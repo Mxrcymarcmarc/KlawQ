@@ -1,9 +1,12 @@
-﻿namespace KlawQ.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace KlawQ.Models
 {
     public class Appointment
     {
-        public string Id { get; set; }
-        public string UserId { get; set; }
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public string Full_Name { get; set; } = string.Empty;
         public string Service { get; set; }
         public DateTime Date { get; set; }
         public int Status { get; set; }
