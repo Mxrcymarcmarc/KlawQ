@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KlawQ")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb348683aaf11114e16de660489d3cd96e7eb1a7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7c74d684a0803ef4d65fb4687a43578a3c3b172f")]
 [assembly: System.Reflection.AssemblyProductAttribute("KlawQ")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KlawQ")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
