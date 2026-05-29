@@ -3353,23 +3353,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\dell\\.nuget\\packages\\": {},
+    "C:\\Users\\Levi\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\dell\\Downloads\\Code\\KlawQ\\KlawQProject\\KlawQ\\KlawQ.csproj",
+      "projectUniqueName": "C:\\Users\\Levi\\source\\repos\\KlawQ\\KlawQProject\\KlawQ\\KlawQ.csproj",
       "projectName": "KlawQ",
-      "projectPath": "C:\\Users\\dell\\Downloads\\Code\\KlawQ\\KlawQProject\\KlawQ\\KlawQ.csproj",
-      "packagesPath": "C:\\Users\\dell\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\dell\\Downloads\\Code\\KlawQ\\KlawQProject\\KlawQ\\obj\\",
+      "projectPath": "C:\\Users\\Levi\\source\\repos\\KlawQ\\KlawQProject\\KlawQ\\KlawQ.csproj",
+      "packagesPath": "C:\\Users\\Levi\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Levi\\source\\repos\\KlawQ\\KlawQProject\\KlawQ\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\dell\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Levi\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
