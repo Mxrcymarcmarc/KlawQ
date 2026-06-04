@@ -1,12 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using KlawQ.Data;
+﻿using KlawQ.Data;
 using KlawQ.Models;
-using System;
-using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
