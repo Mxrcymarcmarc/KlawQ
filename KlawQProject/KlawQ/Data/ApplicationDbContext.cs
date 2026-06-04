@@ -6,6 +6,6 @@ namespace KlawQ.Data
 {
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext(options)
     {
-        public DbSet<Scheduler> Schedules { get; set; }
+        public DbSet<Scheduler> Schedulers { get; set; }
     }
 }
