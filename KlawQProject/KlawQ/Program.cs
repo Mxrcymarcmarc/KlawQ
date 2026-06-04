@@ -50,6 +50,20 @@ using (var scope = app.Services.CreateScope())
             await userManager.AddToRoleAsync(adminUser, "Admin");
         }
     }
+
+    // Seed test user
+    var testUserEmail = "lemuel@gmail.com";
+    var testUserPassword = "Marc123!";
+    var testUser = await userManager.FindByEmailAsync(testUserEmail);
+    if (testUser == null)
+    {
+        testUser = new IdentityUser { UserName = testUserEmail, Email = testUserEmail, EmailConfirmed = true };
+        var result = await userManager.CreateAsync(testUser, testUserPassword);
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(testUser, "User");
+        }
+    }
 }
 
 // Configure the HTTP request pipeline.
@@ -74,7 +88,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Account}/{action=Login}/{id?}")
     .WithStaticAssets();
 
 app.MapRazorPages()
