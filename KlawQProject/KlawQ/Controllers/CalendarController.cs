@@ -19,7 +19,7 @@ namespace KlawQ.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        // FIX: Philippine timezone used consistently across all time comparisons
+        // Philippine timezone used consistently across all time comparisons
         private static readonly TimeZoneInfo PhilippineTimeZone =
             TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
 
@@ -134,7 +134,7 @@ namespace KlawQ.Controllers
         [HttpPost("book")]
         public async Task<IActionResult> BookSlot([FromBody] Scheduler newBooking)
         {
-            // FIX: Guard against past bookings using Philippine time
+            // Guard against past bookings using Philippine time
             if (newBooking.Time_Slot < NowInPH())
             {
                 return BadRequest("Booking failed: You cannot select a time slot in the past!");
@@ -177,9 +177,6 @@ namespace KlawQ.Controllers
             return Ok("Appointment locked in and saved to database successfully!");
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // REUSABLE HELPER: Calculates day-by-day availability for a full month
-        // ─────────────────────────────────────────────────────────────────────
 
         private async Task<List<CalendarDayStatus>> GetDaysStatusForMonth(int year, int month)
         {
@@ -196,7 +193,7 @@ namespace KlawQ.Controllers
             {
                 var loopDate = new DateTime(year, month, day);
 
-                // FIX: Uses shared helper — no duplicated switch block here
+                // Uses shared helper — no duplicated switch block here
                 int maxSlotsForThisDay = GetMaxSlotsForDay(loopDate.DayOfWeek);
                 int totalBookingsForDay = monthlyBookings.Count(b => b.Appointment_Date.Date == loopDate.Date);
 
