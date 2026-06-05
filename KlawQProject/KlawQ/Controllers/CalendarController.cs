@@ -23,7 +23,7 @@ namespace KlawQ.Controllers
         private static readonly TimeZoneInfo PhilippineTimeZone =
             TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
 
-        // Business Rule: If 5 or fewer available days remain, show next month automatically
+        // If 5 or fewer available days remain, show next month automatically
         private const int ALMOST_FULL_THRESHOLD = 5;
 
         public CalendarController(ApplicationDbContext context)
@@ -49,7 +49,7 @@ namespace KlawQ.Controllers
 
         private static string GetFormattedTime(int hour) =>
             new DateTime(2000, 1, 1, hour, 0, 0)
-                .ToString("h:mm tt", CultureInfo.InvariantCulture); // e.g., "2:00 PM"
+                .ToString("h:mm tt", CultureInfo.InvariantCulture); // Example: "2:00 PM"
 
         private static DateTime NowInPH() =>
             TimeZoneInfo.ConvertTime(DateTime.UtcNow, PhilippineTimeZone);
@@ -72,7 +72,7 @@ namespace KlawQ.Controllers
 
             var finalResponse = new List<CalendarDayStatus>(currentMonthDays);
 
-            // Business Rule: If almost full, also attach the next month
+            // If almost full, also attach the next month
             if (availableDaysLeft <= ALMOST_FULL_THRESHOLD)
             {
                 DateTime nextMonthDate = today.AddMonths(1);
@@ -122,7 +122,7 @@ namespace KlawQ.Controllers
                 hourlySlots.Add(new
                 {
                     SlotHour = hour,
-                    FormattedTime = GetFormattedTime(hour),      // e.g., "2:00 PM"
+                    FormattedTime = GetFormattedTime(hour),      // Example: "2:00 PM"
                     IsAvailable = !isAlreadyBooked && !isPastTime
                 });
             }
@@ -142,13 +142,13 @@ namespace KlawQ.Controllers
 
             DayOfWeek dayOfWeek = newBooking.Appointment_Date.DayOfWeek;
 
-            // Shop is closed on Tuesdays
+            // Appointment is closed on Tuesdays
             if (dayOfWeek == DayOfWeek.Tuesday)
             {
                 return BadRequest("Booking failed: The shop is closed on Tuesdays!");
             }
 
-            // Uses shared helper — no duplicated switch block here
+            // Uses shared helper : no duplicated switch block here
             int maxSlotsForThisDay = GetMaxSlotsForDay(dayOfWeek);
 
             // Exact time slot is already taken (race-condition safety)
@@ -170,7 +170,7 @@ namespace KlawQ.Controllers
                 return BadRequest("Booking failed: This date has reached full operational capacity!");
             }
 
-            // All validation passed — save to SQL Server
+            // All validation passed : save to SQL Server
             _context.Schedulers.Add(newBooking);
             await _context.SaveChangesAsync();
 
@@ -193,7 +193,7 @@ namespace KlawQ.Controllers
             {
                 var loopDate = new DateTime(year, month, day);
 
-                // Uses shared helper — no duplicated switch block here
+                // Uses shared helper : no duplicated switch block here
                 int maxSlotsForThisDay = GetMaxSlotsForDay(loopDate.DayOfWeek);
                 int totalBookingsForDay = monthlyBookings.Count(b => b.Appointment_Date.Date == loopDate.Date);
 
@@ -205,7 +205,7 @@ namespace KlawQ.Controllers
                 }
                 else if (loopDate.DayOfWeek == DayOfWeek.Tuesday)
                 {
-                    isAvailable = false; // Shop is closed on Tuesdays
+                    isAvailable = false; // Appointment is closed on Tuesdays
                 }
                 else if (totalBookingsForDay >= maxSlotsForThisDay)
                 {
