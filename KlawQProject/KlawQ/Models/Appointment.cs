@@ -18,9 +18,13 @@ namespace KlawQ.Models
 
     public class Scheduler
     {
+        [Key]
         public int SchedulerID { get; set; }
+        [Required]
         public int AppId { get; set; }
+        [Required]
         public required DateTime Appointment_Date { get; set; }
+        [Required]
         public required DateTime Time_Slot { get; set; }
     }
 }
