@@ -3,49 +3,50 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - KlawQ</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/KlawQ.styles.css" asp-append-version="true" />
+    <title>@ViewData["Title"] - Klaw By Krys</title>
+    <style>
+        :root{
+            --bg-pink: #fff5f6;
+            --panel-pink: #fdeef0;
+            --accent-pink: #fde0e2;
+            --brand-brown: #8b4b3b;
+            --footer-brown: #6b4228;
+            --cta-green: #88b04b;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: "Segoe UI", Roboto, Arial; background:var(--bg-pink); color:var(--brand-brown); }
+        
+        /* Navbar */
+        nav { background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.05); padding:12px 0; }
+        .nav-container { max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:0 20px; }
+        .nav-brand { font-size:20px; font-weight:700; color:var(--brand-brown); text-decoration:none; }
+        .nav-links { display:flex; gap:30px; list-style:none; }
+        .nav-links a { color:var(--brand-brown); text-decoration:none; font-size:14px; }
+        .nav-links a:hover { color:var(--cta-green); }
+        
+        @@media(max-width:768px) {
+            .nav-links { gap:15px; }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">KlawQ</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - KlawQ - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <nav>
+        <div class="nav-container">
+            <a class="nav-brand" href="/">🎀 Klaw By Krys</a>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#gallery">Gallery</a></li>
+                <li><a href="#bookmarks">My Bookmarks</a></li>
+                <li><a href="#appointment">Appointment</a></li>
+                <li><a href="/Account/Logout" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Logout</a></li>
+            </ul>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    </nav>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <form id="logoutForm" action="/Account/Logout" method="post" style="display:none;"></form>
 </body>
 </html>

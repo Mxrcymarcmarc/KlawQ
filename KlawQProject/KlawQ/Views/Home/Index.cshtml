@@ -1,8 +1,200 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    :root{
+        --bg-pink: #fff5f6;
+        --panel-pink: #fdeef0;
+        --accent-pink: #fde0e2;
+        --brand-brown: #8b4b3b;
+        --footer-brown: #6b4228;
+        --cta-green: #88b04b;
+        --light-green: #c5f08f;
+    }
+    
+    /* Main container */
+    .container { max-width:1200px; margin:0 auto; padding:0 20px; }
+    
+    /* Hero section */
+    .hero { padding:60px 20px; text-align:center; }
+    .hero h1 { font-size:48px; font-weight:300; color:var(--brand-brown); margin:20px 0; }
+    .hero .subtitle { color:#999; font-size:16px; }
+    .hero .description { color:#999; font-size:14px; max-width:600px; margin:10px auto 30px; }
+    .btn-appointment { background:var(--cta-green); color:white; padding:12px 30px; border-radius:25px; text-decoration:none; display:inline-block; }
+    
+    /* Section divider */
+    .divider { height:2px; background:var(--accent-pink); margin:40px 0; }
+    
+    /* Featured Works */
+    .section { padding:60px 20px; }
+    .section-title { text-align:center; font-size:32px; color:var(--brand-brown); margin:20px 0; }
+    .section-desc { text-align:center; color:#999; font-size:14px; margin:10px 0 40px; }
+    .gallery { display:grid; grid-template-columns:repeat(3, 1fr); gap:30px; margin:40px 0; }
+    .gallery-item { background:var(--light-green); aspect-ratio:1; border-radius:12px; }
+    
+    /* Bookmarks section */
+    .bookmarks-table { background:#fff; border-radius:12px; padding:20px; margin:30px 0; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+    .btn-add { background:var(--cta-green); color:white; padding:8px 16px; border-radius:20px; text-decoration:none; font-size:12px; display:inline-block; margin:20px 0; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; padding:12px; color:var(--brand-brown); font-size:12px; border-bottom:1px solid #eee; }
+    td { padding:12px; border-bottom:1px solid #eee; font-size:13px; }
+    
+    /* Client Love */
+    .testimonials { display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin:40px 0; }
+    .testimonial { background:#fff; border:2px solid var(--accent-pink); border-radius:12px; padding:20px; }
+    .stars { color:var(--cta-green); font-size:14px; }
+    .testimonial p { font-size:13px; color:#666; margin:10px 0; }
+    .author { font-weight:600; font-size:12px; color:var(--brand-brown); }
+    
+    /* FAQ */
+    .faq { margin:40px 0; }
+    .faq-item { background:#fff; border:1px solid #ddd; border-radius:12px; margin:10px 0; }
+    .faq-question { padding:15px; cursor:pointer; background:var(--panel-pink); }
+    .faq-question:hover { background:var(--accent-pink); }
+    .faq-answer { padding:15px; display:none; }
+    .faq-item.active .faq-answer { display:block; }
+    
+    /* Footer */
+    footer { background:var(--footer-brown); color:#fff; padding:30px; margin-top:60px; text-align:center; }
+    .footer-content { max-width:1200px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr 1fr; gap:30px; text-align:left; margin-bottom:20px; }
+    .footer-col { font-size:14px; }
+    
+    @@media(max-width:768px) {
+        .gallery { grid-template-columns:1fr; }
+        .testimonials { grid-template-columns:1fr; }
+        .footer-content { grid-template-columns:1fr; }
+    }
+</style>
+
+<div class="container">
+    <div class="hero">
+        <h1>Welcome to Klaw By Krys</h1>
+        <p class="subtitle">Quality & Creative Nail Sets</p>
+        <p class="description">Your boutique nail studio where creativity meets craftsmanship. Each set is designed with love, care, and attention to detail.</p>
+        <a href="#" class="btn-appointment">Book Appointment</a>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+        <h2 class="section-title">✨ Featured Works ✨</h2>
+        <p class="section-desc">Discover our latest nail art creations</p>
+        <div class="gallery">
+            <div class="gallery-item"></div>
+            <div class="gallery-item"></div>
+            <div class="gallery-item"></div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+        <h2 class="section-title">🎀 My Design Bookmarks 🎀</h2>
+        <p class="section-desc">Save all your design inspiration</p>
+        <div class="bookmarks-table">
+            <a href="#" class="btn-add">+ Add New Bookmark</a>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>URL</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>#1</td>
+                        <td>Floral Nail Art Inspiration</td>
+                        <td>https://designs.com/floral</td>
+                        <td>❤️ 🗑️</td>
+                    </tr>
+                    <tr>
+                        <td>#2</td>
+                        <td>Minimalist Nails</td>
+                        <td>https://designs.com/minimal</td>
+                        <td>❤️ 🗑️</td>
+                    </tr>
+                    <tr>
+                        <td>#3</td>
+                        <td>French Tip Variations</td>
+                        <td>https://designs.com/french-tips</td>
+                        <td>❤️ 🗑️</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+        <h2 class="section-title">💕 Client Love 💕</h2>
+        <div class="testimonials">
+            <div class="testimonial">
+                <div class="stars">★★★★★</div>
+                <p>"Klaw By Krys created the most stunning nail designs! The attention to detail is incredible. Highly recommend for anyone looking for quality nail art!"</p>
+                <div class="author">— Sarah M.</div>
+            </div>
+            <div class="testimonial">
+                <div class="stars">★★★★★</div>
+                <p>"Excellent work and great customer service. I've been to many nail salons, but this one stands out. The creativity and precision are unmatched!"</p>
+                <div class="author">— Jessica L.</div>
+            </div>
+            <div class="testimonial">
+                <div class="stars">★★★★★</div>
+                <p>"Every time I visit, I leave with gorgeous nails and a smile. The team is professional and truly cares about making me feel special."</p>
+                <div class="author">— Emma K.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+        <h2 class="section-title">✨ Frequently Asked Questions ✨</h2>
+        <div class="faq">
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">How long does a nail appointment take?</div>
+                <div class="faq-answer">Most appointments take 45-60 minutes depending on the complexity of your design.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">How do I book an appointment?</div>
+                <div class="faq-answer">You can book directly through our website or contact us via Instagram.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">What's your cancellation policy?</div>
+                <div class="faq-answer">Cancellations must be made 24 hours in advance for a full refund.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">Do you offer nail art consultations?</div>
+                <div class="faq-answer">Yes! We provide free consultations to discuss your nail design ideas.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">What products do you use?</div>
+                <div class="faq-answer">We use only premium quality, eco-friendly nail products for the best results.</div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<footer>
+    <div class="footer-content">
+        <div class="footer-col">
+            <strong>Klaw By Krys</strong><br/>
+            Your boutique nail studio for creative & quality nail sets
+        </div>
+        <div class="footer-col">
+            📸 Follow on Instagram
+        </div>
+        <div class="footer-col">
+            📍 Studio Location<br/>
+            123 Creative Lane<br/>
+            Studio City, SC 12345
+        </div>
+    </div>
+    <div style="text-align:center; border-top:1px solid rgba(255,255,255,.2); padding-top:15px; font-size:13px;">
+        Made with ♥ by Klaw By Krys © 2026
+    </div>
+</footer>

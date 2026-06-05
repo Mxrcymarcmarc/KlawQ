@@ -1,9 +1,11 @@
 using KlawQ.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
 namespace KlawQ.Controllers
 {
+    [Authorize(Roles = "User")]
     public class HomeController : Controller
     {
         public IActionResult Index()
@@ -11,11 +13,13 @@ namespace KlawQ.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         public IActionResult Privacy()
         {
             return View();
         }
 
+        [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
