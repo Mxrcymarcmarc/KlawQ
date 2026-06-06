@@ -98,6 +98,11 @@ namespace KlawQ.Controllers
                 return BadRequest("Invalid date format. Please use yyyy-MM-dd (e.g. 2025-06-15).");
             }
 
+            if (parsedDate.Date < TodayInPH())
+            {
+                return Ok(new List<object>()); // Return empty array []
+            }
+
             // Fetch all existing bookings for this specific day in one DB trip
             var bookingsForDay = await _context.Schedulers
                 .Where(s => s.Appointment_Date.Date == parsedDate.Date)
@@ -131,7 +136,7 @@ namespace KlawQ.Controllers
         }
 
 
-        [HttpPost("book")]
+        [HttpPost("booking")]
         public async Task<IActionResult> BookSlot([FromBody] Scheduler newBooking)
         {
             // Guard against past bookings using Philippine time
@@ -146,6 +151,15 @@ namespace KlawQ.Controllers
             if (dayOfWeek == DayOfWeek.Tuesday)
             {
                 return BadRequest("Booking failed: The shop is closed on Tuesdays!");
+            }
+
+            // Check if the submitted time slot is a valid business hour
+            int[] validHours = GetBusinessHoursForDay(newBooking.Appointment_Date.DayOfWeek);
+            int submittedHour = newBooking.Time_Slot.Hour;
+
+            if (!validHours.Contains(submittedHour))
+            {
+                return BadRequest("Booking failed: The submitted time slot is not a valid business hour for this day!");
             }
 
             // Uses shared helper : no duplicated switch block here
