@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KlawQ.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260604150016_InitialIdentity")]
+    [Migration("20260605151817_InitialIdentity")]
     partial class InitialIdentity
     {
         /// <inheritdoc />
@@ -24,6 +24,28 @@ namespace KlawQ.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("KlawQ.Models.Scheduler", b =>
+                {
+                    b.Property<int>("SchedulerID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SchedulerID"));
+
+                    b.Property<int>("AppId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Appointment_Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Time_Slot")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SchedulerID");
+
+                    b.ToTable("Schedulers");
+                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {

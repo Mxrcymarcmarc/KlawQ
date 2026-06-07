@@ -1,0 +1,104 @@
+﻿:root {
+    --bg-pink: #fff5f6; /* page background */
+    --panel-pink: #fdeef0; /* input and panel accents */
+    --accent-pink: #fde0e2; /* circle placeholder */
+    --brand-brown: #8b4b3b; /* headings */
+    --footer-brown: #6b4228; /* footer background */
+    --cta-green: #88b04b; /* login button */
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Roboto, Arial;
+    background: linear-gradient(90deg, var(--bg-pink) 0%, #fff9fb 100%);
+    color: var(--brand-brown);
+}
+
+.register-container {
+    max-width: 900px;
+    margin: 40px auto;
+    display: flex;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+.left {
+    padding: 40px;
+    flex: 1;
+    background: linear-gradient(#fff,var(--bg-pink));
+}
+
+    .left form {
+        display: flex;
+        flex-direction: column;
+    }
+
+.right {
+    flex: 1;
+    padding: 40px;
+    background: #f9f0f2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+h1 {
+    font-family: 'Segoe Script', cursive;
+    color: var(--brand-brown);
+    font-size: 36px;
+    margin: 0 0 20px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px 16px;
+    margin: 8px 0 16px;
+    border-radius: 14px;
+    border: none;
+    background: var(--panel-pink);
+    box-sizing: border-box;
+}
+
+.btn {
+    background: var(--cta-green);
+    color: white;
+    padding: 10px 30px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+    align-self: center;
+}
+
+.google-btn {
+    background: var(--cta-green);
+    color: white;
+    padding: 10px 30px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+    align-self: center;
+}
+
+.right .logo-circle {
+    width: 120px;
+    height: 120px;
+    background: var(--accent-pink);
+    border-radius: 50%;
+    margin: 0 auto 12px;
+}
+
+.right h2 {
+    color: var(--brand-brown);
+    margin: 8px 0;
+}
+
+.right p {
+    color: rgba(139,75,59,0.85);
+    text-align: center;
+    max-width: 240px;
+}

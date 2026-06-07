@@ -1,0 +1,35 @@
+﻿@section style {
+    <link rel="stylesheet" href="css/register.css" />
+}
+@{
+    ViewData["Title"] = "Register";
+    ViewData["HideNavbar"] = true;
+}
+
+<div class="register-container">
+    <div cite="left">
+        <h1>Create Your Account</h1>
+        <form asp-action="Signup" method="post">
+            <input class="input-field" type="email" placeholder="Email" />
+            <input class="input-field" type="password" placeholder="Password" />
+            <input name="ConfirmPassword" class="input-field" type="password" placeholder="Confirm Password" />
+            <button class="btn" type="submit">Create Account</button>
+            <p cite="or">OR</p>
+
+            <button type="button" class="google-btn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" />
+                Sign in with Google
+            </button>
+
+        </form>
+        <p>Already have an account? <a href="Login.cshtml">Log In here</a></p>
+    </div>
+
+    <div class="right">
+        <div style="text-align:center;">
+            <div class="logo-circle"></div>
+            <h2>Klaw By Krys</h2>
+            <p>Quality You Can See, Creativity You Can Wear.</p>
+        </div>
+    </div>
+</div>

@@ -22,6 +22,28 @@ namespace KlawQ.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("KlawQ.Models.Scheduler", b =>
+                {
+                    b.Property<int>("SchedulerID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SchedulerID"));
+
+                    b.Property<int>("AppId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Appointment_Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Time_Slot")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SchedulerID");
+
+                    b.ToTable("Schedulers");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
