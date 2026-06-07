@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace KlawQ.Data.Migrations
+namespace KlawQ.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -21,6 +21,77 @@ namespace KlawQ.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("KlawQ.Models.Appointment", b =>
+                {
+                    b.Property<int>("AppId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AppId"));
+
+                    b.Property<string>("Additional_Notes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Appointment_Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(1)");
+
+                    b.Property<string>("Down_Payment")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Full_Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Inspiration_Image")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Reschedule_Count")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Social_Account")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("AppId");
+
+                    b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("KlawQ.Models.Scheduler", b =>
+                {
+                    b.Property<int>("SchedulerID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SchedulerID"));
+
+                    b.Property<int>("AppId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Appointment_Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Time_Slot")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SchedulerID");
+
+                    b.HasIndex("AppId")
+                        .IsUnique();
+
+                    b.ToTable("Schedulers");
+                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -220,6 +291,17 @@ namespace KlawQ.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("KlawQ.Models.Scheduler", b =>
+                {
+                    b.HasOne("KlawQ.Models.Appointment", "Appointment")
+                        .WithOne("Scheduler")
+                        .HasForeignKey("KlawQ.Models.Scheduler", "AppId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -269,6 +351,11 @@ namespace KlawQ.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("KlawQ.Models.Appointment", b =>
+                {
+                    b.Navigation("Scheduler");
                 });
 #pragma warning restore 612, 618
         }

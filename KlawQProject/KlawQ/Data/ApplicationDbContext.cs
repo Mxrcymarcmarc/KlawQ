@@ -13,5 +13,7 @@ namespace KlawQ.Data
         }
 
         public DbSet<Scheduler> Schedulers { get; set; }
+
+        public DbSet<Appointment> Appointments { get; set; }
     }
 }
