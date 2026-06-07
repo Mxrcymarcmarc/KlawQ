@@ -145,7 +145,7 @@ namespace KlawQ.Controllers
 
         // Endpoint to attempt booking a specific time slot on a specific day
         [HttpPost("booking")]
-        public async Task<IActionResult> BookSlot([FromBody] Scheduler newBooking)
+        public async Task<IActionResult> BookSlot([FromBody] BookingRequest newBooking)
         {
             // Guard against past bookings using Philippine time
             if (newBooking.Time_Slot < NowInPH())
@@ -157,6 +157,19 @@ namespace KlawQ.Controllers
             if (newBooking.Appointment_Date.Date == TodayInPH())
             {
                 return BadRequest("Booking failed: You cannot book a time slot for the current day!");
+            }
+
+            if (newBooking.AppId <= 0)
+            {
+                return BadRequest("Booking failed: A valid Appointment ID is required!");
+            }
+
+            bool appointmentExists = await _context.Appointments
+                .AnyAsync(a => a.AppId == newBooking.AppId);
+
+            if (!appointmentExists)
+            {
+                return BadRequest("Booking failed: The provided Appointment ID does not exist!");
             }
 
             DayOfWeek dayOfWeek = newBooking.Appointment_Date.DayOfWeek;
@@ -198,8 +211,14 @@ namespace KlawQ.Controllers
                 return BadRequest("Booking failed: This date has reached full operational capacity!");
             }
 
-            // All validation passed : save to SQL Server
-            _context.Schedulers.Add(newBooking);
+            var scheduler = new Scheduler
+            {
+                AppId = newBooking.AppId,
+                Appointment_Date = newBooking.Appointment_Date,
+                Time_Slot = newBooking.Time_Slot
+            };
+
+            _context.Schedulers.Add(scheduler);
             await _context.SaveChangesAsync();
 
             return Ok("Appointment locked in and saved to database successfully!");

@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KlawQ.Models
 {
     public class Appointment
     {
+        [Key]
         public int AppId { get; set; }
         public int UserId { get; set; }
         public required string Full_Name { get; set; } = string.Empty;
@@ -14,6 +16,8 @@ namespace KlawQ.Models
         public int Reschedule_Count { get; set; } = 0;
         public required char Appointment_Type { get; set; } = 'S'; // H for home service and 'S' for studio-based service
         public int Status { get; set; }
+
+        public Scheduler? Scheduler { get; set; }
     }
 
     public class Scheduler
@@ -21,10 +25,20 @@ namespace KlawQ.Models
         [Key]
         public int SchedulerID { get; set; }
         [Required]
+        [ForeignKey("Appointment")]
         public int AppId { get; set; }
         [Required]
         public required DateTime Appointment_Date { get; set; }
         [Required]
         public required DateTime Time_Slot { get; set; }
+
+        public Appointment? Appointment { get; set; }
+    }
+
+    public class BookingRequest
+    {
+        public int AppId { get; set; }
+        public DateTime Appointment_Date { get; set; }
+        public DateTime Time_Slot { get; set; }
     }
 }
