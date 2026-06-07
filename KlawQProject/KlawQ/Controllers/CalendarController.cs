@@ -6,12 +6,6 @@ using System.Globalization;
 
 namespace KlawQ.Controllers
 {
-    // The data container structure used to send daily availability arrays to the frontend layout
-    public class CalendarDayStatus
-    {
-        public string DateString { get; set; } = string.Empty; // Format: "yyyy-MM-dd"
-        public bool IsAvailable { get; set; }
-    }
 
     [ApiController]
     [Route("api/[controller]")]
@@ -107,8 +101,8 @@ namespace KlawQ.Controllers
                 return BadRequest("Invalid date format. Please use yyyy-MM-dd (e.g. 2025-06-15).");
             }
 
-            // If the chosen date is in the past (compared to Philippine time), return empty array
-            if (parsedDate.Date < TodayInPH())
+            // If the chosen date is in the past or today (compared to Philippine time), return empty array
+            if (parsedDate.Date <= TodayInPH())
             {
                 return Ok(new List<object>()); // Return empty array []
             }
@@ -157,6 +151,12 @@ namespace KlawQ.Controllers
             if (newBooking.Time_Slot < NowInPH())
             {
                 return BadRequest("Booking failed: You cannot select a time slot in the past!");
+            }
+
+            // Guard against same-day bookings using Philippine time
+            if (newBooking.Appointment_Date.Date == TodayInPH())
+            {
+                return BadRequest("Booking failed: You cannot book a time slot for the current day!");
             }
 
             DayOfWeek dayOfWeek = newBooking.Appointment_Date.DayOfWeek;
@@ -230,6 +230,10 @@ namespace KlawQ.Controllers
                 if (loopDate.Date < todayPH)
                 {
                     isAvailable = false; // Past dates are locked
+                }
+                else if (loopDate.Date == todayPH)
+                {
+                    isAvailable = false; // Same-day bookings are not allowed
                 }
                 else if (loopDate.DayOfWeek == DayOfWeek.Tuesday)
                 {
