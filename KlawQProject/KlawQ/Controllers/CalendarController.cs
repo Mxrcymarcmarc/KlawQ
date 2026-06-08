@@ -107,6 +107,12 @@ namespace KlawQ.Controllers
                 return Ok(new List<object>()); // Return empty array []
             }
 
+            // If the chosen date is tomorrow, also return empty array since next-day bookings are not allowed
+            if (parsedDate.Date == TodayInPH().AddDays(1))
+            {
+                return Ok(new List<object>()); // Return empty array []
+            }
+
             // Fetch all existing bookings for this specific day in one DB trip
             var bookingsForDay = await _context.Schedulers
                 .Where(s => s.Appointment_Date.Date == parsedDate.Date)
@@ -157,6 +163,11 @@ namespace KlawQ.Controllers
             if (newBooking.Appointment_Date.Date == TodayInPH())
             {
                 return BadRequest("Booking failed: You cannot book a time slot for the current day!");
+            }
+
+            if (newBooking.Appointment_Date.Date == TodayInPH().AddDays(1))
+            {
+                return BadRequest("Booking failed: You cannot book a time slot for tomorrow!");
             }
 
             if (newBooking.AppId <= 0)
@@ -253,6 +264,10 @@ namespace KlawQ.Controllers
                 else if (loopDate.Date == todayPH)
                 {
                     isAvailable = false; // Same-day bookings are not allowed
+                }
+                else if (loopDate.Date == todayPH.AddDays(1))
+                {
+                    isAvailable = false; // Next-day bookings are not allowed
                 }
                 else if (loopDate.DayOfWeek == DayOfWeek.Tuesday)
                 {
