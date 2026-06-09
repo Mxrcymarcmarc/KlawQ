@@ -4,49 +4,53 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Klaw By Krys</title>
-    <style>
-        :root{
-            --bg-pink: #fff5f6;
-            --panel-pink: #fdeef0;
-            --accent-pink: #fde0e2;
-            --brand-brown: #8b4b3b;
-            --footer-brown: #6b4228;
-            --cta-green: #88b04b;
-        }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: "Segoe UI", Roboto, Arial; background:var(--bg-pink); color:var(--brand-brown); }
-        
-        /* Navbar */
-        nav { background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.05); padding:12px 0; }
-        .nav-container { max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; padding:0 20px; }
-        .nav-brand { font-size:20px; font-weight:700; color:var(--brand-brown); text-decoration:none; }
-        .nav-links { display:flex; gap:30px; list-style:none; }
-        .nav-links a { color:var(--brand-brown); text-decoration:none; font-size:14px; }
-        .nav-links a:hover { color:var(--cta-green); }
-        
-        @@media(max-width:768px) {
-            .nav-links { gap:15px; }
-        }
-    </style>
+    <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
 </head>
 <body>
     <nav>
         <div class="nav-container">
             <a class="nav-brand" href="/">🎀 Klaw By Krys</a>
-            <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#gallery">Gallery</a></li>
-                <li><a href="#bookmarks">My Bookmarks</a></li>
-                <li><a href="#appointment">Appointment</a></li>
-                <li><a href="/Account/Logout" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Logout</a></li>
-            </ul>
-        </div>
+            @if (ViewData["HideNavbar"] == null)
+                {
+                    <ul class="nav-links">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#gallery">Gallery</a></li>
+                        <li><a href="#bookmarks">My Bookmarks</a></li>
+                        <li><a href="#appointment">Appointm ent</a></li>
+                        <li><a href="/Account/Logout" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Logout</a></li>
+                    </ul>
+                }
+            </div>
     </nav>
 
-    <main role="main">
+    <main role="main" class="main-content">
         @RenderBody()
     </main>
 
     <form id="logoutForm" action="/Account/Logout" method="post" style="display:none;"></form>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div>
+                <strong>Klaw By Krys</strong><br />
+                Your boutique nail studio for creative & quality nail sets.<br />
+            </div>
+
+            <div class="footer-center">
+                <a class="footer-btn" href="#">Follow on Instagram</a>
+            </div>
+
+            <div class="footer-right">
+                <b>Studio Location</b><br />
+                123 Creative Lane<br />
+                Studio City, SC 12345
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            Made with ♥ by Klaw By Krys © 2026
+        </div>
+    </footer>
 </body>
 </html>
