@@ -1,0 +1,436 @@
+@model KlawQ.Models.Appointment
+
+@{
+    ViewData["Title"] = "Book Appointment";
+}
+
+<link rel="stylesheet" href="/css/site.css" />
+
+<style>
+    :root{
+        --bg-pink: #fff5f6;
+        --panel-pink: #fdeef0;
+        --accent-pink: #fde0e2;
+        --brand-brown: #8b4b3b;
+        --footer-brown: #6b4228;
+        --cta-green: #88b04b;
+    }
+
+    body { background:var(--bg-pink); }
+    .appointment-wrap { max-width:1100px; margin:40px auto; padding:20px; }
+
+    .top-header { text-align:center; margin-bottom:18px; }
+    .top-header h1 { font-family: 'Segoe UI', Arial; font-size:48px; color:var(--brand-brown); margin-bottom:6px; }
+    .top-header p { color:#8a6a62; margin-bottom:22px; }
+
+    .service-card { background:var(--panel-pink); border-radius:12px; padding:18px; box-shadow:0 10px 25px rgba(0,0,0,.06); border:1px solid var(--accent-pink); }
+    .service-options { display:flex; gap:18px; }
+    .service-box { flex:1; padding:16px; border-radius:8px; background:#fff; border:2px solid transparent; box-shadow:0 6px 14px rgba(0,0,0,.04); cursor:pointer; }
+    .service-box.selected { border-color:var(--brand-brown); }
+    .service-box h4 { margin-bottom:8px; color:var(--brand-brown); }
+    .service-box p { color:#8a6a62; font-size:13px; }
+
+    .info-card { background:var(--panel-pink); margin-top:28px; border-radius:12px; padding:22px; box-shadow:0 10px 25px rgba(0,0,0,.06); border:1px solid var(--accent-pink); }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    .input { display:flex; flex-direction:column; }
+    .input label { font-size:13px; color:#7a5046; margin-bottom:6px; }
+    .input input, .input textarea, .input select { padding:12px; border-radius:8px; border:1px solid rgba(139,75,59,0.08); background:#fff; font-family: "Segoe UI", Roboto, Arial; font-size:14px; }
+    .input textarea { min-height:100px; resize:none; }
+
+    .proceed { text-align:center; margin-top:28px; }
+    .btn-proceed { background:var(--cta-green); color:#fff; padding:12px 46px; border-radius:28px; border:none; font-weight:600; cursor:pointer; box-shadow:0 6px 12px rgba(136,176,75,0.18); }
+
+    /* Modal */
+    .modal.hidden { display:none !important; }
+    .overlay { position:fixed; inset:0; backdrop-filter:blur(8px); background:rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; z-index:50; }
+    .modal-box { display:flex; gap:24px; max-width:1000px; width:90%; }
+    .modal-frame { background:var(--panel-pink); border-radius:12px; padding:24px; border:2px solid rgba(139,75,59,0.1); flex:1; }
+    .modal-frame h4 { color:var(--brand-brown); margin-bottom:12px; font-size:16px; }
+    .modal-frame p { color:#8a6a62; font-size:13px; margin-bottom:16px; }
+
+    /* Calendar */
+    .calendar-month { text-align:center; color:var(--brand-brown); font-weight:600; margin-bottom:12px; }
+    .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+    .day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; background:#fff; border:1px solid var(--accent-pink); cursor:pointer; font-size:14px; color:var(--brand-brown); }
+    .day:hover { background:var(--accent-pink); }
+    .day.unavailable { opacity:0.3; cursor:not-allowed; background:#f0f0f0; }
+    .day.selected { background:var(--cta-green); color:#fff; border-color:var(--cta-green); }
+
+    /* Time slots */
+    .slot-btn { display:block; width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid rgba(139,75,59,0.1); background:#fff; cursor:pointer; color:var(--brand-brown); }
+    .slot-btn:hover { background:var(--accent-pink); }
+    .slot-btn.selected { background:var(--cta-green); color:#fff; border-color:var(--cta-green); }
+    .slot-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+    .calendar-nav { background:var(--accent-pink); border:none; padding:6px 12px; border-radius:4px; cursor:pointer; margin:0 4px; }
+
+    .modal-action { text-align:center; margin-top:20px; }
+    .btn-book { background:var(--cta-green); color:#fff; padding:12px 40px; border-radius:24px; border:none; font-weight:600; cursor:pointer; }
+
+    @@media(max-width:1000px){ .modal-box{flex-direction:column;} .info-grid{grid-template-columns:1fr;} .service-options{flex-direction:column;} }
+</style>
+
+<div class="appointment-wrap">
+    <div class="top-header">
+        <h1>Book your appointment!</h1>
+        <p>Choose your service, pick your add-ons, and let's create something beautiful together!</p>
+    </div>
+
+    <div class="service-card">
+        <h3 style="color:var(--brand-brown); margin-bottom:12px;">✦ Select Your Service</h3>
+        <div class="service-options">
+            <div class="service-box selected" id="box-studio">
+                <h4>Studio-based Service</h4>
+                <p>Ideal for those who want a focused professional environment with our complete suite of equipment.</p>
+            </div>
+            <div class="service-box" id="box-home">
+                <h4>Home Service</h4>
+                <p>The ultimate convenience for busy schedules, perfect for staying cozy while we handle the details.</p>
+            </div>
+        </div>
+    </div>
+
+    <form id="appointmentForm">
+        <div class="info-card">
+            <h3 style="color:var(--brand-brown); margin-bottom:12px;">✦ Your Information</h3>
+            <div class="info-grid">
+                <div class="input">
+                    <label>Full Name *</label>
+                    <input id="fullName" name="Full_Name" type="text" placeholder="Jane Doe" />
+                </div>
+                <div class="input">
+                    <label>Email *</label>
+                    <input id="email" name="Social_Account" type="email" placeholder="jane@example.com" />
+                </div>
+                <div class="input">
+                    <label>Phone *</label>
+                    <input id="phone" name="Phone" type="text" placeholder="(555) 123-4567" />
+                </div>
+                <div class="input">
+                    <label>Design Reference (Image) *</label>
+                    <input id="designImage" name="DesignImage" type="file" accept="image/*" />
+                </div>
+                <div class="input" style="grid-column:1 / -1">
+                    <label>Special Requests</label>
+                    <textarea id="notes" name="Additional_Notes" placeholder="Tell me about your dream nail design ..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="proceed">
+            <button type="button" class="btn-proceed" id="proceedBtn">Proceed</button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal: Date & Time Selection -->
+<div id="bookingModal" class="modal hidden">
+    <div class="overlay">
+        <div class="modal-box">
+            <!-- Left: Calendar -->
+            <div class="modal-frame">
+                <h4>1. Select Date</h4>
+                <p>Select a specific date on the calendar slot to reserve appointment schedule.</p>
+                <div class="calendar-month" id="calendarMonthLabel">June 2026</div>
+                <div class="calendar-grid" id="calendarGrid">Loading...</div>
+                <div style="text-align:center; margin-top:12px;">
+                    <button type="button" class="calendar-nav" id="prevMonth">← Prev</button>
+                    <button type="button" class="calendar-nav" id="nextMonth">Next →</button>
+                </div>
+            </div>
+
+            <!-- Right: Time Slots -->
+            <div class="modal-frame">
+                <h4>2. Appointment Time</h4>
+                <p id="selectedDateDisplay">Available time slot as of mm/dd/yyyy (Current Date)</p>
+                <p style="color:var(--brand-brown); font-weight:600; margin-bottom:12px;">Select your preferred time slot *</p>
+                <div id="timeSlots">Select a date to see available times</div>
+                <div class="modal-action">
+                    <button type="button" class="btn-book" id="confirmBooking" disabled>Proceed to Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Payment Confirmation -->
+<div id="paymentModal" class="modal hidden">
+    <div class="overlay">
+        <div class="modal-box" style="max-width:500px;">
+            <div class="modal-frame" style="flex:unset; width:100%;">
+                <h4>Payment Required</h4>
+                <p style="margin-bottom:16px;">A downpayment of <strong>₱150.00</strong> is required to confirm your appointment.</p>
+                <div style="background:#fff; padding:16px; border-radius:8px; margin-bottom:16px; text-align:center;">
+                    <p style="color:#7a5046; margin-bottom:8px;">Downpayment Amount</p>
+                    <p style="font-size:28px; color:var(--brand-brown); font-weight:700;">₱150.00</p>
+                </div>
+                <div class="modal-action" style="display:flex; gap:12px; justify-content:center;">
+                    <button type="button" class="btn-book" id="payNow">Pay Now</button>
+                    <button type="button" style="background:#ccc; color:#333; padding:12px 40px; border-radius:24px; border:none; font-weight:600; cursor:pointer;" id="cancelPayment">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+@section Scripts {
+<script>
+    // Service box toggle
+    document.getElementById('box-studio').addEventListener('click', ()=>{ 
+        document.getElementById('box-studio').classList.add('selected'); 
+        document.getElementById('box-home').classList.remove('selected'); 
+    });
+    document.getElementById('box-home').addEventListener('click', ()=>{ 
+        document.getElementById('box-home').classList.add('selected'); 
+        document.getElementById('box-studio').classList.remove('selected'); 
+    });
+
+    let createdAppId = null;
+    let selectedDate = null;
+    let selectedSlotHour = null;
+    let selectedSlotDate = null;
+    let selectedSlotTime = null;
+    let currentAppointmentId = null;
+    let currentMonth = new Date();
+    let allDays = [];
+    let tempAppointmentData = null;
+
+    // Store form data temporarily (don't save yet)
+    async function validateAndStoreFormData() {
+        const fullName = document.getElementById('fullName').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const fileInput = document.getElementById('designImage');
+        const file = fileInput.files[0];
+
+        // Validation
+        if (!fullName) { alert('Full Name is required'); return false; }
+        if (!email) { alert('Email is required'); return false; }
+        if (!phone) { alert('Phone is required'); return false; }
+        if (!file) { alert('Design Reference image is required'); return false; }
+
+        // Limit file size to 2MB
+        if (file.size > 2 * 1024 * 1024) { 
+            alert('Image must be smaller than 2MB. Current size: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
+            return false; 
+        }
+
+        let imageBase64 = '';
+        imageBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
+        });
+
+        console.log('Image base64 length:', imageBase64.length);
+
+        // Store data temporarily (not saved yet)
+        tempAppointmentData = {
+            Full_Name: fullName,
+            Social_Account: email,
+            Phone: phone,
+            Additional_Notes: document.getElementById('notes').value || '',
+            Down_Payment_Paid: false,
+            Appointment_Type: document.getElementById('box-home').classList.contains('selected') ? 'H' : 'S',
+            Status: 0,
+            Inspiration_Image: imageBase64
+        };
+
+        console.log('Form validated and stored temporarily. Ready to select date/time.');
+        return true;
+    }
+
+    // Create appointment in database (call only after payment confirmation)
+    async function createAppointment() {
+        if (!tempAppointmentData) {
+            alert('Form data not found. Please try again.');
+            return null;
+        }
+
+        const res = await fetch('/Appointment/create-json', {
+            method: 'POST', 
+            headers: {'Content-Type':'application/json'}, 
+            body: JSON.stringify(tempAppointmentData)
+        });
+
+        if (!res.ok) { 
+            const errorData = await res.json().catch(() => ({}));
+            console.error('Create appointment error:', errorData);
+            alert('Failed to create appointment:\n' + (errorData.error || 'Unknown error')); 
+            return null; 
+        }
+
+        const json = await res.json();
+        console.log('Appointment created with ID:', json.AppId);
+        return json.AppId;
+    }
+
+    // Proceed button: validate form and show calendar modal (don't save yet)
+    document.getElementById('proceedBtn').addEventListener('click', async () => {
+        const isValid = await validateAndStoreFormData();
+        if (!isValid) return;
+        
+        // Show calendar modal without saving
+        document.getElementById('bookingModal').classList.remove('hidden');
+        currentMonth = new Date();
+        await loadCalendar();
+    });
+
+    async function loadCalendar() {
+        const res = await fetch('/api/calendar/current-view-status');
+        const days = await res.json();
+        allDays = days;
+        renderCalendar();
+    }
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = '';
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        document.getElementById('calendarMonthLabel').innerText = currentMonth.toLocaleDateString(undefined, {month:'long', year:'numeric'});
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < firstDay; i++) {
+            const el = document.createElement('div');
+            el.style.visibility = 'hidden';
+            grid.appendChild(el);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayData = allDays.find(d => d.DateString === dateStr);
+            const isAvailable = dayData?.IsAvailable || false;
+
+            const el = document.createElement('div');
+            el.className = 'day';
+            if (!isAvailable) el.classList.add('unavailable');
+            el.innerText = day;
+
+            if (isAvailable) {
+                el.addEventListener('click', () => selectDate(dateStr, el));
+            }
+
+            grid.appendChild(el);
+        }
+    }
+
+    async function selectDate(dateStr, element) {
+        document.querySelectorAll('.day.selected').forEach(d => d.classList.remove('selected'));
+        element.classList.add('selected');
+
+        selectedDate = dateStr;
+        selectedSlotHour = null;
+        document.getElementById('confirmBooking').disabled = true;
+
+        const date = new Date(dateStr);
+        document.getElementById('selectedDateDisplay').innerText = `Available time slot as of ${date.toLocaleDateString()} (Current Date)`;
+
+        const res = await fetch('/api/calendar/day-slots-status?chosenDate=' + dateStr);
+        const slots = await res.json();
+        const container = document.getElementById('timeSlots');
+        container.innerHTML = '';
+
+        if (!slots || slots.length === 0) {
+            container.innerText = 'No available slots for this date.';
+            return;
+        }
+
+        slots.forEach(s => {
+            const btn = document.createElement('button');
+            btn.className = 'slot-btn';
+            btn.type = 'button';
+            btn.innerText = s.FormattedTime;
+            if (!s.IsAvailable) {
+                btn.disabled = true;
+            }
+            btn.addEventListener('click', () => {
+                if (s.IsAvailable) {
+                    document.querySelectorAll('.slot-btn').forEach(x => x.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedSlotHour = s.SlotHour;
+                    document.getElementById('confirmBooking').disabled = false;
+                }
+            });
+            container.appendChild(btn);
+        });
+    }
+
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        currentMonth.setMonth(currentMonth.getMonth() - 1);
+        renderCalendar();
+    });
+
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        currentMonth.setMonth(currentMonth.getMonth() + 1);
+        renderCalendar();
+    });
+
+    document.getElementById('confirmBooking').addEventListener('click', async () => {
+        if (!selectedDate || selectedSlotHour == null) {
+            alert('Please select both a date and time slot');
+            return;
+        }
+
+        // Store selected date/time for later
+        selectedSlotDate = selectedDate;
+        selectedSlotTime = selectedSlotHour;
+
+        // Move to payment modal
+        document.getElementById('bookingModal').classList.add('hidden');
+        document.getElementById('paymentModal').classList.remove('hidden');
+    });
+
+    document.getElementById('payNow').addEventListener('click', async () => {
+        if (!tempAppointmentData) {
+            alert('Error: Form data not found');
+            return;
+        }
+
+        // NOW save the appointment with selected date/time
+        const appointmentId = await createAppointment();
+        if (!appointmentId) {
+            alert('Failed to create appointment');
+            return;
+        }
+
+        // Save the appointment date and time
+        const dateISO = selectedSlotDate + 'T00:00:00';
+        const timeISO = selectedSlotDate + 'T' + String(selectedSlotTime).padStart(2, '0') + ':00:00';
+        const booking = { 
+            AppId: appointmentId, 
+            Appointment_Date: dateISO, 
+            Time_Slot: timeISO 
+        };
+
+        const bookingRes = await fetch('/api/calendar/booking', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(booking)
+        });
+
+        if (!bookingRes.ok) {
+            alert('Failed to save appointment date/time');
+            return;
+        }
+
+        // Update down payment status
+        const updateRes = await fetch(`/Appointment/UpdateDownPayment?id=${appointmentId}`, { method: 'POST' });
+        if (updateRes.ok) {
+            alert('✓ Downpayment recorded! Your appointment has been confirmed.');
+            document.getElementById('paymentModal').classList.add('hidden');
+            tempAppointmentData = null;
+            location.href = '/Home/Index';
+        } else {
+            alert('Error recording payment. Please try again.');
+        }
+    });
+
+    document.getElementById('cancelPayment').addEventListener('click', () => {
+        document.getElementById('paymentModal').classList.add('hidden');
+        document.getElementById('bookingModal').classList.remove('hidden');
+    });
+</script>
+}

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace KlawQ.Migrations
 {
     /// <inheritdoc />
-    public partial class RelationTable : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -20,9 +20,10 @@ namespace KlawQ.Migrations
                     UserId = table.Column<int>(type: "int", nullable: false),
                     Full_Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Social_Account = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Inspiration_Image = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Additional_Notes = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Down_Payment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Down_Payment_Paid = table.Column<bool>(type: "bit", nullable: false),
                     Reschedule_Count = table.Column<int>(type: "int", nullable: false),
                     Appointment_Type = table.Column<string>(type: "nvarchar(1)", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false)
@@ -69,6 +70,23 @@ namespace KlawQ.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserProfiles",
+                columns: table => new
+                {
+                    UserID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Full_Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IdentityUserId = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserProfiles", x => x.UserID);
                 });
 
             migrationBuilder.CreateTable(
@@ -264,6 +282,9 @@ namespace KlawQ.Migrations
 
             migrationBuilder.DropTable(
                 name: "Schedulers");
+
+            migrationBuilder.DropTable(
+                name: "UserProfiles");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
