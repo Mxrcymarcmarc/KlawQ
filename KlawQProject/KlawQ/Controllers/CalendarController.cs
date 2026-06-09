@@ -6,12 +6,6 @@ using System.Globalization;
 
 namespace KlawQ.Controllers
 {
-    // The data container structure used to send daily availability arrays to the frontend layout
-    public class CalendarDayStatus
-    {
-        public string DateString { get; set; } = string.Empty; // Format: "yyyy-MM-dd"
-        public bool IsAvailable { get; set; }
-    }
 
     [ApiController]
     [Route("api/[controller]")]
@@ -19,11 +13,11 @@ namespace KlawQ.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        // Philippine timezone used consistently across all time comparisons
+        // Philippine timezone is used consistently across all time comparisons
         private static readonly TimeZoneInfo PhilippineTimeZone =
             TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
 
-        // If 5 or fewer available days remain, show next month automatically
+        // Threshold to determine when to show next month's availability in the calendar view
         private const int ALMOST_FULL_THRESHOLD = 5;
 
         public CalendarController(ApplicationDbContext context)
@@ -31,6 +25,7 @@ namespace KlawQ.Controllers
             _context = context;
         }
 
+        // To determine max slots for a given day of the week
         private static int GetMaxSlotsForDay(DayOfWeek day) => day switch
         {
             DayOfWeek.Tuesday => 0, // Closed
@@ -39,6 +34,7 @@ namespace KlawQ.Controllers
             _ => 4  // Mon, Thu, Fri, Sun: 10 AM, 2 PM, 6 PM, 9 PM
         };
 
+        // To determine business hours for a given day of the week
         private static int[] GetBusinessHoursForDay(DayOfWeek day) => day switch
         {
             DayOfWeek.Tuesday => Array.Empty<int>(),
@@ -47,15 +43,20 @@ namespace KlawQ.Controllers
             _ => new[] { 10, 14, 18, 21 } // 10 AM, 2 PM, 6 PM, 9 PM
         };
 
+        // To format hour integers into user-friendly time strings (e.g. 14 -> "2:00 PM")
         private static string GetFormattedTime(int hour) =>
             new DateTime(2000, 1, 1, hour, 0, 0)
                 .ToString("h:mm tt", CultureInfo.InvariantCulture); // Example: "2:00 PM"
 
+        // To get current time in Philippine timezone
         private static DateTime NowInPH() =>
             TimeZoneInfo.ConvertTime(DateTime.UtcNow, PhilippineTimeZone);
 
+        // To get today's date in Philippine timezone (time component set to 00:00:00)
         private static DateTime TodayInPH() => NowInPH().Date;
 
+
+        // Endpoint to get availability status for each day of the current month (and next month if almost full)
         [HttpGet("current-view-status")]
         public async Task<IActionResult> GetCurrentCalendarView()
         {
@@ -84,10 +85,12 @@ namespace KlawQ.Controllers
         }
 
 
+        // Endpoint to get hourly slot availability for a specific day
         [HttpGet("day-slots-status")]
         public async Task<IActionResult> GetDaySlotsStatus([FromQuery] string chosenDate)
         {
 
+            // Validate date format first (expects "yyyy-MM-dd")
             if (!DateTime.TryParseExact(
                     chosenDate,
                     "yyyy-MM-dd",
@@ -98,18 +101,33 @@ namespace KlawQ.Controllers
                 return BadRequest("Invalid date format. Please use yyyy-MM-dd (e.g. 2025-06-15).");
             }
 
+            // If the chosen date is in the past or today (compared to Philippine time), return empty array
+            if (parsedDate.Date <= TodayInPH())
+            {
+                return Ok(new List<object>()); // Return empty array []
+            }
+
+            // If the chosen date is tomorrow, also return empty array since next-day bookings are not allowed
+            if (parsedDate.Date == TodayInPH().AddDays(1))
+            {
+                return Ok(new List<object>()); // Return empty array []
+            }
+
             // Fetch all existing bookings for this specific day in one DB trip
             var bookingsForDay = await _context.Schedulers
                 .Where(s => s.Appointment_Date.Date == parsedDate.Date)
                 .ToListAsync();
 
+            // Get the business hours for this day of the week
             int[] businessHours = GetBusinessHoursForDay(parsedDate.DayOfWeek);
 
             // Use Philippine timezone for "is this slot in the past?" check
             DateTime nowPH = NowInPH();
 
+            // Build the response array with availability status for each hourly slot
             var hourlySlots = new List<object>();
 
+            // For each business hour, determine if it's already booked or in the past
             foreach (int hour in businessHours)
             {
                 DateTime exactSlotTime = parsedDate.Date.AddHours(hour);
@@ -131,13 +149,38 @@ namespace KlawQ.Controllers
         }
 
 
-        [HttpPost("book")]
-        public async Task<IActionResult> BookSlot([FromBody] Scheduler newBooking)
+        // Endpoint to attempt booking a specific time slot on a specific day
+        [HttpPost("booking")]
+        public async Task<IActionResult> BookSlot([FromBody] BookingRequest newBooking)
         {
             // Guard against past bookings using Philippine time
             if (newBooking.Time_Slot < NowInPH())
             {
                 return BadRequest("Booking failed: You cannot select a time slot in the past!");
+            }
+
+            // Guard against same-day bookings using Philippine time
+            if (newBooking.Appointment_Date.Date == TodayInPH())
+            {
+                return BadRequest("Booking failed: You cannot book a time slot for the current day!");
+            }
+
+            if (newBooking.Appointment_Date.Date == TodayInPH().AddDays(1))
+            {
+                return BadRequest("Booking failed: You cannot book a time slot for tomorrow!");
+            }
+
+            if (newBooking.AppId <= 0)
+            {
+                return BadRequest("Booking failed: A valid Appointment ID is required!");
+            }
+
+            bool appointmentExists = await _context.Appointments
+                .AnyAsync(a => a.AppId == newBooking.AppId);
+
+            if (!appointmentExists)
+            {
+                return BadRequest("Booking failed: The provided Appointment ID does not exist!");
             }
 
             DayOfWeek dayOfWeek = newBooking.Appointment_Date.DayOfWeek;
@@ -146,6 +189,15 @@ namespace KlawQ.Controllers
             if (dayOfWeek == DayOfWeek.Tuesday)
             {
                 return BadRequest("Booking failed: The shop is closed on Tuesdays!");
+            }
+
+            // Check if the submitted time slot is a valid business hour
+            int[] validHours = GetBusinessHoursForDay(newBooking.Appointment_Date.DayOfWeek);
+            int submittedHour = newBooking.Time_Slot.Hour;
+
+            if (!validHours.Contains(submittedHour))
+            {
+                return BadRequest("Booking failed: The submitted time slot is not a valid business hour for this day!");
             }
 
             // Uses shared helper : no duplicated switch block here
@@ -170,14 +222,20 @@ namespace KlawQ.Controllers
                 return BadRequest("Booking failed: This date has reached full operational capacity!");
             }
 
-            // All validation passed : save to SQL Server
-            _context.Schedulers.Add(newBooking);
+            var scheduler = new Scheduler
+            {
+                AppId = newBooking.AppId,
+                Appointment_Date = newBooking.Appointment_Date,
+                Time_Slot = newBooking.Time_Slot
+            };
+
+            _context.Schedulers.Add(scheduler);
             await _context.SaveChangesAsync();
 
             return Ok("Appointment locked in and saved to database successfully!");
         }
 
-
+        // To get availability status for each day of a given month and year
         private async Task<List<CalendarDayStatus>> GetDaysStatusForMonth(int year, int month)
         {
             // Pull all entries for this month in one DB trip (avoids N+1 queries)
@@ -202,6 +260,14 @@ namespace KlawQ.Controllers
                 if (loopDate.Date < todayPH)
                 {
                     isAvailable = false; // Past dates are locked
+                }
+                else if (loopDate.Date == todayPH)
+                {
+                    isAvailable = false; // Same-day bookings are not allowed
+                }
+                else if (loopDate.Date == todayPH.AddDays(1))
+                {
+                    isAvailable = false; // Next-day bookings are not allowed
                 }
                 else if (loopDate.DayOfWeek == DayOfWeek.Tuesday)
                 {

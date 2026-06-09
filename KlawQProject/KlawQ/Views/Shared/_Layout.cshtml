@@ -17,7 +17,7 @@
                         <li><a href="#home">Home</a></li>
                         <li><a href="#gallery">Gallery</a></li>
                         <li><a href="#bookmarks">My Bookmarks</a></li>
-                        <li><a href="#appointment">Appointment</a></li>
+                        <li><a asp-controller="Appointment" asp-action="Index">Appointment</a></li>
                         <li><a href="/Account/Logout" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Logout</a></li>
                     </ul>
                 }
@@ -52,5 +52,10 @@
             Made with ♥ by Klaw By Krys © 2026
         </div>
     </footer>
+<<<<<<< HEAD
+=======
+
+    @RenderSection("Scripts", required: false)
+>>>>>>> bfc05f5a10b3eda5a0645cc09bc761d3bebd7cb3
 </body>
 </html>
