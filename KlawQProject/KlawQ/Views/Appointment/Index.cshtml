@@ -43,10 +43,14 @@
     /* Modal */
     .modal.hidden { display:none !important; }
     .overlay { position:fixed; inset:0; backdrop-filter:blur(8px); background:rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; z-index:50; }
-    .modal-box { display:flex; gap:24px; max-width:1000px; width:90%; }
+    .modal-box { display:flex; gap:24px; max-width:1000px; width:90%; position:relative; }
     .modal-frame { background:var(--panel-pink); border-radius:12px; padding:24px; border:2px solid rgba(139,75,59,0.1); flex:1; }
     .modal-frame h4 { color:var(--brand-brown); margin-bottom:12px; font-size:16px; }
     .modal-frame p { color:#8a6a62; font-size:13px; margin-bottom:16px; }
+
+    /* Back button positioned top-right of modal */
+    .modal-overlay .back-btn { position:absolute; right:12px; top:12px; background:transparent; border:1px solid rgba(139,75,59,0.08); color:var(--brand-brown); padding:8px 10px; border-radius:8px; cursor:pointer; }
+    .modal-overlay .back-btn:hover { background:var(--accent-pink); }
 
     /* Calendar */
     .calendar-month { text-align:center; color:var(--brand-brown); font-weight:600; margin-bottom:12px; }
@@ -126,7 +130,8 @@
 
 <!-- Modal: Date & Time Selection -->
 <div id="bookingModal" class="modal hidden">
-    <div class="overlay">
+    <div class="overlay modal-overlay" style="position:relative;">
+        <button type="button" class="back-btn" id="backToForm">← Back</button>
         <div class="modal-box">
             <!-- Left: Calendar -->
             <div class="modal-frame">
@@ -136,7 +141,6 @@
                 <div class="calendar-grid weekday-row" id="calendarWeekdays"></div>
                 <div class="calendar-grid" id="calendarGrid">Loading...</div>
                 <div style="text-align:center; margin-top:12px; display:flex; justify-content:center; gap:8px;">
-                    <button type="button" class="calendar-nav" id="backToForm">← Back</button>
                     <button type="button" class="calendar-nav" id="prevMonth">← Prev</button>
                     <button type="button" class="calendar-nav" id="nextMonth">Next →</button>
                 </div>
@@ -542,8 +546,10 @@
             const dayRes = await fetch(`/api/calendar/day-slots-status?chosenDate=${selectedSlotDate}`);
             if (!dayRes.ok) { alert('Failed to verify slot availability'); return; }
             const slots = await dayRes.json();
-            const chosen = slots.find(s => s.SlotHour == selectedSlotTime);
-            if (!chosen || !chosen.IsAvailable) {
+            // normalize property names (support both PascalCase and camelCase)
+            const chosen = slots.find(s => (s.SlotHour ?? s.slotHour) == selectedSlotTime);
+            const isAvailable = chosen ? ((chosen.IsAvailable ?? chosen.isAvailable) === undefined ? true : (chosen.IsAvailable ?? chosen.isAvailable)) : false;
+            if (!chosen || !isAvailable) {
                 alert('Selected slot is no longer available. Please choose another date/time.');
                 return;
             }
