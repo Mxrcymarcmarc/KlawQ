@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Concurrent;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace KlawQ.Controllers
 {
@@ -47,7 +48,8 @@ namespace KlawQ.Controllers
             if (string.IsNullOrWhiteSpace(gcashEndpoint))
             {
                 var pid = Guid.NewGuid().ToString();
-                var paymentUrl = $"/api/payments/mock-confirm?paymentId={pid}&appointmentId={req.AppointmentId}";
+                // Use a friendly mock payment UI page instead of raw JSON endpoint
+                var paymentUrl = $"/Payments/MockPage?paymentId={pid}&appointmentId={req.AppointmentId}";
                 _paymentStatus[pid] = false; // not paid yet
                 return Ok(new CreatePaymentResponse { Success = true, PaymentId = pid, PaymentUrl = paymentUrl });
             }

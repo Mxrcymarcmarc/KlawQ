@@ -8,6 +8,7 @@ namespace KlawQ.Controllers
     [Authorize(Roles = "User")]
     public class HomeController : Controller
     {
+        [AllowAnonymous]
         public IActionResult Index()
         {
             return View();

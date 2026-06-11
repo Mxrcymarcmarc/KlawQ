@@ -130,7 +130,7 @@
 
 <!-- Modal: Date & Time Selection -->
 <div id="bookingModal" class="modal hidden">
-    <div class="overlay modal-overlay" style="position:relative;">
+    <div class="overlay modal-overlay">
         <button type="button" class="back-btn" id="backToForm">← Back</button>
         <div class="modal-box">
             <!-- Left: Calendar -->
@@ -614,14 +614,17 @@
                         clearInterval(window._paymentPoll.id);
                         window._paymentPoll.id = null;
                         // mark down payment and finish
-                        const updateRes = await fetch(`/Appointment/UpdateDownPayment?id=${appointmentId}`, { method: 'POST' });
+                        const updateRes = await fetch(`/Appointment/UpdateDownPayment?id=${appointmentId}`, { method: 'POST', credentials: 'same-origin' });
                         if (updateRes.ok) {
                             alert('✓ Downpayment recorded! Your appointment has been confirmed.');
                             document.getElementById('paymentModal').classList.add('hidden');
                             tempAppointmentData = null;
                             location.href = '/Home/Index';
                         } else {
-                            alert('Error recording payment. Please try again.');
+                            // try to surface server error for easier debugging
+                            const errText = await updateRes.text().catch(()=>null);
+                            console.error('UpdateDownPayment failed', updateRes.status, errText);
+                            alert('Error recording payment. Please try again. Server response: ' + (errText || updateRes.statusText));
                         }
                     } else if (attempts >= maxAttempts) {
                         clearInterval(window._paymentPoll.id);
