@@ -11,10 +11,12 @@ namespace KlawQ.Controllers
     public class AppointmentController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<AppointmentController> _logger;
 
-        public AppointmentController(ApplicationDbContext context)
+        public AppointmentController(ApplicationDbContext context, ILogger<AppointmentController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public IActionResult Index()
@@ -74,18 +76,30 @@ namespace KlawQ.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("UpdateDownPayment")]
         public async Task<IActionResult> UpdateDownPayment(int id)
         {
-            var appointment = await _context.Appointments.FindAsync(id);
-            if (appointment == null)
-                return NotFound();
+            try
+            {
+                var appointment = await _context.Appointments.FindAsync(id);
+                if (appointment == null)
+                {
+                    _logger?.LogWarning("UpdateDownPayment: appointment {Id} not found", id);
+                    return NotFound(new { success = false, error = "Appointment not found" });
+                }
 
-            appointment.Down_Payment_Paid = true;
-            _context.Appointments.Update(appointment);
-            await _context.SaveChangesAsync();
+                appointment.Down_Payment_Paid = true;
+                _context.Appointments.Update(appointment);
+                await _context.SaveChangesAsync();
 
-            return Ok();
+                _logger?.LogInformation("UpdateDownPayment: appointment {Id} marked as paid", id);
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "UpdateDownPayment failed for id {Id}", id);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
         }
 
         [HttpGet("debug")]
