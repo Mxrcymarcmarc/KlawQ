@@ -264,8 +264,14 @@
         }
 
         const json = await res.json();
-        console.log('Appointment created with ID:', json.AppId);
-        return json.AppId;
+        // support both camelCase (appId) and PascalCase (AppId)
+        const appId = json.appId ?? json.AppId;
+        console.log('Create appointment response:', json, 'resolved appId:', appId);
+        if (!appId) {
+            alert('Failed to create appointment: invalid server response');
+            return null;
+        }
+        return appId;
     }
 
     // Proceed button: validate form and show calendar modal (don't save yet)
