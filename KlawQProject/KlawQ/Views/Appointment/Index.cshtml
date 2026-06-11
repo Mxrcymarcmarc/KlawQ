@@ -133,8 +133,10 @@
                 <h4>1. Select Date</h4>
                 <p>Select a specific date on the calendar slot to reserve appointment schedule.</p>
                 <div class="calendar-month" id="calendarMonthLabel">June 2026</div>
+                <div class="calendar-grid weekday-row" id="calendarWeekdays"></div>
                 <div class="calendar-grid" id="calendarGrid">Loading...</div>
-                <div style="text-align:center; margin-top:12px;">
+                <div style="text-align:center; margin-top:12px; display:flex; justify-content:center; gap:8px;">
+                    <button type="button" class="calendar-nav" id="backToForm">← Back</button>
                     <button type="button" class="calendar-nav" id="prevMonth">← Prev</button>
                     <button type="button" class="calendar-nav" id="nextMonth">Next →</button>
                 </div>
@@ -316,6 +318,24 @@
         document.getElementById('calendarMonthLabel').innerText = currentMonth.toLocaleDateString(undefined, {month:'long', year:'numeric'});
         console.log('Rendering calendar for', year, month + 1, 'allDays length', Array.isArray(allDays) ? allDays.length : 0);
 
+        // Render weekday headers (MON, TUE, ...)
+        const weekdays = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+        const wk = document.getElementById('calendarWeekdays');
+        if (wk) {
+            wk.innerHTML = '';
+            weekdays.forEach(w => {
+                const wEl = document.createElement('div');
+                wEl.className = 'day';
+                wEl.style.pointerEvents = 'none';
+                wEl.style.background = 'transparent';
+                wEl.style.border = 'none';
+                wEl.style.color = 'var(--brand-brown)';
+                wEl.style.fontWeight = '600';
+                wEl.innerText = w;
+                wk.appendChild(wEl);
+            });
+        }
+
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -327,8 +347,8 @@
 
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayData = Array.isArray(allDays) ? allDays.find(d => d && typeof d.DateString === 'string' && d.DateString === dateStr) : null;
-            const isAvailable = !!(dayData && dayData.IsAvailable);
+            const dayData = Array.isArray(allDays) ? allDays.find(d => d && typeof d.dateString === 'string' && d.dateString === dateStr) : null;
+            const isAvailable = !!(dayData && dayData.isAvailable);
 
             const el = document.createElement('div');
             el.className = 'day';
@@ -427,16 +447,17 @@
                 const btn = document.createElement('button');
                 btn.className = 'slot-btn';
                 btn.type = 'button';
-                btn.innerText = s.FormattedTime;
-                if (!s.IsAvailable) {
+                // use camelCase properties returned by ASP.NET JSON
+                btn.innerText = s.formattedTime || s.FormattedTime || '';
+                if (!s.isAvailable && s.isAvailable !== undefined) {
                     btn.disabled = true;
                     btn.style.opacity = '0.5';
                 }
                 btn.addEventListener('click', () => {
-                    if (s.IsAvailable) {
+                    if ((s.isAvailable !== undefined && s.isAvailable) || s.IsAvailable) {
                         document.querySelectorAll('.slot-btn').forEach(x => x.classList.remove('selected'));
                         btn.classList.add('selected');
-                        selectedSlotHour = s.SlotHour;
+                        selectedSlotHour = s.slotHour ?? s.SlotHour;
                         document.getElementById('confirmBooking').disabled = false;
                         console.log('Selected slot hour:', selectedSlotHour);
                     }
@@ -449,6 +470,13 @@
             document.getElementById('timeSlots').innerText = 'Error loading time slots. Please check the console for details.';
         }
     }
+
+    document.getElementById('backToForm').addEventListener('click', () => {
+        // Close calendar modal and return user to the appointment form
+        document.getElementById('bookingModal').classList.add('hidden');
+        // Scroll to top so form is visible
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 
     document.getElementById('prevMonth').addEventListener('click', async (e) => {
         const prevBtn = document.getElementById('prevMonth');
@@ -540,44 +568,75 @@
             return;
         }
 
-        // Mock GCash payment flow: create payment and confirm immediately (simulated)
+        // Create payment (GCash or mock)
+        let paymentId = null;
         try {
-            const payRes = await fetch('/api/payments/gcash-mock', {
+            const createRes = await fetch('/api/payments/create', {
                 method: 'POST',
                 headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({ AppointmentId: appointmentId, Amount: 150 })
             });
-            const payJson = await payRes.json();
-            console.log('Mock payment created:', payJson);
-            // Simulate user completing payment by calling the confirm URL
-            const confirmRes = await fetch(payJson.paymentUrl);
-            const confirmJson = await confirmRes.json();
-            console.log('Mock payment confirm:', confirmJson);
-            if (!confirmJson.success) {
-                alert('Payment failed during mock flow.');
-                return;
+            if (!createRes.ok) { const txt = await createRes.text(); alert('Failed creating payment: ' + txt); return; }
+            const createJson = await createRes.json();
+            console.log('Payment creation response:', createJson);
+            if (!createJson.success) { alert('Payment creation failed: ' + (createJson.error || 'unknown')); return; }
+            paymentId = createJson.paymentId || createJson.PaymentId;
+            const paymentUrl = createJson.paymentUrl || createJson.PaymentUrl;
+            if (paymentUrl) {
+                // open payment page in new window/tab
+                window.open(paymentUrl, '_blank');
             }
+            // Poll for payment status
+            const maxAttempts = 60; // ~60 seconds
+            let attempts = 0;
+            const pollInterval = 1000; // ms
+            window._paymentPoll = window._paymentPoll || {};
+            if (window._paymentPoll.id) clearInterval(window._paymentPoll.id);
+            window._paymentPoll.id = setInterval(async () => {
+                attempts++;
+                try {
+                    const statusRes = await fetch('/api/payments/status?paymentId=' + encodeURIComponent(paymentId));
+                    if (!statusRes.ok) return;
+                    const statusJson = await statusRes.json();
+                    if (statusJson.paid) {
+                        clearInterval(window._paymentPoll.id);
+                        window._paymentPoll.id = null;
+                        // mark down payment and finish
+                        const updateRes = await fetch(`/Appointment/UpdateDownPayment?id=${appointmentId}`, { method: 'POST' });
+                        if (updateRes.ok) {
+                            alert('✓ Downpayment recorded! Your appointment has been confirmed.');
+                            document.getElementById('paymentModal').classList.add('hidden');
+                            tempAppointmentData = null;
+                            location.href = '/Home/Index';
+                        } else {
+                            alert('Error recording payment. Please try again.');
+                        }
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(window._paymentPoll.id);
+                        window._paymentPoll.id = null;
+                        alert('Payment not completed. You can retry or cancel.');
+                    }
+                } catch (e) { console.error('Polling error', e); }
+            }, pollInterval);
         } catch (e) {
             console.error(e);
-            alert('Error during mock payment flow');
+            alert('Error during payment creation flow');
             return;
-        }
-
-        // Update down payment status
-        const updateRes = await fetch(`/Appointment/UpdateDownPayment?id=${appointmentId}`, { method: 'POST' });
-        if (updateRes.ok) {
-            alert('✓ Downpayment recorded! Your appointment has been confirmed.');
-            document.getElementById('paymentModal').classList.add('hidden');
-            tempAppointmentData = null;
-            location.href = '/Home/Index';
-        } else {
-            alert('Error recording payment. Please try again.');
         }
     });
 
-    document.getElementById('cancelPayment').addEventListener('click', () => {
+    document.getElementById('cancelPayment').addEventListener('click', async () => {
+        // Stop any ongoing payment polling
+        if (window._paymentPoll && window._paymentPoll.id) {
+            clearInterval(window._paymentPoll.id);
+            window._paymentPoll.id = null;
+        }
         document.getElementById('paymentModal').classList.add('hidden');
         document.getElementById('bookingModal').classList.remove('hidden');
+        // Refresh calendar availability when returning from payment
+        try {
+            await loadCalendarForMonth(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
+        } catch (e) { console.error('Error refreshing calendar after cancel', e); }
     });
 </script>
 }
