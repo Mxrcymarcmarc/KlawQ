@@ -291,5 +291,15 @@ namespace KlawQ.Controllers
 
             return daysList;
         }
+
+        [HttpGet("month-status")]
+        public async Task<IActionResult> GetMonthStatus([FromQuery] int year, [FromQuery] int month)
+        {
+            if (year <= 0 || month < 1 || month > 12)
+                return BadRequest("Invalid year or month");
+
+            var days = await GetDaysStatusForMonth(year, month);
+            return Ok(days);
+        }
     }
 }

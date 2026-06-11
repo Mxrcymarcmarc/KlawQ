@@ -51,14 +51,15 @@
     /* Calendar */
     .calendar-month { text-align:center; color:var(--brand-brown); font-weight:600; margin-bottom:12px; }
     .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
-    .day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; background:#fff; border:1px solid var(--accent-pink); cursor:pointer; font-size:14px; color:var(--brand-brown); }
-    .day:hover { background:var(--accent-pink); }
-    .day.unavailable { opacity:0.3; cursor:not-allowed; background:#f0f0f0; }
+    .day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; background:#fff; border:1px solid var(--accent-pink); cursor:pointer; font-size:14px; color:var(--brand-brown); pointer-events:auto; transition:all 0.2s ease; }
+    .day:hover { background:var(--accent-pink); transform:scale(1.05); }
     .day.selected { background:var(--cta-green); color:#fff; border-color:var(--cta-green); }
+    .day.unavailable { opacity:0.3; cursor:not-allowed; background:#f0f0f0; pointer-events:none; }
 
-    /* Time slots */
-    .slot-btn { display:block; width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid rgba(139,75,59,0.1); background:#fff; cursor:pointer; color:var(--brand-brown); }
-    .slot-btn:hover { background:var(--accent-pink); }
+    /* Time slot grid */
+    .slot-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:8px; }
+    .slot-btn { display:block; width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid rgba(139,75,59,0.1); background:#fff; cursor:pointer; color:var(--brand-brown); transition:all 0.2s ease; }
+    .slot-btn:hover:not(:disabled) { background:var(--accent-pink); transform:translateY(-2px); }
     .slot-btn.selected { background:var(--cta-green); color:#fff; border-color:var(--cta-green); }
     .slot-btn:disabled { opacity:0.4; cursor:not-allowed; }
 
@@ -267,20 +268,44 @@
 
     // Proceed button: validate form and show calendar modal (don't save yet)
     document.getElementById('proceedBtn').addEventListener('click', async () => {
+        console.log('Proceed button clicked');
         const isValid = await validateAndStoreFormData();
-        if (!isValid) return;
+        console.log('Validation result:', isValid);
+        if (!isValid) {
+            console.log('Validation failed, returning');
+            return;
+        }
         
         // Show calendar modal without saving
+        console.log('Showing calendar modal');
         document.getElementById('bookingModal').classList.remove('hidden');
         currentMonth = new Date();
-        await loadCalendar();
+        console.log('Loading calendar for month...');
+        await loadCalendarForMonth(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
+        console.log('Calendar loaded');
     });
 
-    async function loadCalendar() {
-        const res = await fetch('/api/calendar/current-view-status');
-        const days = await res.json();
-        allDays = days;
-        renderCalendar();
+    async function loadCalendarForMonth(year, month) {
+        try {
+            const res = await fetch(`/api/calendar/month-status?year=${year}&month=${month}`);
+            console.log('Calendar API response status:', res.status);
+            if (!res.ok) {
+                console.error('Calendar API error:', res.statusText);
+                document.getElementById('calendarGrid').innerText = 'Error loading calendar';
+                return;
+            }
+            const days = await res.json();
+            console.log('Days received for', year, month, ':', days.length);
+            // Replace month data for the current view (avoid carrying undefined entries)
+            allDays = days.slice(); // use only fresh month data for rendering
+            // Ensure allDays is always an array
+            if (!Array.isArray(allDays)) allDays = [];
+
+            renderCalendar();
+        } catch (error) {
+            console.error('Error loading calendar:', error);
+            document.getElementById('calendarGrid').innerText = 'Error loading calendar: ' + error.message;
+        }
     }
 
     function renderCalendar() {
@@ -289,6 +314,7 @@
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth();
         document.getElementById('calendarMonthLabel').innerText = currentMonth.toLocaleDateString(undefined, {month:'long', year:'numeric'});
+        console.log('Rendering calendar for', year, month + 1, 'allDays length', Array.isArray(allDays) ? allDays.length : 0);
 
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -301,23 +327,64 @@
 
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayData = allDays.find(d => d.DateString === dateStr);
-            const isAvailable = dayData?.IsAvailable || false;
+            const dayData = Array.isArray(allDays) ? allDays.find(d => d && typeof d.DateString === 'string' && d.DateString === dateStr) : null;
+            const isAvailable = !!(dayData && dayData.IsAvailable);
 
             const el = document.createElement('div');
             el.className = 'day';
             if (!isAvailable) el.classList.add('unavailable');
             el.innerText = day;
+            el.dataset.date = dateStr;
+            el.tabIndex = 0;
+            el.setAttribute('role', 'button');
+            el.setAttribute('aria-disabled', (!isAvailable).toString());
+            el.style.pointerEvents = isAvailable ? 'auto' : 'none';
 
+            // Attach explicit event listeners to each day element so clicks always work even if delegation is prevented by overlays
             if (isAvailable) {
-                el.addEventListener('click', () => selectDate(dateStr, el));
+                el.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    selectDate(el.dataset.date, el);
+                });
+                el.addEventListener('keydown', (ev) => {
+                    if (ev.key === 'Enter' || ev.key === ' ') {
+                        ev.preventDefault();
+                        selectDate(el.dataset.date, el);
+                    }
+                });
+            } else {
+                // ensure unavailable elements are not focusable or interactive
+                el.tabIndex = -1;
             }
 
             grid.appendChild(el);
         }
+
+        // Disable Prev button if we're at or before the current month
+        const prevBtn = document.getElementById('prevMonth');
+        const nextBtn = document.getElementById('nextMonth');
+        const today = new Date();
+        const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const viewMonthFirst = new Date(year, month, 1);
+        if (viewMonthFirst <= firstOfThisMonth) {
+            prevBtn.disabled = true;
+            prevBtn.style.opacity = '0.5';
+            prevBtn.style.pointerEvents = 'none';
+        } else {
+            prevBtn.disabled = false;
+            prevBtn.style.opacity = '';
+            prevBtn.style.pointerEvents = '';
+        }
+
+        // Show debug JSON to help diagnose availability (remove in production)
+        const dbg = document.getElementById('calendarDebug');
+        if (dbg) dbg.innerText = JSON.stringify(allDays, null, 2);
+
+        // Keep delegation for fallback but explicit listeners are preferred now
     }
 
     async function selectDate(dateStr, element) {
+        console.log('=== selectDate called with:', dateStr);
         document.querySelectorAll('.day.selected').forEach(d => d.classList.remove('selected'));
         element.classList.add('selected');
 
@@ -325,47 +392,82 @@
         selectedSlotHour = null;
         document.getElementById('confirmBooking').disabled = true;
 
-        const date = new Date(dateStr);
-        document.getElementById('selectedDateDisplay').innerText = `Available time slot as of ${date.toLocaleDateString()} (Current Date)`;
+        const date = new Date(dateStr + 'T00:00:00');
+        const displayDate = date.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'});
+        document.getElementById('selectedDateDisplay').innerText = `Available time slot as of ${displayDate} (Current Date)`;
 
-        const res = await fetch('/api/calendar/day-slots-status?chosenDate=' + dateStr);
-        const slots = await res.json();
-        const container = document.getElementById('timeSlots');
-        container.innerHTML = '';
-
-        if (!slots || slots.length === 0) {
-            container.innerText = 'No available slots for this date.';
-            return;
-        }
-
-        slots.forEach(s => {
-            const btn = document.createElement('button');
-            btn.className = 'slot-btn';
-            btn.type = 'button';
-            btn.innerText = s.FormattedTime;
-            if (!s.IsAvailable) {
-                btn.disabled = true;
+        try {
+            const apiUrl = '/api/calendar/day-slots-status?chosenDate=' + dateStr;
+            console.log('Fetching slots from:', apiUrl);
+            const res = await fetch(apiUrl);
+            console.log('API Response status:', res.status);
+            
+            if (!res.ok) {
+                const errorText = await res.text();
+                console.error('Error response body:', errorText);
+                document.getElementById('timeSlots').innerText = 'Error loading time slots. Please try again.';
+                return;
             }
-            btn.addEventListener('click', () => {
-                if (s.IsAvailable) {
-                    document.querySelectorAll('.slot-btn').forEach(x => x.classList.remove('selected'));
-                    btn.classList.add('selected');
-                    selectedSlotHour = s.SlotHour;
-                    document.getElementById('confirmBooking').disabled = false;
+            
+            const slots = await res.json();
+            console.log('Slots received:', slots);
+            const container = document.getElementById('timeSlots');
+            console.log('Container element:', container);
+            container.innerHTML = '';
+
+            if (!slots || slots.length === 0) {
+                console.log('No slots available for this date');
+                container.innerText = 'No available slots for this date.';
+                return;
+            }
+
+            console.log('Rendering', slots.length, 'slots');
+            slots.forEach(s => {
+                console.log('Creating button for slot:', s);
+                const btn = document.createElement('button');
+                btn.className = 'slot-btn';
+                btn.type = 'button';
+                btn.innerText = s.FormattedTime;
+                if (!s.IsAvailable) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
                 }
+                btn.addEventListener('click', () => {
+                    if (s.IsAvailable) {
+                        document.querySelectorAll('.slot-btn').forEach(x => x.classList.remove('selected'));
+                        btn.classList.add('selected');
+                        selectedSlotHour = s.SlotHour;
+                        document.getElementById('confirmBooking').disabled = false;
+                        console.log('Selected slot hour:', selectedSlotHour);
+                    }
+                });
+                container.appendChild(btn);
             });
-            container.appendChild(btn);
-        });
+            console.log('All slots rendered successfully');
+        } catch (error) {
+            console.error('Error fetching slots:', error);
+            document.getElementById('timeSlots').innerText = 'Error loading time slots. Please check the console for details.';
+        }
     }
 
-    document.getElementById('prevMonth').addEventListener('click', () => {
+    document.getElementById('prevMonth').addEventListener('click', async (e) => {
+        const prevBtn = document.getElementById('prevMonth');
+        if (prevBtn.disabled) return; // guard against clicking when disabled
         currentMonth.setMonth(currentMonth.getMonth() - 1);
-        renderCalendar();
+        await loadCalendarForMonth(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
     });
 
-    document.getElementById('nextMonth').addEventListener('click', () => {
+    document.getElementById('nextMonth').addEventListener('click', async (e) => {
+        // Prevent navigating back into past months via Next (defensive)
         currentMonth.setMonth(currentMonth.getMonth() + 1);
-        renderCalendar();
+        // If user navigated to a month before current month accidentally, clamp it
+        const today = new Date();
+        const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const viewMonthFirst = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+        if (viewMonthFirst < firstOfThisMonth) {
+            currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        }
+        await loadCalendarForMonth(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
     });
 
     document.getElementById('confirmBooking').addEventListener('click', async () => {
@@ -389,10 +491,31 @@
             return;
         }
 
+        if (!selectedSlotDate || selectedSlotTime == null) {
+            alert('Please select a date and a time slot before proceeding to payment.');
+            return;
+        }
+
         // NOW save the appointment with selected date/time
         const appointmentId = await createAppointment();
         if (!appointmentId) {
             alert('Failed to create appointment');
+            return;
+        }
+
+        // Pre-check slot availability to avoid race conditions
+        try {
+            const dayRes = await fetch(`/api/calendar/day-slots-status?chosenDate=${selectedSlotDate}`);
+            if (!dayRes.ok) { alert('Failed to verify slot availability'); return; }
+            const slots = await dayRes.json();
+            const chosen = slots.find(s => s.SlotHour == selectedSlotTime);
+            if (!chosen || !chosen.IsAvailable) {
+                alert('Selected slot is no longer available. Please choose another date/time.');
+                return;
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error verifying slot availability');
             return;
         }
 
@@ -412,7 +535,31 @@
         });
 
         if (!bookingRes.ok) {
-            alert('Failed to save appointment date/time');
+            const errText = await bookingRes.text().catch(()=>null);
+            alert('Failed to save appointment date/time: ' + (errText || bookingRes.statusText));
+            return;
+        }
+
+        // Mock GCash payment flow: create payment and confirm immediately (simulated)
+        try {
+            const payRes = await fetch('/api/payments/gcash-mock', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ AppointmentId: appointmentId, Amount: 150 })
+            });
+            const payJson = await payRes.json();
+            console.log('Mock payment created:', payJson);
+            // Simulate user completing payment by calling the confirm URL
+            const confirmRes = await fetch(payJson.paymentUrl);
+            const confirmJson = await confirmRes.json();
+            console.log('Mock payment confirm:', confirmJson);
+            if (!confirmJson.success) {
+                alert('Payment failed during mock flow.');
+                return;
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error during mock payment flow');
             return;
         }
 
