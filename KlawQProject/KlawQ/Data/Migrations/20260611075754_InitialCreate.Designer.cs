@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KlawQ.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260609122047_InitialCreate")]
+    [Migration("20260611075754_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
