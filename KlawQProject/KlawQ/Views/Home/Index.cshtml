@@ -49,11 +49,78 @@
     
     /* FAQ */
     .faq { margin:40px 0; }
-    .faq-item { background:#fff; border:1px solid #ddd; border-radius:12px; margin:10px 0; }
-    .faq-question { padding:15px; cursor:pointer; background:var(--panel-pink); }
-    .faq-question:hover { background:var(--accent-pink); }
-    .faq-answer { padding:15px; display:none; }
-    .faq-item.active .faq-answer { display:block; }
+
+    .faq-item {
+        background:#fff;
+        border:1px solid #e8d5d8;
+        border-radius:14px;
+        margin:12px 0;
+        overflow:hidden;
+        box-shadow:0 2px 8px rgba(139,75,59,.06);
+        transition: box-shadow .3s ease, transform .3s ease;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    .faq-item.faq-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .faq-item:hover {
+        box-shadow:0 6px 20px rgba(139,75,59,.13);
+        transform: translateY(-2px);
+    }
+    .faq-item.active {
+        border-color: var(--brand-brown);
+        box-shadow:0 6px 20px rgba(139,75,59,.15);
+    }
+
+    .faq-question {
+        padding: 18px 20px;
+        cursor: pointer;
+        background: var(--panel-pink);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--brand-brown);
+        transition: background .25s ease;
+        user-select: none;
+    }
+    .faq-question:hover { background: var(--accent-pink); }
+    .faq-item.active .faq-question { background: var(--accent-pink); }
+
+    .faq-arrow {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--brand-brown);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+        transition: transform .35s cubic-bezier(.4,0,.2,1), background .25s ease;
+    }
+    .faq-item.active .faq-arrow {
+        transform: rotate(180deg);
+        background: var(--cta-green);
+    }
+
+    .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height .4s cubic-bezier(.4,0,.2,1), padding .3s ease;
+        padding: 0 20px;
+        font-size: 13px;
+        color: #666;
+        line-height: 1.7;
+    }
+    .faq-item.active .faq-answer {
+        max-height: 200px;
+        padding: 14px 20px 18px;
+    }
     
     /* Footer */
     footer { background:var(--footer-brown); color:#fff; padding:30px; margin-top:60px; text-align:center; }
@@ -154,28 +221,51 @@
 
     <div class="section">
         <h2 class="section-title">✨ Frequently Asked Questions ✨</h2>
-        <div class="faq">
+        <div class="faq" id="faq-list">
             <div class="faq-item">
-                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">How long does a nail appointment take?</div>
+                <div class="faq-question" onclick="toggleFaq(this)">How long does a nail appointment take? <span class="faq-arrow">&#9660;</span></div>
                 <div class="faq-answer">Most appointments take 45-60 minutes depending on the complexity of your design.</div>
             </div>
             <div class="faq-item">
-                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">How do I book an appointment?</div>
+                <div class="faq-question" onclick="toggleFaq(this)">How do I book an appointment? <span class="faq-arrow">&#9660;</span></div>
                 <div class="faq-answer">You can book directly through our website or contact us via Instagram.</div>
             </div>
             <div class="faq-item">
-                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">What's your cancellation policy?</div>
+                <div class="faq-question" onclick="toggleFaq(this)">What's your cancellation policy? <span class="faq-arrow">&#9660;</span></div>
                 <div class="faq-answer">Cancellations must be made 24 hours in advance for a full refund.</div>
             </div>
             <div class="faq-item">
-                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">Do you offer nail art consultations?</div>
+                <div class="faq-question" onclick="toggleFaq(this)">Do you offer nail art consultations? <span class="faq-arrow">&#9660;</span></div>
                 <div class="faq-answer">Yes! We provide free consultations to discuss your nail design ideas.</div>
             </div>
             <div class="faq-item">
-                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">What products do you use?</div>
+                <div class="faq-question" onclick="toggleFaq(this)">What products do you use? <span class="faq-arrow">&#9660;</span></div>
                 <div class="faq-answer">We use only premium quality, eco-friendly nail products for the best results.</div>
             </div>
         </div>
+
+        <script>
+            function toggleFaq(questionEl) {
+                const item = questionEl.parentElement;
+                const isActive = item.classList.contains('active');
+                // Close all open items
+                document.querySelectorAll('.faq-item.active').forEach(i => i.classList.remove('active'));
+                // Open clicked one if it was closed
+                if (!isActive) item.classList.add('active');
+            }
+
+            // Scroll-triggered fade-in for FAQ items
+            const faqObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry, i) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => entry.target.classList.add('faq-visible'), i * 100);
+                        faqObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+
+            document.querySelectorAll('.faq-item').forEach(item => faqObserver.observe(item));
+        </script>
     </div>
 </div>
 
