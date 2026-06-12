@@ -1,0 +1,238 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin-dashboard.css" />
+}
+
+<div class="container">
+    <div class="page-title-section">
+        <h1 class="page-title"><i class="fas fa-shield-alt"></i> Admin Dashboard</h1>
+        <p class="page-subtitle">Manage your nail studio at a glance</p>
+    </div>
+
+    <div class="cards-grid">
+        <div class="card">
+            <div class="card-icon"><i class="fas fa-box"></i></div>
+            <div class="card-content">
+                <h3>Manage Portfolio</h3>
+                <p>Add/edit nail works</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon"><i class="far fa-calendar-times"></i></div>
+            <div class="card-content">
+                <h3>View Order Cancellations</h3>
+                <p>Check cancellations</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-icon"><i class="far fa-eye"></i></div>
+            <div class="card-content">
+                <h3>View Portfolio</h3>
+                <p>Public gallery view</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="cards-grid">
+        <div class="card revenue-card">
+            <div class="card-icon">₱</div>
+            <h3>Total Revenue</h3>
+            <h2>₱1000</h2>
+            <p>From completed orders</p>
+        </div>
+        <div class="card stat-card">
+            <div class="card-icon"><i class="fas fa-cube"></i></div>
+            <h3>Total Orders</h3>
+            <h2>6</h2>
+            <p>All Time</p>
+        </div>
+        <div class="card stat-card">
+            <div class="card-icon"><i class="far fa-clock"></i></div>
+            <h3>Pending Orders</h3>
+            <h2>1</h2>
+            <p>Awaiting confirmation</p>
+        </div>
+        <div class="card stat-card">
+            <div class="card-icon"><i class="far fa-check-circle"></i></div>
+            <h3>Completed Orders</h3>
+            <h2>3</h2>
+            <p>Successfully finished</p>
+        </div>
+        <div class="card stat-card">
+            <div class="card-icon"><i class="far fa-calendar-alt"></i></div>
+            <h3>This Week</h3>
+            <h2>6</h2>
+            <p>New bookings</p>
+        </div>
+    </div>
+
+    <div class="section-box">
+        <div class="section-header">
+            <h2><i class="fas fa-star"></i> Top Services</h2>
+        </div>
+        
+        <div class="service-item">
+            <div class="service-info">
+                <div class="rank-badge">#1</div>
+                <div class="service-details">
+                    <h4>Custom Nail Art Design</h4>
+                    <p>2 bookings</p>
+                </div>
+            </div>
+            <div class="service-price">
+                <h4>₱1020</h4>
+                <p>Total revenue</p>
+            </div>
+        </div>
+
+        <div class="service-item">
+            <div class="service-info">
+                <div class="rank-badge">#2</div>
+                <div class="service-details">
+                    <h4>Gel Manicure</h4>
+                    <p>8 bookings</p>
+                </div>
+            </div>
+            <div class="service-price">
+                <h4>₱900</h4>
+                <p>Total revenue</p>
+            </div>
+        </div>
+
+        <div class="service-item">
+            <div class="service-info">
+                <div class="rank-badge">#3</div>
+                <div class="service-details">
+                    <h4>Full Set with Tips</h4>
+                    <p>5 bookings</p>
+                </div>
+            </div>
+            <div class="service-price">
+                <h4>₱975</h4>
+                <p>Total revenue</p>
+            </div>
+        </div>
+
+        <div class="service-item">
+            <div class="service-info">
+                <div class="rank-badge">#4</div>
+                <div class="service-details">
+                    <h4>Luxury Spa Package</h4>
+                    <p>8 bookings</p>
+                </div>
+            </div>
+            <div class="service-price">
+                <h4>₱960</h4>
+                <p>Total revenue</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-box">
+        <div class="section-header">
+            <h2><i class="fas fa-user-friends"></i> Recent Orders</h2>
+            <span class="badge-total">6 total</span>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Service</th>
+                        <th>Qty</th>
+                        <th>Size</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                        <th>Date & Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>D-1</td>
+                        <td class="customer-info">Name Name<p>@@email.com</p></td>
+                        <td class="service-td">Custom Nail Art Design<p>+Add-ons</p></td>
+                        <td>1</td>
+                        <td>SML</td>
+                        <td class="price-text">₱100</td>
+                        <td class="price-text">₱100</td>
+                        <td>6/1/2026<br>14:00</td>
+                        <td><span class="status status-pending"><i class="far fa-clock"></i> Pending</span></td>
+                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td>D-2</td>
+                        <td class="customer-info">Name Name<p>@@email.com</p></td>
+                        <td class="service-td">Gel Manicure<p>+Add-ons</p></td>
+                        <td>1</td>
+                        <td>SML</td>
+                        <td class="price-text">₱100</td>
+                        <td class="price-text">₱100</td>
+                        <td>6/7/2026<br>10:20</td>
+                        <td><span class="status status-confirmed"><i class="fas fa-check-double"></i> Confirmed</span></td>
+                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td>D-4</td>
+                        <td class="customer-info">Name Name<p>@@email.com</p></td>
+                        <td class="service-td">Full Set with Tips<p>+Add-ons</p></td>
+                        <td>1</td>
+                        <td>SML</td>
+                        <td class="price-text">₱100</td>
+                        <td class="price-text">₱100</td>
+                        <td>6/8/2026<br>16:00</td>
+                        <td><span class="status status-completed"><i class="fas fa-check"></i> Completed</span></td>
+                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td>D-4</td>
+                        <td class="customer-info">Name Name<p>@@email.com</p></td>
+                        <td class="service-td">Luxury Spa Package</td>
+                        <td>1</td>
+                        <td>SML</td>
+                        <td class="price-text">₱100</td>
+                        <td class="price-text">₱100</td>
+                        <td>6/5/2026<br>13:00</td>
+                        <td><span class="status status-completed"><i class="fas fa-check"></i> Completed</span></td>
+                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td>D-5</td>
+                        <td class="customer-info">Name Name<p>@@email.com</p></td>
+                        <td class="service-td">Full Set Sculpted<p>+Add-ons</p></td>
+                        <td>1</td>
+                        <td>SML</td>
+                        <td class="price-text">₱100</td>
+                        <td class="price-text">₱100</td>
+                        <td>6/7/2026<br>11:00</td>
+                        <td><span class="status status-completed"><i class="fas fa-check"></i> Completed</span></td>
+                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td>D-6</td>
+                        <td class="customer-info">Name Name<p>@@email.com</p></td>
+                        <td class="service-td">Basic Manicure<p>+Add-ons</p></td>
+                        <td>1</td>
+                        <td>SML</td>
+                        <td class="price-text">₱100</td>
+                        <td class="price-text">₱100</td>
+                        <td>6/3/2026<br>15:30</td>
+                        <td><span class="status status-cancelled"><i class="fas fa-times"></i> Cancelled</span></td>
+                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
