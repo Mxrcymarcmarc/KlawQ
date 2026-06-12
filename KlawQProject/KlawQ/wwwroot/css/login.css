@@ -5,6 +5,7 @@
     --brand-brown: #8b4b3b; /* headings */
     --footer-brown: #6b4228; /* footer background */
     --cta-green: #88b04b; /* login button */
+    --font-brown: #8B5E34; /* Brown Fonts */
 }
 
 body {
@@ -15,47 +16,44 @@ body {
 }
 
 .login-container {
-    max-width: 900px;
+    max-width: clamp(600px, 85vw, 1100px); /* grows/shrinks with viewport */
+    width: 90%;
     margin: 40px auto;
     display: flex;
-    background: #fff;
+    justify-content: center;
+    background: transparent;
     border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    overflow: visible;
+    gap: 30px;
 }
 
 .left {
-    padding: 40px;
     flex: 1;
-    background: linear-gradient(#fff,var(--bg-pink));
+    padding: clamp(24px, 3vw, 50px);
+    background: transparent;
 }
 
     .left form {
         display: flex;
         flex-direction: column;
+        width: 100%;
     }
 
 .right {
     flex: 1;
-    padding: 40px;
-    background: #f9f0f2;
+    padding: 40px 30px;
+    background: transparent;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 }
 
-h1 {
-    font-family: 'Segoe Script', cursive;
-    color: var(--brand-brown);
-    font-size: 36px;
-    margin: 0 0 20px;
-}
-
 .input-field {
+    padding: clamp(10px, 1.5vw, 14px) 16px;
+    font-size: clamp(13px, 1.5vw, 16px);
     width: 100%;
-    padding: 12px 16px;
-    margin: 8px 0 16px;
+    margin: 6px 0 12px;
     border-radius: 14px;
     border: none;
     background: var(--panel-pink);
@@ -65,14 +63,21 @@ h1 {
 .btn {
     background: var(--cta-green);
     color: white;
-    padding: 10px 30px;
+    padding: 11px 0;
     border-radius: 20px;
     border: none;
     cursor: pointer;
-    margin-top: 20px;
-    align-self: center;
+    margin-top: 16px;
+    width: 100%;
+    transition: all 0.25s ease;
 }
 
+    .btn:hover {
+        background: #6fa03f !important;
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
 .right .logo-circle {
     width: 120px;
     height: 120px;
@@ -92,3 +97,66 @@ h1 {
     max-width: 240px;
 }
 
+.right .logo-circle {
+    width: 60px;
+    height: 60px;
+    background: var(--accent-pink);
+    border-radius: 50%;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.heading {
+    font-family: 'Shadows Into Light Two', cursive;
+    color: var(--brand-brown);
+    font-size: clamp(36px, 5vw, 80px); /* never too big or too small */
+    margin: 0 0 16px;
+    white-space: nowrap; /* keeps it on one line */
+}
+
+.description {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--font-brown);
+    font-size: clamp(14px, 2vw, 25px);
+    white-space: nowrap;
+}
+
+.brand-name {
+    font-family: 'Shadows Into Light Two', cursive;
+    color: var(--brand-brown);
+    font-size: clamp(24px, 3.5vw, 50px); /* never too big or too small */
+    margin: 0 0 16px;
+    white-space: nowrap;
+}
+
+.brand-description {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--font-brown);
+    font-size: clamp(14px, 2vw, 25px);
+    white-space: nowrap;
+}
+
+@media (max-width: 540px) {
+    .register-container {
+        flex-direction: column;
+        width: 95%;
+    }
+
+    .left {
+        flex: unset;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .right {
+        display: none;
+    }
+
+    .heading {
+        font-size: 40px; /* prevent overflow on small screens */
+    }
+
+    .description {
+        font-size: 16px;
+    }
+}

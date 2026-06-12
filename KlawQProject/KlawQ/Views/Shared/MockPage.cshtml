@@ -1,0 +1,62 @@
+@{
+    Layout = null;
+    var paymentId = (string)ViewData["PaymentId"];
+    var appointmentId = (int)ViewData["AppointmentId"];
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Complete Payment</title>
+    <style>
+        body{font-family:Segoe UI,Arial;background:#f9f6f6;display:flex;align-items:center;justify-content:center;height:100vh}
+        .card{background:#fff;padding:28px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.08);text-align:center;width:420px}
+        .btn{background:#88b04b;color:#fff;padding:10px 18px;border-radius:6px;border:none;cursor:pointer}
+        .muted{color:#7a5046}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Mock Payment</h2>
+        <p class="muted">This is a development mock page. Click to confirm payment for testing.</p>
+        <p><strong>Appointment ID: </strong>@appointmentId</p>
+        <p><strong>Payment ID: </strong>@paymentId</p>
+        <div style="margin-top:18px">
+            <button id="confirmBtn" class="btn">Confirm Payment</button>
+            <button id="cancelBtn" style="margin-left:10px;padding:10px 18px;border-radius:6px;border:1px solid #ccc;background:#eee;">Cancel</button>
+        </div>
+        <div id="status" style="margin-top:14px;color:#7a5046"></div>
+    </div>
+
+    <script>
+        const paymentId = '@paymentId';
+        const appointmentId = '@appointmentId';
+        document.getElementById('confirmBtn').addEventListener('click', async () => {
+            document.getElementById('status').innerText = 'Confirming payment...';
+            try {
+                const res = await fetch('/api/payments/mock-confirm?paymentId=' + encodeURIComponent(paymentId) + '&appointmentId=' + encodeURIComponent(appointmentId));
+                const json = await res.json();
+                if (json.success) {
+                    document.getElementById('status').innerText = 'Payment confirmed.';
+                    // Notify opener window if any
+                    try {
+                        if (window.opener && !window.opener.closed) {
+                            window.opener.postMessage({ paid: true, paymentId: paymentId, appointmentId: appointmentId }, window.location.origin);
+                        }
+                    } catch(e) { /* ignore */ }
+                    // Close the window after a short delay
+                    setTimeout(() => { window.close(); }, 900);
+                } else {
+                    document.getElementById('status').innerText = 'Failed: ' + (json.error || 'unknown');
+                }
+            } catch (e) {
+                document.getElementById('status').innerText = 'Error confirming payment';
+            }
+        });
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            window.close();
+        });
+    </script>
+</body>
+</html>

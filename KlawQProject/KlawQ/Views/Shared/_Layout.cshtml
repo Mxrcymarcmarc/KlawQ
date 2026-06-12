@@ -5,16 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Klaw By Krys</title>
     <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&family=Indie+Flower&family=Caveat:wght@400;700&family=Kalam:wght@300;400&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     @RenderSection("Styles", required: false)
 </head>
 <body>
     <nav>
         <div class="nav-container">
-            <a class="nav-brand" href="/">🎀 Klaw By Krys</a>
+            <a class="nav-brand" asp-controller="Home" asp-action="Index">🎀 Klaw By Krys</a>
             @if (ViewData["HideNavbar"] == null)
                 {
                     <ul class="nav-links">
-                        <li><a href="#home">Home</a></li>
+                        <li><a asp-controller="Home" asp-action="Index">Home</a></li>
                         <li><a href="#gallery">Gallery</a></li>
                         <li><a href="#bookmarks">My Bookmarks</a></li>
                         <li><a asp-controller="Appointment" asp-action="Index">Appointment</a></li>
