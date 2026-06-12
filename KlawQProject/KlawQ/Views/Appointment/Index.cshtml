@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="/css/site.css" />
 
 <style>
-    :root{
+    :root {
         --bg-pink: #fff5f6;
         --panel-pink: #fdeef0;
         --accent-pink: #fde0e2;
@@ -16,63 +16,341 @@
         --cta-green: #88b04b;
     }
 
-    body { background:var(--bg-pink); }
-    .appointment-wrap { max-width:1100px; margin:40px auto; padding:20px; }
+    body {
+        background: var(--bg-pink);
+    }
 
-    .top-header { text-align:center; margin-bottom:18px; }
-    .top-header h1 { font-family: 'Segoe UI', Arial; font-size:48px; color:var(--brand-brown); margin-bottom:6px; }
-    .top-header p { color:#8a6a62; margin-bottom:22px; }
+    .appointment-wrap {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 20px;
+    }
 
-    .service-card { background:var(--panel-pink); border-radius:12px; padding:18px; box-shadow:0 10px 25px rgba(0,0,0,.06); border:1px solid var(--accent-pink); }
-    .service-options { display:flex; gap:18px; }
-    .service-box { flex:1; padding:16px; border-radius:8px; background:#fff; border:2px solid transparent; box-shadow:0 6px 14px rgba(0,0,0,.04); cursor:pointer; }
-    .service-box.selected { border-color:var(--brand-brown); }
-    .service-box h4 { margin-bottom:8px; color:var(--brand-brown); }
-    .service-box p { color:#8a6a62; font-size:13px; }
+    .top-header {
+        text-align: center;
+        margin-bottom: 18px;
+    }
 
-    .info-card { background:var(--panel-pink); margin-top:28px; border-radius:12px; padding:22px; box-shadow:0 10px 25px rgba(0,0,0,.06); border:1px solid var(--accent-pink); }
-    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-    .input { display:flex; flex-direction:column; }
-    .input label { font-size:13px; color:#7a5046; margin-bottom:6px; }
-    .input input, .input textarea, .input select { padding:12px; border-radius:8px; border:1px solid rgba(139,75,59,0.08); background:#fff; font-family: "Segoe UI", Roboto, Arial; font-size:14px; }
-    .input textarea { min-height:100px; resize:none; }
+        .top-header h1 {
+            font-family: 'Segoe UI', Arial;
+            font-size: 48px;
+            color: var(--brand-brown);
+            margin-bottom: 6px;
+        }
 
-    .proceed { text-align:center; margin-top:28px; }
-    .btn-proceed { background:var(--cta-green); color:#fff; padding:12px 46px; border-radius:28px; border:none; font-weight:600; cursor:pointer; box-shadow:0 6px 12px rgba(136,176,75,0.18); }
+        .top-header p {
+            color: #8a6a62;
+            margin-bottom: 22px;
+        }
+
+    .service-card {
+        background: var(--panel-pink);
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 10px 25px rgba(0,0,0,.06);
+        border: 1px solid var(--accent-pink);
+    }
+
+    .service-options {
+        display: flex;
+        gap: 18px;
+    }
+
+    .service-box {
+        flex: 1;
+        padding: 16px;
+        border-radius: 8px;
+        background: #fff;
+        border: 2px solid transparent;
+        box-shadow: 0 6px 14px rgba(0,0,0,.04);
+        cursor: pointer;
+    }
+
+        .service-box.selected {
+            border-color: var(--brand-brown);
+        }
+
+        .service-box h4 {
+            margin-bottom: 8px;
+            color: var(--brand-brown);
+        }
+
+        .service-box p {
+            color: #8a6a62;
+            font-size: 13px;
+        }
+
+    .info-card {
+        background: var(--panel-pink);
+        margin-top: 28px;
+        border-radius: 12px;
+        padding: 22px;
+        box-shadow: 0 10px 25px rgba(0,0,0,.06);
+        border: 1px solid var(--accent-pink);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+
+    .input {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .input label {
+            font-size: 13px;
+            color: #7a5046;
+            margin-bottom: 6px;
+        }
+
+        .input input, .input textarea, .input select {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(139,75,59,0.08);
+            background: #fff;
+            font-family: "Segoe UI", Roboto, Arial;
+            font-size: 14px;
+        }
+
+        .input textarea {
+            min-height: 100px;
+            resize: none;
+        }
+
+    .proceed {
+        text-align: center;
+        margin-top: 28px;
+    }
+
+    .btn-proceed {
+        background: var(--cta-green);
+        color: #fff;
+        padding: 12px 46px;
+        border-radius: 28px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 6px 12px rgba(136,176,75,0.18);
+    }
 
     /* Modal */
-    .modal.hidden { display:none !important; }
-    .overlay { position:fixed; inset:0; backdrop-filter:blur(8px); background:rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; z-index:50; }
-    .modal-box { display:flex; gap:24px; max-width:1000px; width:90%; position:relative; }
-    .modal-frame { background:var(--panel-pink); border-radius:12px; padding:24px; border:2px solid rgba(139,75,59,0.1); flex:1; }
-    .modal-frame h4 { color:var(--brand-brown); margin-bottom:12px; font-size:16px; }
-    .modal-frame p { color:#8a6a62; font-size:13px; margin-bottom:16px; }
+    .modal.hidden {
+        display: none !important;
+    }
 
-    /* Back button positioned top-right of modal */
-    .modal-overlay .back-btn { position:absolute; right:12px; top:12px; background:transparent; border:1px solid rgba(139,75,59,0.08); color:var(--brand-brown); padding:8px 10px; border-radius:8px; cursor:pointer; }
-    .modal-overlay .back-btn:hover { background:var(--accent-pink); }
+    .overlay {
+        position: fixed;
+        inset: 0;
+        backdrop-filter: blur(8px);
+        background: rgba(0,0,0,0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+    }
+
+    .modal-box {
+        display: flex;
+        gap: 24px;
+        max-width: 1000px;
+        width: 90%;
+    }
+
+    .modal-frame {
+        background: var(--panel-pink);
+        border-radius: 12px;
+        padding: 24px;
+        border: 2px solid rgba(139,75,59,0.1);
+        flex: 1;
+        position: relative;
+    }
+
+        .modal-frame h4 {
+            color: var(--brand-brown);
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .modal-frame p {
+            color: #8a6a62;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+    /* Back button — inside top-left of the left card */
+    .btn-back {
+        background: none;
+        border: none;
+        color: var(--brand-brown);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        opacity: 0.65;
+        padding: 0;
+        margin-bottom: 14px;
+    }
+
+        .btn-back:hover {
+            opacity: 1;
+        }
 
     /* Calendar */
-    .calendar-month { text-align:center; color:var(--brand-brown); font-weight:600; margin-bottom:12px; }
-    .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
-    .day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; background:#fff; border:1px solid var(--accent-pink); cursor:pointer; font-size:14px; color:var(--brand-brown); pointer-events:auto; transition:all 0.2s ease; }
-    .day:hover { background:var(--accent-pink); transform:scale(1.05); }
-    .day.selected { background:var(--cta-green); color:#fff; border-color:var(--cta-green); }
-    .day.unavailable { opacity:0.3; cursor:not-allowed; background:#f0f0f0; pointer-events:none; }
+    .calendar-month {
+        text-align: center;
+        color: var(--brand-brown);
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+    /* Always 6 rows × 7 cols — height never changes between months */
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7,1fr);
+        grid-template-rows: repeat(6, 1fr);
+        gap: 8px;
+        height: 252px;
+    }
 
-    /* Time slot grid */
-    .slot-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:8px; }
-    .slot-btn { display:block; width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid rgba(139,75,59,0.1); background:#fff; cursor:pointer; color:var(--brand-brown); transition:all 0.2s ease; }
-    .slot-btn:hover:not(:disabled) { background:var(--accent-pink); transform:translateY(-2px); }
-    .slot-btn.selected { background:var(--cta-green); color:#fff; border-color:var(--cta-green); }
-    .slot-btn:disabled { opacity:0.4; cursor:not-allowed; }
+    .day {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #fff;
+        border: 1px solid var(--accent-pink);
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--brand-brown);
+    }
 
-    .calendar-nav { background:var(--accent-pink); border:none; padding:6px 12px; border-radius:4px; cursor:pointer; margin:0 4px; }
+        .day:hover {
+            background: var(--accent-pink);
+        }
 
-    .modal-action { text-align:center; margin-top:20px; }
-    .btn-book { background:var(--cta-green); color:#fff; padding:12px 40px; border-radius:24px; border:none; font-weight:600; cursor:pointer; }
+        .day.unavailable {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: #f0f0f0;
+        }
 
-    @@media(max-width:1000px){ .modal-box{flex-direction:column;} .info-grid{grid-template-columns:1fr;} .service-options{flex-direction:column;} }
+        .day.selected {
+            background: var(--cta-green);
+            color: #fff;
+            border-color: var(--cta-green);
+        }
+
+        .day.empty {
+            background: transparent;
+            border-color: transparent;
+            pointer-events: none;
+        }
+
+    /* Time slots */
+    .slot-btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(139,75,59,0.1);
+        background: #fff;
+        cursor: pointer;
+        color: var(--brand-brown);
+    }
+
+        .slot-btn:hover {
+            background: var(--accent-pink);
+        }
+
+        .slot-btn.selected {
+            background: var(--cta-green);
+            color: #fff;
+            border-color: var(--cta-green);
+        }
+
+        .slot-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+    .calendar-nav {
+        background: var(--accent-pink);
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 0 4px;
+    }
+
+    /* Day-of-week header labels */
+    .dow-header {
+        display: grid;
+        grid-template-columns: repeat(7,1fr);
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+
+        .dow-header span {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--brand-brown);
+            opacity: 0.6;
+            text-transform: uppercase;
+        }
+
+    /* Right panel: flex column so button stays pinned to bottom */
+    .time-panel {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .time-slots-scroll {
+        flex: 1;
+        overflow-y: auto;
+        max-height: 260px;
+        padding-right: 4px;
+    }
+
+    .modal-action {
+        text-align: center;
+        margin-top: 16px;
+        flex-shrink: 0;
+    }
+
+    .btn-book {
+        background: var(--cta-green);
+        color: #fff;
+        padding: 12px 40px;
+        border-radius: 24px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* Prevent background scroll when modal is open */
+    body.modal-open {
+        overflow: hidden;
+    }
+
+    @@media(max-width:1000px) {
+        .modal-box {
+            flex-direction: column;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .service-options {
+            flex-direction: column;
+        }
+    }
 </style>
 
 <div class="appointment-wrap">
@@ -130,15 +408,20 @@
 
 <!-- Modal: Date & Time Selection -->
 <div id="bookingModal" class="modal hidden">
-    <div class="overlay modal-overlay">
-        <button type="button" class="back-btn" id="backToForm">← Back</button>
+    <div class="overlay">
         <div class="modal-box">
             <!-- Left: Calendar -->
             <div class="modal-frame">
+                <!-- Back button inside the card, top left -->
+                <button type="button" class="btn-back" id="closeBookingModal">&#8592; Back</button>
                 <h4>1. Select Date</h4>
                 <p>Select a specific date on the calendar slot to reserve appointment schedule.</p>
                 <div class="calendar-month" id="calendarMonthLabel">June 2026</div>
-                <div class="calendar-grid weekday-row" id="calendarWeekdays"></div>
+                <!-- Day-of-week labels -->
+                <div class="dow-header">
+                    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+                    <span>Thu</span><span>Fri</span><span>Sat</span>
+                </div>
                 <div class="calendar-grid" id="calendarGrid">Loading...</div>
                 <div style="text-align:center; margin-top:12px; display:flex; justify-content:center; gap:8px;">
                     <button type="button" class="calendar-nav" id="prevMonth">← Prev</button>
@@ -146,12 +429,12 @@
                 </div>
             </div>
 
-            <!-- Right: Time Slots -->
-            <div class="modal-frame">
+            <!-- Right: Time Slots — flex column keeps button pinned at bottom -->
+            <div class="modal-frame time-panel">
                 <h4>2. Appointment Time</h4>
                 <p id="selectedDateDisplay">Available time slot as of mm/dd/yyyy (Current Date)</p>
                 <p style="color:var(--brand-brown); font-weight:600; margin-bottom:12px;">Select your preferred time slot *</p>
-                <div id="timeSlots">Select a date to see available times</div>
+                <div id="timeSlots" class="time-slots-scroll">Select a date to see available times</div>
                 <div class="modal-action">
                     <button type="button" class="btn-book" id="confirmBooking" disabled>Proceed to Payment</button>
                 </div>
@@ -159,6 +442,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- Modal: Payment Confirmation -->
 <div id="paymentModal" class="modal hidden">
@@ -178,480 +462,286 @@
             </div>
         </div>
     </div>
-
+</div>
 
 @section Scripts {
-<script>
-    // Service box toggle
-    document.getElementById('box-studio').addEventListener('click', ()=>{ 
-        document.getElementById('box-studio').classList.add('selected'); 
-        document.getElementById('box-home').classList.remove('selected'); 
-    });
-    document.getElementById('box-home').addEventListener('click', ()=>{ 
-        document.getElementById('box-home').classList.add('selected'); 
-        document.getElementById('box-studio').classList.remove('selected'); 
-    });
-
-    let createdAppId = null;
-    let selectedDate = null;
-    let selectedSlotHour = null;
-    let selectedSlotDate = null;
-    let selectedSlotTime = null;
-    let currentAppointmentId = null;
-    let currentMonth = new Date();
-    let allDays = [];
-    let tempAppointmentData = null;
-
-    // Store form data temporarily (don't save yet)
-    async function validateAndStoreFormData() {
-        const fullName = document.getElementById('fullName').value;
-        const email = document.getElementById('email').value;
-        const phone = document.getElementById('phone').value;
-        const fileInput = document.getElementById('designImage');
-        const file = fileInput.files[0];
-
-        // Validation
-        if (!fullName) { alert('Full Name is required'); return false; }
-        if (!email) { alert('Email is required'); return false; }
-        if (!phone) { alert('Phone is required'); return false; }
-        if (!file) { alert('Design Reference image is required'); return false; }
-
-        // Limit file size to 2MB
-        if (file.size > 2 * 1024 * 1024) { 
-            alert('Image must be smaller than 2MB. Current size: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
-            return false; 
-        }
-
-        let imageBase64 = '';
-        imageBase64 = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.readAsDataURL(file);
+    <script>
+        // Service box toggle
+        document.getElementById('box-studio').addEventListener('click', () => {
+            document.getElementById('box-studio').classList.add('selected');
+            document.getElementById('box-home').classList.remove('selected');
+        });
+        document.getElementById('box-home').addEventListener('click', () => {
+            document.getElementById('box-home').classList.add('selected');
+            document.getElementById('box-studio').classList.remove('selected');
         });
 
-        console.log('Image base64 length:', imageBase64.length);
+        let selectedDate = null;
+        let selectedSlotHour = null;
+        let selectedSlotDate = null;
+        let selectedSlotTime = null;
+        let currentMonth = new Date();
+        let allDays = [];
+        let tempAppointmentData = null;
 
-        // Store data temporarily (not saved yet)
-        tempAppointmentData = {
-            Full_Name: fullName,
-            Social_Account: email,
-            Phone: phone,
-            Additional_Notes: document.getElementById('notes').value || '',
-            Down_Payment_Paid: false,
-            Appointment_Type: document.getElementById('box-home').classList.contains('selected') ? 'H' : 'S',
-            Status: 0,
-            Inspiration_Image: imageBase64
-        };
+        // Store form data temporarily (don't save yet)
+        async function validateAndStoreFormData() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const fileInput = document.getElementById('designImage');
+            const file = fileInput.files[0];
 
-        console.log('Form validated and stored temporarily. Ready to select date/time.');
-        return true;
-    }
+            if (!fullName) { alert('Full Name is required'); return false; }
+            if (!email)    { alert('Email is required');     return false; }
+            if (!phone)    { alert('Phone is required');     return false; }
+            if (!file)     { alert('Design Reference image is required'); return false; }
 
-    // Create appointment in database (call only after payment confirmation)
-    async function createAppointment() {
-        if (!tempAppointmentData) {
-            alert('Form data not found. Please try again.');
-            return null;
-        }
-
-        const res = await fetch('/Appointment/create-json', {
-            method: 'POST', 
-            headers: {'Content-Type':'application/json'}, 
-            body: JSON.stringify(tempAppointmentData)
-        });
-
-        if (!res.ok) { 
-            const errorData = await res.json().catch(() => ({}));
-            console.error('Create appointment error:', errorData);
-            alert('Failed to create appointment:\n' + (errorData.error || 'Unknown error')); 
-            return null; 
-        }
-
-        const json = await res.json();
-        // support both camelCase (appId) and PascalCase (AppId)
-        const appId = json.appId ?? json.AppId;
-        console.log('Create appointment response:', json, 'resolved appId:', appId);
-        if (!appId) {
-            alert('Failed to create appointment: invalid server response');
-            return null;
-        }
-        return appId;
-    }
-
-    // Proceed button: validate form and show calendar modal (don't save yet)
-    document.getElementById('proceedBtn').addEventListener('click', async () => {
-        console.log('Proceed button clicked');
-        const isValid = await validateAndStoreFormData();
-        console.log('Validation result:', isValid);
-        if (!isValid) {
-            console.log('Validation failed, returning');
-            return;
-        }
-        
-        // Show calendar modal without saving
-        console.log('Showing calendar modal');
-        document.getElementById('bookingModal').classList.remove('hidden');
-        currentMonth = new Date();
-        console.log('Loading calendar for month...');
-        await loadCalendarForMonth(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
-        console.log('Calendar loaded');
-    });
-
-    async function loadCalendarForMonth(year, month) {
-        try {
-            const res = await fetch(`/api/calendar/month-status?year=${year}&month=${month}`);
-            console.log('Calendar API response status:', res.status);
-            if (!res.ok) {
-                console.error('Calendar API error:', res.statusText);
-                document.getElementById('calendarGrid').innerText = 'Error loading calendar';
-                return;
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Image must be smaller than 2MB. Current size: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
+                return false;
             }
-            const days = await res.json();
-            console.log('Days received for', year, month, ':', days.length);
-            // Replace month data for the current view (avoid carrying undefined entries)
-            allDays = days.slice(); // use only fresh month data for rendering
-            // Ensure allDays is always an array
-            if (!Array.isArray(allDays)) allDays = [];
 
-            renderCalendar();
-        } catch (error) {
-            console.error('Error loading calendar:', error);
-            document.getElementById('calendarGrid').innerText = 'Error loading calendar: ' + error.message;
-        }
-    }
-
-    function renderCalendar() {
-        const grid = document.getElementById('calendarGrid');
-        grid.innerHTML = '';
-        const year = currentMonth.getFullYear();
-        const month = currentMonth.getMonth();
-        document.getElementById('calendarMonthLabel').innerText = currentMonth.toLocaleDateString(undefined, {month:'long', year:'numeric'});
-        console.log('Rendering calendar for', year, month + 1, 'allDays length', Array.isArray(allDays) ? allDays.length : 0);
-
-        // Render weekday headers (MON, TUE, ...)
-        const weekdays = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
-        const wk = document.getElementById('calendarWeekdays');
-        if (wk) {
-            wk.innerHTML = '';
-            weekdays.forEach(w => {
-                const wEl = document.createElement('div');
-                wEl.className = 'day';
-                wEl.style.pointerEvents = 'none';
-                wEl.style.background = 'transparent';
-                wEl.style.border = 'none';
-                wEl.style.color = 'var(--brand-brown)';
-                wEl.style.fontWeight = '600';
-                wEl.innerText = w;
-                wk.appendChild(wEl);
+            const imageBase64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
             });
+
+            tempAppointmentData = {
+                Full_Name: fullName,
+                Social_Account: email,
+                Phone: phone,
+                Additional_Notes: document.getElementById('notes').value || '',
+                Down_Payment_Paid: false,
+                Appointment_Type: document.getElementById('box-home').classList.contains('selected') ? 'H' : 'S',
+                Status: 0,
+                Inspiration_Image: imageBase64
+            };
+
+            return true;
         }
 
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        for (let i = 0; i < firstDay; i++) {
-            const el = document.createElement('div');
-            el.style.visibility = 'hidden';
-            grid.appendChild(el);
-        }
-
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayData = Array.isArray(allDays) ? allDays.find(d => d && typeof d.dateString === 'string' && d.dateString === dateStr) : null;
-            const isAvailable = !!(dayData && dayData.isAvailable);
-
-            const el = document.createElement('div');
-            el.className = 'day';
-            if (!isAvailable) el.classList.add('unavailable');
-            el.innerText = day;
-            el.dataset.date = dateStr;
-            el.tabIndex = 0;
-            el.setAttribute('role', 'button');
-            el.setAttribute('aria-disabled', (!isAvailable).toString());
-            el.style.pointerEvents = isAvailable ? 'auto' : 'none';
-
-            // Attach explicit event listeners to each day element so clicks always work even if delegation is prevented by overlays
-            if (isAvailable) {
-                el.addEventListener('click', (ev) => {
-                    ev.stopPropagation();
-                    selectDate(el.dataset.date, el);
-                });
-                el.addEventListener('keydown', (ev) => {
-                    if (ev.key === 'Enter' || ev.key === ' ') {
-                        ev.preventDefault();
-                        selectDate(el.dataset.date, el);
-                    }
-                });
-            } else {
-                // ensure unavailable elements are not focusable or interactive
-                el.tabIndex = -1;
+        // Create appointment in database (called only after payment confirmation)
+        async function createAppointment() {
+            if (!tempAppointmentData) {
+                alert('Form data not found. Please try again.');
+                return null;
             }
 
-            grid.appendChild(el);
-        }
+            const res = await fetch('/Appointment/create-json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(tempAppointmentData)
+            });
 
-        // Disable Prev button if we're at or before the current month
-        const prevBtn = document.getElementById('prevMonth');
-        const nextBtn = document.getElementById('nextMonth');
-        const today = new Date();
-        const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        const viewMonthFirst = new Date(year, month, 1);
-        if (viewMonthFirst <= firstOfThisMonth) {
-            prevBtn.disabled = true;
-            prevBtn.style.opacity = '0.5';
-            prevBtn.style.pointerEvents = 'none';
-        } else {
-            prevBtn.disabled = false;
-            prevBtn.style.opacity = '';
-            prevBtn.style.pointerEvents = '';
-        }
-
-        // Show debug JSON to help diagnose availability (remove in production)
-        const dbg = document.getElementById('calendarDebug');
-        if (dbg) dbg.innerText = JSON.stringify(allDays, null, 2);
-
-        // Keep delegation for fallback but explicit listeners are preferred now
-    }
-
-    async function selectDate(dateStr, element) {
-        console.log('=== selectDate called with:', dateStr);
-        document.querySelectorAll('.day.selected').forEach(d => d.classList.remove('selected'));
-        element.classList.add('selected');
-
-        selectedDate = dateStr;
-        selectedSlotHour = null;
-        document.getElementById('confirmBooking').disabled = true;
-
-        const date = new Date(dateStr + 'T00:00:00');
-        const displayDate = date.toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: 'numeric'});
-        document.getElementById('selectedDateDisplay').innerText = `Available time slot as of ${displayDate} (Current Date)`;
-
-        try {
-            const apiUrl = '/api/calendar/day-slots-status?chosenDate=' + dateStr;
-            console.log('Fetching slots from:', apiUrl);
-            const res = await fetch(apiUrl);
-            console.log('API Response status:', res.status);
-            
             if (!res.ok) {
-                const errorText = await res.text();
-                console.error('Error response body:', errorText);
-                document.getElementById('timeSlots').innerText = 'Error loading time slots. Please try again.';
-                return;
+                const errorData = await res.json().catch(() => ({}));
+                alert('Failed to create appointment:\n' + (errorData.error || 'Unknown error'));
+                return null;
             }
-            
+
+            const json = await res.json();
+            return json.AppId;
+        }
+
+        // Proceed button: validate form then show calendar (don't save yet)
+        document.getElementById('proceedBtn').addEventListener('click', async () => {
+            const isValid = await validateAndStoreFormData();
+            if (!isValid) return;
+
+            document.getElementById('bookingModal').classList.remove('hidden');
+            document.body.classList.add('modal-open'); // lock background scroll
+
+            // Reset currentMonth to a fresh Date object (not mutated)
+            currentMonth = new Date();
+            currentMonth.setDate(1); // Normalize to 1st to avoid month-overflow issues
+
+            await loadCalendar();
+        });
+
+        async function loadCalendar() {
+            const res = await fetch('/api/calendar/current-view-status');
+            allDays = await res.json();
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const year  = currentMonth.getFullYear();
+            const month = currentMonth.getMonth(); // 0-based
+
+            document.getElementById('calendarMonthLabel').innerText =
+                currentMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+            const firstDayOfWeek = new Date(year, month, 1).getDay();
+            const daysInMonth    = new Date(year, month + 1, 0).getDate();
+            const TOTAL_CELLS    = 42; // always 6 rows × 7 cols — fixed height
+
+            for (let cell = 0; cell < TOTAL_CELLS; cell++) {
+                const dayNumber = cell - firstDayOfWeek + 1;
+                const el = document.createElement('div');
+
+                if (dayNumber < 1 || dayNumber > daysInMonth) {
+                    // Empty filler cell — takes space but shows nothing
+                    el.className = 'day empty';
+                } else {
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+                    const dayData = allDays.find(d => (d.DateString || d.dateString) === dateStr);
+                    const isAvailable = dayData?.IsAvailable ?? dayData?.isAvailable ?? false;
+
+                    el.className = 'day' + (isAvailable ? '' : ' unavailable');
+                    el.innerText = dayNumber;
+
+                    el.addEventListener('click', () => {
+                        if (!isAvailable) return;
+                        selectDate(dateStr, el);
+                    });
+                }
+
+                grid.appendChild(el);
+            }
+
+            // Collect all valid month keys (e.g. "2026-06") from allDays, ignoring undefined entries
+            const validDays = allDays.filter(d => d && (d.DateString || d.dateString));
+            const monthKeys = [...new Set(validDays.map(d => (d.DateString || d.dateString).substring(0, 7)))].sort();
+            const currentKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+            // Disable Prev if we are already on the earliest available month
+            document.getElementById('prevMonth').disabled =
+                monthKeys.length === 0 || monthKeys[0] === currentKey;
+
+            // Disable Next if we are already on the latest available month
+            document.getElementById('nextMonth').disabled =
+                monthKeys.length === 0 || monthKeys[monthKeys.length - 1] === currentKey;
+        }
+
+        async function selectDate(dateStr, element) {
+            document.querySelectorAll('.day.selected').forEach(d => d.classList.remove('selected'));
+            element.classList.add('selected');
+
+            selectedDate    = dateStr;
+            selectedSlotHour = null;
+            document.getElementById('confirmBooking').disabled = true;
+
+            // Parse date parts manually to avoid UTC-midnight timezone shift
+            const [y, m, d] = dateStr.split('-').map(Number);
+            const localDate = new Date(y, m - 1, d); // Local time, no UTC offset issue
+            document.getElementById('selectedDateDisplay').innerText =
+                `Available time slot as of ${localDate.toLocaleDateString()} (Current Date)`;
+
+            const res   = await fetch('/api/calendar/day-slots-status?chosenDate=' + dateStr);
             const slots = await res.json();
-            console.log('Slots received:', slots);
+
             const container = document.getElementById('timeSlots');
-            console.log('Container element:', container);
             container.innerHTML = '';
 
             if (!slots || slots.length === 0) {
-                console.log('No slots available for this date');
                 container.innerText = 'No available slots for this date.';
                 return;
             }
 
-            console.log('Rendering', slots.length, 'slots');
             slots.forEach(s => {
-                console.log('Creating button for slot:', s);
                 const btn = document.createElement('button');
                 btn.className = 'slot-btn';
-                btn.type = 'button';
-                // use camelCase properties returned by ASP.NET JSON
-                btn.innerText = s.formattedTime || s.FormattedTime || '';
-                if (!s.isAvailable && s.isAvailable !== undefined) {
+                btn.type      = 'button';
+                // Support both PascalCase and camelCase from the API
+                const formattedTime = s.FormattedTime ?? s.formattedTime;
+                const isAvailable   = s.IsAvailable   ?? s.isAvailable   ?? false;
+                const slotHour      = s.SlotHour       ?? s.slotHour;
+                btn.innerText = formattedTime;
+
+                if (!isAvailable) {
                     btn.disabled = true;
-                    btn.style.opacity = '0.5';
-                }
-                btn.addEventListener('click', () => {
-                    if ((s.isAvailable !== undefined && s.isAvailable) || s.IsAvailable) {
+                } else {
+                    btn.addEventListener('click', () => {
                         document.querySelectorAll('.slot-btn').forEach(x => x.classList.remove('selected'));
                         btn.classList.add('selected');
-                        selectedSlotHour = s.slotHour ?? s.SlotHour;
+                        selectedSlotHour = slotHour;
                         document.getElementById('confirmBooking').disabled = false;
-                        console.log('Selected slot hour:', selectedSlotHour);
-                    }
-                });
+                    });
+                }
+
                 container.appendChild(btn);
             });
-            console.log('All slots rendered successfully');
-        } catch (error) {
-            console.error('Error fetching slots:', error);
-            document.getElementById('timeSlots').innerText = 'Error loading time slots. Please check the console for details.';
-        }
-    }
-
-    document.getElementById('backToForm').addEventListener('click', () => {
-        // Close calendar modal and return user to the appointment form
-        document.getElementById('bookingModal').classList.add('hidden');
-        // Scroll to top so form is visible
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    document.getElementById('prevMonth').addEventListener('click', async (e) => {
-        const prevBtn = document.getElementById('prevMonth');
-        if (prevBtn.disabled) return; // guard against clicking when disabled
-        currentMonth.setMonth(currentMonth.getMonth() - 1);
-        await loadCalendarForMonth(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
-    });
-
-    document.getElementById('nextMonth').addEventListener('click', async (e) => {
-        // Prevent navigating back into past months via Next (defensive)
-        currentMonth.setMonth(currentMonth.getMonth() + 1);
-        // If user navigated to a month before current month accidentally, clamp it
-        const today = new Date();
-        const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        const viewMonthFirst = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-        if (viewMonthFirst < firstOfThisMonth) {
-            currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        }
-        await loadCalendarForMonth(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
-    });
-
-    document.getElementById('confirmBooking').addEventListener('click', async () => {
-        if (!selectedDate || selectedSlotHour == null) {
-            alert('Please select both a date and time slot');
-            return;
         }
 
-        // Store selected date/time for later
-        selectedSlotDate = selectedDate;
-        selectedSlotTime = selectedSlotHour;
-
-        // Move to payment modal
-        document.getElementById('bookingModal').classList.add('hidden');
-        document.getElementById('paymentModal').classList.remove('hidden');
-    });
-
-    document.getElementById('payNow').addEventListener('click', async () => {
-        if (!tempAppointmentData) {
-            alert('Error: Form data not found');
-            return;
-        }
-
-        if (!selectedSlotDate || selectedSlotTime == null) {
-            alert('Please select a date and a time slot before proceeding to payment.');
-            return;
-        }
-
-        // NOW save the appointment with selected date/time
-        const appointmentId = await createAppointment();
-        if (!appointmentId) {
-            alert('Failed to create appointment');
-            return;
-        }
-
-        // Pre-check slot availability to avoid race conditions
-        try {
-            const dayRes = await fetch(`/api/calendar/day-slots-status?chosenDate=${selectedSlotDate}`);
-            if (!dayRes.ok) { alert('Failed to verify slot availability'); return; }
-            const slots = await dayRes.json();
-            // normalize property names (support both PascalCase and camelCase)
-            const chosen = slots.find(s => (s.SlotHour ?? s.slotHour) == selectedSlotTime);
-            const isAvailable = chosen ? ((chosen.IsAvailable ?? chosen.isAvailable) === undefined ? true : (chosen.IsAvailable ?? chosen.isAvailable)) : false;
-            if (!chosen || !isAvailable) {
-                alert('Selected slot is no longer available. Please choose another date/time.');
-                return;
-            }
-        } catch (e) {
-            console.error(e);
-            alert('Error verifying slot availability');
-            return;
-        }
-
-        // Save the appointment date and time
-        const dateISO = selectedSlotDate + 'T00:00:00';
-        const timeISO = selectedSlotDate + 'T' + String(selectedSlotTime).padStart(2, '0') + ':00:00';
-        const booking = { 
-            AppId: appointmentId, 
-            Appointment_Date: dateISO, 
-            Time_Slot: timeISO 
-        };
-
-        const bookingRes = await fetch('/api/calendar/booking', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(booking)
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+            renderCalendar();
         });
 
-        if (!bookingRes.ok) {
-            const errText = await bookingRes.text().catch(()=>null);
-            alert('Failed to save appointment date/time: ' + (errText || bookingRes.statusText));
-            return;
-        }
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+            renderCalendar();
+        });
 
-        // Create payment (GCash or mock)
-        let paymentId = null;
-        try {
-            const createRes = await fetch('/api/payments/create', {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ AppointmentId: appointmentId, Amount: 150 })
-            });
-            if (!createRes.ok) { const txt = await createRes.text(); alert('Failed creating payment: ' + txt); return; }
-            const createJson = await createRes.json();
-            console.log('Payment creation response:', createJson);
-            if (!createJson.success) { alert('Payment creation failed: ' + (createJson.error || 'unknown')); return; }
-            paymentId = createJson.paymentId || createJson.PaymentId;
-            const paymentUrl = createJson.paymentUrl || createJson.PaymentUrl;
-            if (paymentUrl) {
-                // open payment page in new window/tab
-                window.open(paymentUrl, '_blank');
+        document.getElementById('confirmBooking').addEventListener('click', () => {
+            if (!selectedDate || selectedSlotHour == null) {
+                alert('Please select both a date and time slot');
+                return;
             }
-            // Poll for payment status
-            const maxAttempts = 60; // ~60 seconds
-            let attempts = 0;
-            const pollInterval = 1000; // ms
-            window._paymentPoll = window._paymentPoll || {};
-            if (window._paymentPoll.id) clearInterval(window._paymentPoll.id);
-            window._paymentPoll.id = setInterval(async () => {
-                attempts++;
-                try {
-                    const statusRes = await fetch('/api/payments/status?paymentId=' + encodeURIComponent(paymentId));
-                    if (!statusRes.ok) return;
-                    const statusJson = await statusRes.json();
-                    if (statusJson.paid) {
-                        clearInterval(window._paymentPoll.id);
-                        window._paymentPoll.id = null;
-                        // mark down payment and finish
-                        const updateRes = await fetch(`/Appointment/UpdateDownPayment?id=${appointmentId}`, { method: 'POST', credentials: 'same-origin' });
-                        if (updateRes.ok) {
-                            alert('✓ Downpayment recorded! Your appointment has been confirmed.');
-                            document.getElementById('paymentModal').classList.add('hidden');
-                            tempAppointmentData = null;
-                            location.href = '/Home/Index';
-                        } else {
-                            // try to surface server error for easier debugging
-                            const errText = await updateRes.text().catch(()=>null);
-                            console.error('UpdateDownPayment failed', updateRes.status, errText);
-                            alert('Error recording payment. Please try again. Server response: ' + (errText || updateRes.statusText));
-                        }
-                    } else if (attempts >= maxAttempts) {
-                        clearInterval(window._paymentPoll.id);
-                        window._paymentPoll.id = null;
-                        alert('Payment not completed. You can retry or cancel.');
-                    }
-                } catch (e) { console.error('Polling error', e); }
-            }, pollInterval);
-        } catch (e) {
-            console.error(e);
-            alert('Error during payment creation flow');
-            return;
-        }
-    });
 
-    document.getElementById('cancelPayment').addEventListener('click', async () => {
-        // Stop any ongoing payment polling
-        if (window._paymentPoll && window._paymentPoll.id) {
-            clearInterval(window._paymentPoll.id);
-            window._paymentPoll.id = null;
-        }
-        document.getElementById('paymentModal').classList.add('hidden');
-        document.getElementById('bookingModal').classList.remove('hidden');
-        // Refresh calendar availability when returning from payment
-        try {
-            await loadCalendarForMonth(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
-        } catch (e) { console.error('Error refreshing calendar after cancel', e); }
-    });
-</script>
+            selectedSlotDate = selectedDate;
+            selectedSlotTime = selectedSlotHour;
+
+            document.getElementById('bookingModal').classList.add('hidden');
+            document.getElementById('paymentModal').classList.remove('hidden');
+        });
+
+        document.getElementById('payNow').addEventListener('click', async () => {
+            if (!tempAppointmentData) {
+                alert('Error: Form data not found');
+                return;
+            }
+
+            const appointmentId = await createAppointment();
+            if (!appointmentId) return;
+
+            // Send explicit +08:00 offset so the server always receives PH time correctly
+            const dateISO = selectedSlotDate + 'T00:00:00+08:00';
+            const timeISO = selectedSlotDate + 'T' + String(selectedSlotTime).padStart(2, '0') + ':00:00+08:00';
+
+            const booking = {
+                AppId: appointmentId,
+                Appointment_Date: dateISO,
+                Time_Slot: timeISO
+            };
+
+            const bookingRes = await fetch('/api/calendar/booking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(booking)
+            });
+
+            if (!bookingRes.ok) {
+                const msg = await bookingRes.text();
+                alert('Booking failed: ' + msg);
+                return;
+            }
+
+            const updateRes = await fetch(`/Appointment/UpdateDownPayment?id=${appointmentId}`, { method: 'POST' });
+            if (updateRes.ok) {
+                alert('✓ Downpayment recorded! Your appointment has been confirmed.');
+                document.getElementById('paymentModal').classList.add('hidden');
+                document.body.classList.remove('modal-open');
+                tempAppointmentData = null;
+                location.href = '/Home/Index';
+            } else {
+                alert('Error recording payment. Please try again.');
+            }
+        });
+
+        document.getElementById('cancelPayment').addEventListener('click', () => {
+            document.getElementById('paymentModal').classList.add('hidden');
+            document.getElementById('bookingModal').classList.remove('hidden');
+        });
+
+        document.getElementById('closeBookingModal').addEventListener('click', () => {
+            document.getElementById('bookingModal').classList.add('hidden');
+            document.body.classList.remove('modal-open'); // restore background scroll
+        });
+    </script>
 }
