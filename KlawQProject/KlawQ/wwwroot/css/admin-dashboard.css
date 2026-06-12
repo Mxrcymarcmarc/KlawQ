@@ -1,0 +1,350 @@
+:root {
+    --primary-font: 'Shadows Into Light Two', cursive;
+    --secondary-font: 'Montserrat', sans-serif;
+    --text-dark: #644b39;
+    --text-muted: #9c8a7c;
+    --bg-gradient: linear-gradient(135deg, #fff0f5, #fdfcfd);
+    --card-bg: #ffffff;
+    --accent-green: #a7c47d;
+    --accent-pink: #f4d6db;
+    --shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+    --footer-bg: #644b39;
+    
+    --status-pending-bg: #fff9db;
+    --status-pending-text: #e6b800;
+    --status-confirmed-bg: #e1f5fe;
+    --status-confirmed-text: #0288d1;
+    --status-completed-bg: #e8f5e9;
+    --status-completed-text: #388e3c;
+    --status-cancelled-bg: #ffebee;
+    --status-cancelled-text: #d32f2f;
+}
+
+.container {
+    font-family: var(--primary-font);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+
+.page-title-section {
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: normal;
+}
+
+.page-title i {
+    color: var(--accent-green);
+}
+
+.page-subtitle {
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+    font-size: 1.2rem;
+}
+
+.cards-grid {
+    font-family: var(--secondary-font);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 2px solid transparent;
+}
+
+.card:hover {
+    border-color: var(--accent-pink);
+}
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #fdf5f6;
+    color: var(--accent-green);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+}
+
+.card-content h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: normal;
+}
+
+.card-content p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.card.revenue-card {
+    background: var(--accent-green);
+    color: white;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.revenue-card .card-icon {
+    background: transparent;
+    color: white;
+    justify-content: flex-start;
+    font-size: 1.8rem;
+    width: auto;
+    height: auto;
+}
+
+.revenue-card h3 {
+    font-size: 1rem;
+    color: #e8f0d8;
+}
+
+.revenue-card h2 {
+    margin: 0;
+    font-size: 2.5rem;
+}
+
+.revenue-card p {
+    color: #e8f0d8;
+}
+
+.card.stat-card {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.stat-card h2 {
+    margin: 0.5rem 0 0 0;
+    font-size: 2rem;
+}
+
+.section-box {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-header h2 i {
+    color: var(--accent-green);
+}
+
+.service-item {
+    font-family: var(--secondary-font);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #f0e6e8;
+    border-radius: 8px;
+    margin-bottom: 0.8rem;
+}
+
+.service-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.rank-badge {
+    background: var(--accent-green);
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.service-details h4 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+.service-details p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.service-price {
+    font-family: var(--secondary-font);
+    text-align: right;
+}
+
+.service-price h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--accent-green);
+}
+
+.badge-total {
+    background: var(--accent-pink);
+    padding: 0.2rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th {
+    color: var(--text-muted);
+    font-weight: normal;
+    padding: 1rem 0.5rem;
+    border-bottom: 1px solid #f0e6e8;
+}
+
+td {
+    padding: 1rem 0.5rem;
+    border-bottom: 1px solid #f0e6e8;
+    vertical-align: middle;
+}
+
+.customer-info p, .service-td p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.price-text {
+    color: var(--accent-green);
+}
+
+.status {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.status-pending { background: var(--status-pending-bg); color: var(--status-pending-text); }
+.status-confirmed { background: var(--status-confirmed-bg); color: var(--status-confirmed-text); }
+.status-completed { background: var(--status-completed-bg); color: var(--status-completed-text); }
+.status-cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled-text); }
+
+.btn-action {
+    background: var(--accent-pink);
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.footer-logo h2 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.footer-logo p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #d1c4bc;
+}
+
+.footer-location {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.footer-location p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #d1c4bc;
+}
+
+@media (max-width: 768px) {
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    .footer-location {
+        justify-content: center;
+    }
+}
+
+.card-content h3, 
+.stat-card h2, 
+.revenue-card h2 {
+    font-family: var(--secondary-font);
+    font-weight: 600;
+}
+
+th, td, .badge-total, .status {
+    font-family: var(--secondary-font);
+}
+
+.card-content p, 
+.service-details p, 
+.customer-info p, 
+.service-td p {
+    font-family: var(--secondary-font);
+    font-size: 0.85rem;
+}
+
+.footer-logo h2 {
+    font-family: 'Shadows Into Light Two', cursive !important;
+    font-weight: normal !important;
+    font-size: 1.5rem;
+}
+
+.logo-icon-img {
+    height: 30px;
+    width: auto;
+    display: block;
+}
