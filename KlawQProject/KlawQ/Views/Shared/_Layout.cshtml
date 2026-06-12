@@ -15,8 +15,8 @@
                 {
                     <ul class="nav-links">
                         <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                        <li><a href="#gallery">Gallery</a></li>
-                        <li><a href="#bookmarks">My Bookmarks</a></li>
+                        <li><a asp-controller="Gallery" asp-action="Index">Gallery</a></li>  
+                        <li><a asp-controller="My Bookmarks" asp-action="Index">My Bookmarks</a></li>         
                         <li><a asp-controller="Appointment" asp-action="Index">Appointment</a></li>
                         <li><a href="/Account/Logout" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Logout</a></li>
                     </ul>
