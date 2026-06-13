@@ -12,7 +12,7 @@
         <p class="heading">Verify Email</p>
         <p class="description">We sent a 6-digit code to <strong>@Model.Email</strong>. Enter it below to complete registration.</p>
 
-        <form asp-action="VerifyEmail" method="post">
+        <form class="verify-email" asp-action="VerifyEmail" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
             <input type="hidden" asp-for="Email" />
 
