@@ -172,11 +172,11 @@ namespace KlawQ.Controllers
         private void SendEmailCode(string email, string code)
         {
             // IMPORTANT: Replace these placeholders with your real credentials for testing!
-            string yourGmail = "klawqwebapp@gmail.com";
-            string yourAppPassword = "tqwc jyao ujds bedm";
+            string Gmail = "klawqwebapp@gmail.com";
+            string AppPassword = "tqwc jyao ujds bedm";
 
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Klaw By Krys", yourGmail));
+            message.From.Add(new MailboxAddress("Klaw By Krys", Gmail));
             message.To.Add(new MailboxAddress("", email));
             message.Subject = "Your KlawQ Verification Code";
 
@@ -201,7 +201,7 @@ namespace KlawQ.Controllers
                 try
                 {
                     client.Connect("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-                    client.Authenticate(yourGmail, yourAppPassword);
+                    client.Authenticate(Gmail, AppPassword);
                     client.Send(message);
                     client.Disconnect(true);
                 }
