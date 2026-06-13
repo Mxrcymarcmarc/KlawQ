@@ -1,0 +1,74 @@
+﻿@{
+    ViewData["Title"] = "Admin Portfolio Manager";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="/css/portfolio-manager.css" />
+}
+
+<div class="portfolio-container">
+
+    <div class="page-header">
+        <h1 class="page-title">Admin Portfolio Manager</h1>
+        <p class="page-subtitle">Add, edit, and organize your nail work gallery</p>
+    </div>
+
+    <div class="section-box form-section">
+        <div class="section-header">
+            <h2><i class="far fa-image"></i> Manage work</h2>
+        </div>
+
+        <form class="portfolio-form" action="#" method="post">
+            <div class="form-group">
+                <label for="imageUrl">Image URL <span class="required">*</span></label>
+                <input type="url" id="imageUrl" name="imageUrl" placeholder="https://example.com/image.jpg" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description <span class="required">*</span></label>
+                <input type="text" id="description" name="description" placeholder="Press on nail collection" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-save"><i class="fas fa-save"></i> Save</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="section-box gallery-section">
+        <div class="section-header flex-between">
+            <h2>Uploaded Work</h2>
+            <span class="badge-total">2 items</span>
+        </div>
+
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <div class="image-placeholder">
+                    <i class="far fa-image"></i>
+                </div>
+                <div class="item-actions">
+                    <button class="action-btn delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>
+
+            <div class="gallery-item">
+                <div class="image-placeholder">
+                    <i class="far fa-image"></i>
+                </div>
+                <div class="item-actions">
+                    <button class="action-btn delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
