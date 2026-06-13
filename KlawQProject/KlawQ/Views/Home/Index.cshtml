@@ -11,6 +11,7 @@
         --footer-brown: #6b4228;
         --cta-green: #88b04b;
         --light-green: #c5f08f;
+        --font-brown: #8B5E34;
     }
     
     /* Main container */
@@ -18,10 +19,11 @@
     
     /* Hero section */
     .hero { padding:60px 20px; text-align:center; }
-    .hero h1 { font-size:48px; font-weight:300; color:var(--brand-brown); margin:20px 0; }
-    .hero .subtitle { color:#999; font-size:16px; }
-    .hero .description { color:#999; font-size:14px; max-width:600px; margin:10px auto 30px; }
-    .btn-appointment { background:var(--cta-green); color:white; padding:12px 30px; border-radius:25px; text-decoration:none; display:inline-block; }
+    .hero h1 { font-family: 'Shadows Into Light Two', cursive; font-size:48px; font-weight:300; color:var(--brand-brown); margin:50px 0; }
+    .hero .subtitle { font-family: 'Montserrat', sans-serif; color: var(--font-brown); font-size:16px; }
+    .hero .description { font-family: 'Montserrat', sans-serif; color: var(--font-brown); font-size:14px; max-width:600px; margin:10px auto 30px; }
+    .btn-appointment { background:var(--cta-green); color:white; padding:12px 30px; border-radius:25px; text-decoration:none; display:inline-block; transition: all 0.25s ease}
+    .btn-appointment:hover {background: #6fa03f !important; color: white !important; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.15);}
     
     /* Section divider */
     .divider { height:2px; background:var(--accent-pink); margin:40px 0; }
@@ -50,7 +52,7 @@
     /* FAQ */
     .faq { margin:40px 0; }
     .faq-item { background:#fff; border:1px solid #ddd; border-radius:12px; margin:10px 0; }
-    .faq-question { padding:15px; cursor:pointer; background:var(--panel-pink); }
+    .faq-question { padding:15px; cursor:pointer; background:var(--panel-pink); transition: all 0.25s ease; }
     .faq-question:hover { background:var(--accent-pink); }
     .faq-answer { padding:15px; display:none; }
     .faq-item.active .faq-answer { display:block; }

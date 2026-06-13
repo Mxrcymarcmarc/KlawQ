@@ -1,0 +1,91 @@
+﻿:root {
+    --bg-pink: #fff5f6; /* page background */
+    --panel-pink: #fdeef0; /* input and panel accents */
+    --accent-pink: #fde0e2; /* circle placeholder */
+    --brand-brown: #8b4b3b; /* headings */
+    --footer-brown: #6b4228; /* footer background */
+    --cta-green: #88b04b; /* login button */
+    --font-brown: #8B5E34; /* Brown Fonts */
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Roboto, Arial;
+    background: linear-gradient(90deg, var(--bg-pink) 0%, #fff9fb 100%);
+    color: var(--brand-brown);
+}
+
+.verify-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 40vh;
+    background: transparent;
+    border-radius: 8px;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+}
+
+.verify-box {
+    width: 100%;
+    max-width: 480px;
+    padding: clamp(16px, 3vw, 32px);
+    text-align: center;
+}
+
+.verify-email {
+    max-width: 360px;
+    width: 100%;
+    margin: 0 auto; /* centers the form inside the box */
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px 16px;
+    margin: 6px 0 12px;
+    border-radius: 14px;
+    border: none;
+    background: var(--panel-pink);
+    box-sizing: border-box;
+    font-size: 15px;
+    text-align: center;
+    letter-spacing: 6px; /* spaces out the digits */
+}
+
+.btn {
+    background: var(--cta-green);
+    color: white;
+    padding: 11px 0;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    margin-top: 16px;
+    width: 100%;
+    transition: all 0.25s ease;
+}
+    .btn:hover {
+        background: #6fa03f !important;
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+
+.heading {
+    font-family: 'Shadows Into Light Two', cursive;
+    color: var(--brand-brown);
+    font-size: clamp(28px, 4vw, 52px);
+    margin: 0 auto 10px 0;
+    white-space: nowrap; /* keeps it on one line */
+}
+
+.description {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--font-brown);
+    font-size: clamp(12px, 1.5vw, 16px);
+    white-space: normal;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+}

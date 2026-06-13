@@ -30,17 +30,17 @@ namespace KlawQ.Controllers
             _context = context;
             _signInManager = signInManager;
             _userManager = userManager;
-            _configuration = configuration; // FIX: Added this line so your configuration isn't null!
+            _configuration = configuration;
         }
 
-        // STEP 1: Display Registration Page
+        // Display Registration Page
         [HttpGet]
         public IActionResult Register()
         {
             return View("~/Views/Account/Register.cshtml");
         }
 
-        // STEP 1 POST: Process Details & Send Verification Code
+        // Process Details & Send Verification Code
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Register(RegisterViewModel model)
@@ -84,7 +84,7 @@ namespace KlawQ.Controllers
             }
         }
 
-        // STEP 2: Display Verification Code Screen
+        // Display Verification Code Screen
         [HttpGet]
         public IActionResult VerifyEmail(string email)
         {
@@ -92,7 +92,7 @@ namespace KlawQ.Controllers
             return View("~/Views/Account/VerifyEmail.cshtml", model);
         }
 
-        // STEP 2 POST: Confirm Code & Commit User to Database
+        // Confirm Code & Commit User to Database
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult VerifyEmail(VerifyCodeViewModel model)
@@ -124,7 +124,7 @@ namespace KlawQ.Controllers
 
             try
             {
-                // 1. Create the Microsoft Identity user that _context.Users expects
+                // Create the Microsoft Identity user that _context.Users expects
                 var identityUser = new IdentityUser
                 {
                     UserName = cachedEmail,
@@ -132,10 +132,10 @@ namespace KlawQ.Controllers
                     EmailConfirmed = true
                 };
 
-                // 2. Add the Identity User to the context first
+                // Add the Identity User to the context first
                 _context.Users.Add(identityUser);
 
-                // 3. Map the data to your leader's custom profile entity 
+                // Map the data to your leader's custom profile entity 
                 var customUserProfile = new KlawQ.Models.Users
                 {
                     Full_Name = cachedFullName!,
@@ -145,10 +145,10 @@ namespace KlawQ.Controllers
                     IdentityUserId = identityUser.Id
                 };
 
-                // 4. Save the custom profile to its specific table
+                // Save the custom profile to its specific table
                 _context.UserProfiles.Add(customUserProfile);
 
-                // 5. Commit everything to the SQL database at once
+                // Commit everything to the SQL database at once
                 _context.SaveChanges();
 
                 // Clear session data
@@ -171,7 +171,7 @@ namespace KlawQ.Controllers
         // Real functional method for sending emails via MailKit
         private void SendEmailCode(string email, string code)
         {
-            // IMPORTANT: Replace these placeholders with your real credentials for testing!
+
             string Gmail = "klawqwebapp@gmail.com";
             string AppPassword = "tqwc jyao ujds bedm";
 

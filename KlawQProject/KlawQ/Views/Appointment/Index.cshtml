@@ -4,8 +4,6 @@
     ViewData["Title"] = "Book Appointment";
 }
 
-<link rel="stylesheet" href="/css/site.css" />
-
 <style>
     :root {
         --bg-pink: #fff5f6;
@@ -21,9 +19,11 @@
     }
 
     .appointment-wrap {
-        max-width: 1100px;
-        margin: 40px auto;
-        padding: 20px;
+        max-width: 1000px !important;
+        margin: 0 auto !important;
+        padding: 10px 20px;
+        box-sizing: border-box;
+        width: 100% !important;
     }
 
     .top-header {
@@ -32,7 +32,7 @@
     }
 
         .top-header h1 {
-            font-family: 'Segoe UI', Arial;
+            font-family: 'Shadows Into Light Two', cursive;
             font-size: 48px;
             color: var(--brand-brown);
             margin-bottom: 6px;
@@ -49,6 +49,8 @@
         padding: 18px;
         box-shadow: 0 10px 25px rgba(0,0,0,.06);
         border: 1px solid var(--accent-pink);
+        width: 95%;
+        max-width: 100%;
     }
 
     .service-options {
@@ -123,6 +125,7 @@
     .proceed {
         text-align: center;
         margin-top: 28px;
+        width: 100%;
     }
 
     .btn-proceed {
@@ -134,7 +137,14 @@
         font-weight: 600;
         cursor: pointer;
         box-shadow: 0 6px 12px rgba(136,176,75,0.18);
+        transition: all 0.25s ease;
     }
+        .btn-proceed:hover {
+            background: #6fa03f !important;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
 
     /* Modal */
     .modal.hidden {
@@ -376,7 +386,7 @@
     <form id="appointmentForm">
         <div class="info-card">
             <h3 style="color:var(--brand-brown); margin-bottom:12px;">✦ Your Information</h3>
-            <div class="info-grid">
+            <div class="info-grid" id="studioFields">
                 <div class="input">
                     <label>Full Name *</label>
                     <input id="fullName" name="Full_Name" type="text" placeholder="Jane Doe" />
@@ -396,6 +406,33 @@
                 <div class="input" style="grid-column:1 / -1">
                     <label>Special Requests</label>
                     <textarea id="notes" name="Additional_Notes" placeholder="Tell me about your dream nail design ..."></textarea>
+                </div>
+            </div>
+
+            <div class="info-grid" id="homeFields" style="display:none;">
+                <div class="input">
+                    <label>Full Name *</label>
+                    <input id="h-fullName" type="text" placeholder="Jane Doe" />
+                </div>
+                <div class="input">
+                    <label>Email *</label>
+                    <input id="h-email" type="email" placeholder="jane@example.com" />
+                </div>
+                <div class="input">
+                    <label>Phone *</label>
+                    <input id="h-phone" type="text" placeholder="(555) 123-4567" />
+                </div>
+                <div class="input">
+                    <label>Design Reference (Image) *</label>
+                    <input id="designImage" name="DesignImage" type="file" accept="image/*" />
+                </div>
+                <div class="input">
+                    <label>Address *</label>
+                    <input id="h-address" type="text" placeholder="123 Main St" />
+                </div>  
+                <div class="input" style="grid-column:1 / -1">
+                    <label>Special Requests</label>
+                    <textarea id="h-notes" placeholder="Tell me about your dream nail design ..."></textarea>
                 </div>
             </div>
         </div>
@@ -468,13 +505,18 @@
     <script>
         // Service box toggle
         document.getElementById('box-studio').addEventListener('click', () => {
-            document.getElementById('box-studio').classList.add('selected');
-            document.getElementById('box-home').classList.remove('selected');
-        });
+        document.getElementById('box-studio').classList.add('selected');
+        document.getElementById('box-home').classList.remove('selected');
+        document.getElementById('studioFields').style.display = 'grid';
+        document.getElementById('homeFields').style.display = 'none';
+    });
+
         document.getElementById('box-home').addEventListener('click', () => {
-            document.getElementById('box-home').classList.add('selected');
-            document.getElementById('box-studio').classList.remove('selected');
-        });
+        document.getElementById('box-home').classList.add('selected');
+        document.getElementById('box-studio').classList.remove('selected');
+        document.getElementById('studioFields').style.display = 'none';
+        document.getElementById('homeFields').style.display = 'grid';
+    });
 
         let selectedDate = null;
         let selectedSlotHour = null;
@@ -486,38 +528,65 @@
 
         // Store form data temporarily (don't save yet)
         async function validateAndStoreFormData() {
-            const fullName = document.getElementById('fullName').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const fileInput = document.getElementById('designImage');
-            const file = fileInput.files[0];
+            const isHome = document.getElementById('box-home').classList.contains('selected');
+
+            const fullName = isHome
+                ? document.getElementById('h-fullName').value.trim()
+                : document.getElementById('fullName').value.trim();
+            const email = isHome
+                ? document.getElementById('h-email').value.trim()
+                : document.getElementById('email').value.trim();
+            const phone = isHome
+                ? document.getElementById('h-phone').value.trim()
+                : document.getElementById('phone').value.trim();
+            const notes = isHome
+                ? document.getElementById('h-notes').value
+                : document.getElementById('notes').value;
 
             if (!fullName) { alert('Full Name is required'); return false; }
             if (!email)    { alert('Email is required');     return false; }
             if (!phone)    { alert('Phone is required');     return false; }
-            if (!file)     { alert('Design Reference image is required'); return false; }
 
-            if (file.size > 2 * 1024 * 1024) {
-                alert('Image must be smaller than 2MB. Current size: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
-                return false;
+            if (isHome) {
+                const address = document.getElementById('h-address').value.trim();
+                if (!address) { alert('Address is required'); return false; }
+
+                tempAppointmentData = {
+                    Full_Name: fullName,
+                    Social_Account: email,
+                    Phone: phone,
+                    Additional_Notes: notes,
+                    Down_Payment_Paid: false,
+                    Appointment_Type: 'H',
+                    Status: 0,
+                    Inspiration_Image: null
+                };
+            } else {
+                const fileInput = document.getElementById('designImage');
+                const file = fileInput.files[0];
+                if (!file) { alert('Design Reference image is required'); return false; }
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Image must be smaller than 2MB.');
+                    return false;
+                }
+
+                const imageBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+
+                tempAppointmentData = {
+                    Full_Name: fullName,
+                    Social_Account: email,
+                    Phone: phone,
+                    Additional_Notes: notes,
+                    Down_Payment_Paid: false,
+                    Appointment_Type: 'S',
+                    Status: 0,
+                    Inspiration_Image: imageBase64
+                };
             }
-
-            const imageBase64 = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.readAsDataURL(file);
-            });
-
-            tempAppointmentData = {
-                Full_Name: fullName,
-                Social_Account: email,
-                Phone: phone,
-                Additional_Notes: document.getElementById('notes').value || '',
-                Down_Payment_Paid: false,
-                Appointment_Type: document.getElementById('box-home').classList.contains('selected') ? 'H' : 'S',
-                Status: 0,
-                Inspiration_Image: imageBase64
-            };
 
             return true;
         }
