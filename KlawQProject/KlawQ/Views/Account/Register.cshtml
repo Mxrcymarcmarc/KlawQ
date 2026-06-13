@@ -1,15 +1,16 @@
 @model KlawQ.Models.RegisterViewModel
-@section Styles {
-    <link rel="stylesheet" href="css/login.css" />
-}
 @{
+    ViewData["Title"] = "Register";
     ViewData["HideNavbar"] = true;
 }
+@section styles {
+    <link rel="stylesheet" href="/css/register.css" />
+}
 
-<div class="login-container">
+<div class="register-container">
     <div class="left">
-        <h1>Create Account</h1>
-        <p>Join us and book your appointment!</p>
+        <p class="heading">Create Account</p>
+        <p class="description">Join us and book your appointment!</p>
         <form asp-action="Register" method="post">
             <input asp-for="FullName" class="input-field" type="text" placeholder="Full Name" />
             <span asp-validation-for="FullName" class="text-danger"></span>
@@ -17,24 +18,28 @@
             <input asp-for="Email" class="input-field" type="email" placeholder="Email" />
             <span asp-validation-for="Email" class="text-danger"></span>
 
-            <input asp-for="PhoneNumber" class="input-field" type="tel" placeholder="Phone Number (Optional)" />
-            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-
             <input asp-for="Password" class="input-field" placeholder="Password" type="password" />
             <span asp-validation-for="Password" class="text-danger"></span>
 
             <input asp-for="ConfirmPassword" class="input-field" placeholder="Confirm Password" type="password" />
             <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
 
-            <button class="btn" type="submit">Register</button>
+            <button class="btn" type="submit">Create Account</button><p style="align-self: center">OR</p>
+            
+            <button type="button" class="google-btn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo">
+                Sign in with Google
+            </button>
         </form>
-        <p>Already have an account? <a href="/Account/Login">Log in here</a></p>
+        <p style="justify-content: space-between">Already have an account? <a href="/Account/Login">Log In</a></p>
     </div>
     <div class="right">
         <div style="text-align:center;">
-            <div class="logo-circle"></div>
-            <h2>Klaw By Krys</h2>
-            <p>Quality You Can See, Creativity You Can Wear.</p>
+            <div style="display:flex; align-items:center; justify-content:center; gap:12px;">
+                <div class="logo-circle"></div>
+                <p class="brand-name">Klaw By Krys</p>
+            </div>
+            <p class="brand-description">Quality You Can See, Creativity You Can Wear.</p>
         </div>
     </div>
 </div>

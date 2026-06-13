@@ -15,7 +15,7 @@ body {
     color: var(--brand-brown);
 }
 
-.login-container {
+.register-container {
     max-width: clamp(600px, 85vw, 1100px); /* grows/shrinks with viewport */
     width: 90%;
     margin: 40px auto;
@@ -41,7 +41,7 @@ body {
 
 .right {
     flex: 1;
-    padding: 40px 30px;
+    padding: 20px 30px;
     background: transparent;
     display: flex;
     flex-direction: column;
@@ -78,6 +78,35 @@ body {
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(0,0,0,0.15);
     }
+
+.google-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 11px 16px;
+    margin-top: 16px;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    background: white;
+    color: #444;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+    .google-btn img {
+        width: 18px;
+        height: 18px;
+    }
+
+    .google-btn:hover {
+        background: #f7f7f7;
+        border-color: #ccc;
+        transform: translateY(-1px);
+    }
 .right .logo-circle {
     width: 120px;
     height: 120px;
@@ -109,7 +138,7 @@ body {
 .heading {
     font-family: 'Shadows Into Light Two', cursive;
     color: var(--brand-brown);
-    font-size: clamp(36px, 5vw, 80px); /* never too big or too small */
+    font-size: clamp(36px, 5vw, 80px);
     margin: 0 0 16px;
     white-space: nowrap; /* keeps it on one line */
 }
@@ -135,6 +164,7 @@ body {
     font-size: clamp(14px, 2vw, 25px);
     white-space: nowrap;
 }
+
 
 @media (max-width: 540px) {
     .register-container {
