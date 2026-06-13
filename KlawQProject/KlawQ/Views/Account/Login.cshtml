@@ -1,31 +1,32 @@
 @model KlawQ.Models.LoginViewModel
 @section Styles {
-    <link rel="stylesheet" href="css/login.css" />
+    <link rel="stylesheet" href="/css/login.css" />
 }
 @{
     ViewData["HideNavbar"] = true;
 }
 
-    <div class="login-container">
-        <div class="left">
-            <h1>Welcome Back!</h1>
-            <p>Enter your Username & Password</p>
-            <form asp-action="Login" method="post">
-                <input asp-for="Email" class="input-field" type="email" placeholder="Email" />
-                <input asp-for="Password" class="input-field" placeholder="Password" type="password" />
-                <div>
-                    <label><input asp-for="RememberMe" /> Remember me</label>
-                </div>
-                <button class="btn" type="submit">Log In</button>
-            </form>
-            <p>Don't have an account? <a href="/Account/Register">Register here</a></p>
-        </div>
-        <div class="right">
-            <div style="text-align:center;">
-                <div class="logo-circle"></div>
-                <h2>Klaw By Krys</h2>
-                <p>Quality You Can See, Creativity You Can Wear.</p>
+<div class="login-container">
+    <div class="left">
+        <p class="heading">Welcome Back!</p>
+        <p class="description">Enter your Username & Password</p>
+        <form asp-action="Login" method="post">
+            <input asp-for="Email" class="input-field" type="email" placeholder="Email" />
+            <input asp-for="Password" class="input-field" placeholder="Password" type="password" />
+            <div>
+                <label><input asp-for="RememberMe" /> Remember me</label>
             </div>
+            <button class="btn" type="submit">Log In</button>
+        </form>
+        <p>Don't have an account? <a href="/Account/Register">Register here</a></p>
+    </div>
+    <div class="right">
+        <div style="text-align:center;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:12px;">
+                <div class="logo-circle"></div>
+                <p class="brand-name">Klaw By Krys</p>
+            </div>
+            <p class="brand-description">Quality You Can See, Creativity You Can Wear.</p>
         </div>
     </div>
-    
+</div>

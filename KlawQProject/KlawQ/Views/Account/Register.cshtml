@@ -1,12 +1,13 @@
 @model KlawQ.Models.RegisterViewModel
-@section Styles {
-    <link rel="stylesheet" href="css/login.css" />
-}
 @{
+    ViewData["Title"] = "Register";
     ViewData["HideNavbar"] = true;
 }
+@section styles {
+    <link rel="stylesheet" href="/css/register.css" />
+}
 
-<div class="login-container">
+<div class="register-container">
     <div class="left">
         <h1>Create Account</h1>
         <p>Join us and book your appointment!</p>
@@ -27,13 +28,15 @@
 
             <div asp-validation-summary="All" class="text-danger"></div>
         </form>
-        <p>Already have an account? <a href="/Account/Login">Log in here</a></p>
+        <p style="justify-content: space-between">Already have an account? <a href="/Account/Login">Log In</a></p>
     </div>
     <div class="right">
         <div style="text-align:center;">
-            <div class="logo-circle"></div>
-            <h2>Klaw By Krys</h2>
-            <p>Quality You Can See, Creativity You Can Wear.</p>
+            <div style="display:flex; align-items:center; justify-content:center; gap:12px;">
+                <div class="logo-circle"></div>
+                <p class="brand-name">Klaw By Krys</p>
+            </div>
+            <p class="brand-description">Quality You Can See, Creativity You Can Wear.</p>
         </div>
     </div>
 </div>
