@@ -34,6 +34,15 @@ nav {
     max-width: 100%;
 }
 
+/* Sticky navbar */
+.sticky-nav{position:sticky;top:0;z-index:1000}
+
+/* Fixed cart button */
+.cart-button{position:fixed;top:14px;right:20px;z-index:1100}
+.cart-button a{background:#fff;padding:8px 12px;border-radius:22px;box-shadow:0 6px 14px rgba(0,0,0,0.08);text-decoration:none;color:#8b4b3b;display:inline-flex;align-items:center}
+.cart-count{background:#e2557a;color:#fff;border-radius:12px;padding:2px 8px;margin-left:8px;font-size:12px}
+
+
 .nav-container {
     max-width: 1200px;
     margin: 0 auto;

@@ -102,10 +102,52 @@ namespace KlawQ.Controllers
             }
         }
 
-        [HttpGet("debug")]
-        public IActionResult DebugUser()
+    [HttpGet("debug")]
+    public IActionResult DebugUser()
+    {
+        var userName = User.Identity?.Name ?? "Not authenticated";
+        return Ok(new { authenticatedUser = userName });
+    }
+
+    [HttpPost("fetch-image")]
+    public async Task<IActionResult> FetchImageFromUrl([FromBody] FetchImageRequest body)
+    {
+        if (body == null || string.IsNullOrWhiteSpace(body.Url))
+            return BadRequest(new { error = "url required" });
+
+        try
         {
-            var userName = User.Identity?.Name ?? "Not authenticated";
-            return Ok(new { authenticatedUser = userName });
+            using var http = new System.Net.Http.HttpClient();
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("KlawQ-App/1.0");
+            var resp = await http.GetAsync(body.Url);
+            if (!resp.IsSuccessStatusCode) return BadRequest(new { error = "Failed to fetch image" });
+
+            var contentType = resp.Content.Headers.ContentType?.MediaType ?? "";
+            if (!contentType.StartsWith("image/")) return BadRequest(new { error = "URL is not an image" });
+
+            var bytes = await resp.Content.ReadAsByteArrayAsync();
+            if (bytes.Length > 2 * 1024 * 1024) return BadRequest(new { error = "Image too large" });
+
+            var parts = contentType.Split('/');
+            var ext = parts.Length > 1 ? parts[1] : "jpg";
+            if (ext.Contains("jpeg")) ext = "jpg";
+
+            var uploads = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot", "uploads", "appointment_refs");
+            System.IO.Directory.CreateDirectory(uploads);
+            var fname = System.Guid.NewGuid().ToString() + "." + ext;
+            var fpath = System.IO.Path.Combine(uploads, fname);
+            await System.IO.File.WriteAllBytesAsync(fpath, bytes);
+
+            var url = "/uploads/appointment_refs/" + fname;
+            return Ok(new { url });
         }
-}}
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "FetchImage failed for url {Url}", body?.Url);
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    public class FetchImageRequest { public string Url { get; set; } = string.Empty; }
+}
+}

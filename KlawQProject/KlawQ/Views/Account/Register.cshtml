@@ -12,6 +12,7 @@
         <h1>Create Account</h1>
         <p>Join us and book your appointment!</p>
         <form asp-controller="Register" asp-action="Register" method="post">
+            @Html.AntiForgeryToken()
             <input asp-for="FullName" class="input-field" type="text" placeholder="Full Name" />
             <span asp-validation-for="FullName" class="text-danger"></span>
 

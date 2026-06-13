@@ -62,13 +62,11 @@ namespace KlawQ.Controllers
                 // Generate a random 6-digit verification code
                 string verificationCode = new Random().Next(100000, 999999).ToString();
 
-                // Hash the password now so it's secure while sitting in the session
-                string secureHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
-
-                // Save registration info and code to Session variables
+                // Store the plain password briefly in session for account creation after verification.
+                // Session is server-side and will be cleared immediately after use.
                 HttpContext.Session.SetString("Reg_FullName", model.FullName);
                 HttpContext.Session.SetString("Reg_Email", model.Email);
-                HttpContext.Session.SetString("Reg_PasswordHash", secureHash);
+                HttpContext.Session.SetString("Reg_Password", model.Password);
                 HttpContext.Session.SetString("Reg_VerificationCode", verificationCode);
 
                 // Send the email code 
@@ -95,7 +93,7 @@ namespace KlawQ.Controllers
         // Confirm Code & Commit User to Database
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult VerifyEmail(VerifyCodeViewModel model)
+        public async Task<IActionResult> VerifyEmail(VerifyCodeViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -106,7 +104,6 @@ namespace KlawQ.Controllers
             string? cachedCode = HttpContext.Session.GetString("Reg_VerificationCode");
             string? cachedEmail = HttpContext.Session.GetString("Reg_Email");
             string? cachedFullName = HttpContext.Session.GetString("Reg_FullName");
-            string? cachedHash = HttpContext.Session.GetString("Reg_PasswordHash");
 
             // Ensure session hasn't expired and email matches
             if (string.IsNullOrEmpty(cachedCode) || cachedEmail != model.Email)
@@ -124,7 +121,7 @@ namespace KlawQ.Controllers
 
             try
             {
-                // Create the Microsoft Identity user that _context.Users expects
+                // Create Identity user using UserManager so password and security stamps are handled
                 var identityUser = new IdentityUser
                 {
                     UserName = cachedEmail,
@@ -132,29 +129,45 @@ namespace KlawQ.Controllers
                     EmailConfirmed = true
                 };
 
-                // Add the Identity User to the context first
-                _context.Users.Add(identityUser);
+                // Retrieve plain password stored in session
+                string? plainPassword = HttpContext.Session.GetString("Reg_Password");
+                if (string.IsNullOrEmpty(plainPassword))
+                {
+                    ModelState.AddModelError(string.Empty, "Registration session expired. Please register again.");
+                    return View("~/Views/Account/VerifyEmail.cshtml", model);
+                }
 
-                // Map the data to your leader's custom profile entity 
+                var createResult = await _userManager.CreateAsync(identityUser, plainPassword);
+                if (!createResult.Succeeded)
+                {
+                    foreach (var err in createResult.Errors) ModelState.AddModelError(string.Empty, err.Description);
+                    return View("~/Views/Account/VerifyEmail.cshtml", model);
+                }
+
+                // Assign default role
+                await _userManager.AddToRoleAsync(identityUser, "User");
+
+                // Refresh identityUser to read the generated PasswordHash and Id
+                var createdUser = await _userManager.FindByEmailAsync(cachedEmail);
+
+                // Map the data to custom profile entity 
                 var customUserProfile = new KlawQ.Models.Users
                 {
                     Full_Name = cachedFullName!,
                     Email = cachedEmail!,
-                    PasswordHash = cachedHash!,
-                    Role = "Client",
-                    IdentityUserId = identityUser.Id
+                    PasswordHash = createdUser?.PasswordHash ?? string.Empty,
+                    Role = "User",
+                    IdentityUserId = createdUser?.Id
                 };
 
                 // Save the custom profile to its specific table
                 _context.UserProfiles.Add(customUserProfile);
-
-                // Commit everything to the SQL database at once
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
 
                 // Clear session data
                 HttpContext.Session.Remove("Reg_FullName");
                 HttpContext.Session.Remove("Reg_Email");
-                HttpContext.Session.Remove("Reg_PasswordHash");
+                HttpContext.Session.Remove("Reg_Password");
                 HttpContext.Session.Remove("Reg_VerificationCode");
 
                 TempData["SuccessMessage"] = "Email verified! Registration successful.";

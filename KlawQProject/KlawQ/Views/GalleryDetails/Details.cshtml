@@ -1,0 +1,147 @@
+@model KlawQ.Models.Products
+
+@{
+    ViewData["Title"] = Model.Product_Name;
+    var mainImg = Model.Product_Image as string;
+    if (string.IsNullOrWhiteSpace(mainImg)) mainImg = Url.Content("~/images/placeholder.png");
+    else if (mainImg.StartsWith("~")) mainImg = Url.Content(mainImg);
+    else if (!mainImg.StartsWith("/")) mainImg = Url.Content("~/" + mainImg.TrimStart('/'));
+    else mainImg = Url.Content(mainImg);
+}
+
+<style>
+.details-container{max-width:1200px;margin:24px auto;padding:0 12px}
+.details-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px}
+.image-card{background:#fff;border-radius:16px;overflow:hidden;border:6px solid #fde6ea;box-shadow:0 8px 18px rgba(0,0,0,.06)}
+.image-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.info-card{background:#fff;border-radius:16px;padding:24px;border:6px solid #f8e8ed;box-shadow:0 8px 18px rgba(0,0,0,.06)}
+.info-card h1{font-family:'Brush Script MT',cursive;font-size:32px;color:#8b4b3b;margin:0 0 12px;line-height:1}
+.info-card .divider{border:0;border-top:1px solid #e9cfd6;margin:12px 0 16px;height:0}
+.info-card .desc{color:#7a5046;font-size:14px;line-height:1.6;margin:0}
+.price-row{margin:16px 0;font-size:14px}
+.price-row .label{color:#999;font-weight:600}
+.price-row .amount{color:#e2557a;font-weight:900;font-size:22px;margin-left:4px}
+.action-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.action-buttons .btn{border-radius:999px;padding:10px 16px;font-size:14px;border:0;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn-fav{background:#88b04b;color:#fff;box-shadow:0 4px 10px rgba(100,120,80,.08)}
+.btn-fav:hover{background:#7a9a3f;text-decoration:none;color:#fff}
+.btn-book{background:#88b04b;color:#fff;box-shadow:0 4px 10px rgba(100,120,80,.08)}
+.btn-book:hover{background:#7a9a3f;text-decoration:none;color:#fff}
+.btn-order{background:#88b04b;color:#fff;box-shadow:0 4px 10px rgba(100,120,80,.08)}
+.btn-order:hover{background:#7a9a3f;text-decoration:none;color:#fff}
+
+.you-may-section{margin:28px 0}
+.you-may-text{font-family:'Brush Script MT',cursive;font-size:24px;color:#b36a44;text-align:center;margin-bottom:16px}
+.related-row{display:flex;gap:14px;overflow-x:auto;padding:8px 4px;scrollbar-width:none}
+.related-row::-webkit-scrollbar{display:none}
+.related-card{width:140px;height:105px;border-radius:12px;overflow:hidden;flex:0 0 140px;background:#fff;border:4px solid #fde6ea;box-shadow:0 6px 14px rgba(0,0,0,.06)}
+.related-card img{width:100%;height:100%;object-fit:cover}
+.related-card:hover{border-color:#f0b8cc;box-shadow:0 8px 18px rgba(0,0,0,.1)}
+
+@@media(max-width:768px){
+    .details-row{grid-template-columns:1fr}
+    .info-card{padding:20px}
+    .info-card h1{font-size:28px}
+}
+</style>
+
+<div class="details-container">
+    <div class="details-row">
+        <!-- Left card: Image -->
+        <div class="image-card">
+            <img src="@mainImg" alt="@Model.Product_Name" />
+        </div>
+
+        <!-- Right card: Product info -->
+        <div class="info-card">
+            <h1>@Model.Product_Name</h1>
+            <hr class="divider" />
+            <p class="desc">@Model.Product_Description</p>
+
+            <div class="price-row">
+                <span class="label">Price</span>
+                <span class="amount">₱@Model.Product_Price</span>
+            </div>
+
+            <div class="action-buttons">
+                @if (Model.Product_Type != null && Model.Product_Type.ToLower().Contains("original"))
+                {
+                    <form id="favForm" method="post" action="/Gallery/toggle-favorite/@Model.ProductID" style="display:inline">
+                        <input type="hidden" name="productId" value="@Model.ProductID" />
+                        <button type="submit" class="btn btn-fav" id="favBtn">
+                            <i class="fa-regular fa-heart" id="favIcon"></i> Favorite
+                        </button>
+                    </form>
+                    <a href="/Appointment?Inspiration_Image=@Uri.EscapeDataString(mainImg)&Inspiration_Title=@Uri.EscapeDataString(Model.Product_Name)" class="btn btn-book">Book Appointment</a>
+                }
+                else if (Model.Product_Type != null && Model.Product_Type.ToLower().Contains("press"))
+                {
+                    <a href="/Order/Start?productId=@Model.ProductID" class="btn btn-order">Order Press-On</a>
+                }
+                else
+                {
+                    <a href="/Appointment?Inspiration_Image=@Uri.EscapeDataString(mainImg)&Inspiration_Title=@Uri.EscapeDataString(Model.Product_Name)" class="btn btn-book">Book Appointment</a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- You May Also Like section -->
+    @{
+        var related = ViewBag.RelatedProducts as List<KlawQ.Models.Products> ?? new List<KlawQ.Models.Products>();
+        if (related.Any(x => x.ProductID != Model.ProductID))
+        {
+            <div class="you-may-section">
+                <div class="you-may-text">You May Also Like</div>
+                <div class="related-row">
+                    @foreach (var r in related.Where(x => x.ProductID != Model.ProductID))
+                    {
+                        var rimg = r.Product_Image as string;
+                        if (string.IsNullOrWhiteSpace(rimg)) rimg = Url.Content("~/images/placeholder.png");
+                        else if (rimg.StartsWith("~")) rimg = Url.Content(rimg);
+                        else if (!rimg.StartsWith("/")) rimg = Url.Content("~/" + rimg.TrimStart('/'));
+                        else rimg = Url.Content(rimg);
+
+                        <a href="@Url.Action("Details", "Gallery", new { id = r.ProductID })" class="related-card">
+                            <img src="@rimg" alt="@r.Product_Name" />
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var isFav = @(((ViewData["IsFavorited"] as bool?) == true) ? "true" : "false");
+            var $favIcon = $('#favIcon');
+            var $favBtn = $('#favBtn');
+            
+            if (isFav === 'true') {
+                $favIcon.removeClass('fa-regular').addClass('fa-solid');
+            }
+
+            $('#favForm').on('submit', function (e) {
+                e.preventDefault();
+                var form = $(this);
+                
+                // Visual feedback
+                $favBtn.prop('disabled', true).css('opacity', '0.6');
+                
+                $.post(form.attr('action'), form.serialize(), function (resp) {
+                    $favBtn.prop('disabled', false).css('opacity', '1');
+                    
+                    if (resp && resp.success) {
+                        if (resp.favorited) {
+                            $favIcon.removeClass('fa-regular').addClass('fa-solid');
+                        } else {
+                            $favIcon.removeClass('fa-solid').addClass('fa-regular');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

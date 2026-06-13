@@ -1,0 +1,164 @@
+﻿@model IEnumerable<KlawQ.Models.Products>
+@{
+    ViewData["Title"] = "Admin Portfolio Manager";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="/css/portfolio-manager.css" />
+
+    <style>
+        /* limit description to two lines */
+        .item-details p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        /* grid layout: 3 cards per row */
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap:24px; align-items:stretch; }
+        .gallery-grid .gallery-item { display:flex; flex-direction:column; gap:12px; padding:16px; border-radius:12px; background:#fff; box-shadow:0 6px 18px rgba(0,0,0,0.04); height:100%; }
+
+        /* image box */
+        .gallery-item .work-image { width:100%; height:220px; border-radius:12px; overflow:hidden; background-color:#f8eef2; background-size:cover; background-position:center; flex-shrink:0; }
+        .item-details { flex:1; }
+
+        /* ensure actions stick to bottom */
+        .item-actions { margin-top:auto; display:flex; gap:8px; align-items:center; }
+
+        /* title truncation to two lines */
+        .work-title { font-size:18px; margin:0 0 8px 0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word }
+
+        /* responsive: 2 columns on smaller screens, 1 on very small */
+        @@media (max-width: 900px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
+        @@media (max-width: 560px) { .gallery-grid { grid-template-columns: 1fr; } }
+    </style>
+    <style>
+        /* overrides to align content and add padding */
+        .gallery-grid { align-items:stretch; grid-auto-rows: 1fr; }
+        .gallery-grid .gallery-item { padding:18px; box-sizing:border-box; height:100%; }
+        .gallery-item .work-image { height:220px; }
+        .item-details { display:flex; flex-direction:column; align-items:flex-start; padding-top:8px; }
+        .work-title { margin:8px 0 6px; }
+        .meta-row { display:flex; gap:12px; margin-top:8px; color:#7a5b52; }
+        .item-actions { margin-top:12px; }
+    </style>
+}
+
+<div class="portfolio-container">
+
+    <div class="page-header">
+        <h1 class="page-title">Admin Portfolio Manager</h1>
+        <p class="page-subtitle">Add, edit, and organize your nail work gallery</p>
+    </div>
+
+    <div class="section-box form-section">
+        <div class="section-header">
+            <h2><i class="far fa-image"></i> Add New Work</h2>
+        </div>
+
+        <form class="portfolio-form" action="/admin/PortfolioManager/create" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <label for="Product_Name">Title <span class="required">*</span></label>
+                <input type="text" id="Product_Name" name="Product_Name" placeholder="Work title" required />
+            </div>
+
+            <div class="form-group">
+                <label for="Product_Description">Description <span class="required">*</span></label>
+                <textarea id="Product_Description" name="Product_Description" placeholder="Enter a short description" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="Product_Type">Type</label>
+                <select id="Product_Type" name="Product_Type">
+                    <option value="Original">Original Sets (Appointment)</option>
+                    <option value="PressOn">Press-On Sets (Order)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="Product_Price">Price</label>
+                <input type="number" step="0.01" id="Product_Price" name="Product_Price" placeholder="0.00" value="0.00" required />
+            </div>
+
+            <div class="form-group">
+                <label for="Product_Stock">Stock</label>
+                <input type="number" id="Product_Stock" name="Product_Stock" placeholder="0" value="1" required />
+            </div>
+
+            <div class="form-group">
+                <label for="imageFile">Upload Image <span class="required">*</span></label>
+                <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-save"><i class="fas fa-save"></i> Save</button>
+            </div>
+        </form>
+
+    </div>
+
+    <div class="section-box gallery-section">
+        <div class="section-header flex-between">
+            <h2>Uploaded Work</h2>
+            <span class="badge-total">@($"{Model?.Count() ?? 0} items")</span>
+        </div>
+
+        <div class="gallery-grid">
+            @if (Model == null || !Model.Any())
+            {
+                <div class="gallery-item empty-state">
+                    <div class="image-placeholder">
+                        <i class="far fa-image"></i>
+                    </div>
+                    <p>No portfolio items yet. Upload a work to show it on the public gallery.</p>
+                </div>
+            }
+            else
+            {
+                foreach (var item in Model)
+                {
+                    <div class="gallery-item">
+                        @{
+                            var imgPath = item.Product_Image;
+                            if (string.IsNullOrWhiteSpace(imgPath))
+                            {
+                                imgPath = Url.Content("~/images/placeholder.png");
+                            }
+                            else if (imgPath.StartsWith("~"))
+                            {
+                                imgPath = Url.Content(imgPath);
+                            }
+                            else if (!imgPath.StartsWith("/"))
+                            {
+                                imgPath = Url.Content("~/" + imgPath.TrimStart('/'));
+                            }
+                        }
+                        <div class="work-image" style="background-image:url('@imgPath');"></div>
+                        <div class="item-details">
+                            <h3 class="work-title">@item.Product_Name</h3>
+                            <p>@item.Product_Description</p>
+                            <div class="meta-row">
+                                <small>Price: @item.Product_Price.ToString("C")</small>
+                                <small>Stock: @item.Product_Stock</small>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <a class="action-btn edit-btn" href="/admin/AdminProducts/edit/@item.ProductID" title="Edit"><i class="fas fa-pencil-alt"></i></a>
+                            <form method="post" action="/admin/PortfolioManager/delete/@item.ProductID" onsubmit="return confirm('Delete this work?');">
+                                @Html.AntiForgeryToken()
+                                <button class="action-btn delete-btn" type="submit" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+</div>

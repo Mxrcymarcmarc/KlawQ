@@ -4,16 +4,19 @@ using KlawQ.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace KlawQ.Migrations
+namespace KlawQ.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260613144926_AddFavoritesCart")]
+    partial class AddFavoritesCart
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,6 +104,9 @@ namespace KlawQ.Migrations
                     b.Property<int>("CartId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("CartId1")
+                        .HasColumnType("int");
+
                     b.Property<int>("ProductID")
                         .HasColumnType("int");
 
@@ -110,6 +116,8 @@ namespace KlawQ.Migrations
                     b.HasKey("CartItemId");
 
                     b.HasIndex("CartId");
+
+                    b.HasIndex("CartId1");
 
                     b.HasIndex("ProductID");
 
@@ -168,12 +176,6 @@ namespace KlawQ.Migrations
 
                     b.Property<int>("Product_Stock")
                         .HasColumnType("int");
-
-                    b.Property<string>("Product_Type")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("Original");
 
                     b.HasKey("ProductID");
 
@@ -437,11 +439,15 @@ namespace KlawQ.Migrations
 
             modelBuilder.Entity("KlawQ.Models.CartItem", b =>
                 {
-                    b.HasOne("KlawQ.Models.Cart", "Cart")
+                    b.HasOne("KlawQ.Models.Cart", null)
                         .WithMany("Items")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("KlawQ.Models.Cart", "Cart")
+                        .WithMany()
+                        .HasForeignKey("CartId1");
 
                     b.HasOne("KlawQ.Models.Products", "Product")
                         .WithMany()
