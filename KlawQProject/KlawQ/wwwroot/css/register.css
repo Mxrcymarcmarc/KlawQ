@@ -166,7 +166,7 @@ body {
 }
 
 
-@media (max-width: 540px) {
+@media (max-width: 768px) {
     .register-container {
         flex-direction: column;
         width: 95%;
