@@ -10,7 +10,7 @@
     <div class="left">
         <h1>Create Account</h1>
         <p>Join us and book your appointment!</p>
-        <form asp-action="Register" method="post">
+        <form asp-controller="Register" asp-action="Register" method="post">
             <input asp-for="FullName" class="input-field" type="text" placeholder="Full Name" />
             <span asp-validation-for="FullName" class="text-danger"></span>
 
@@ -24,6 +24,8 @@
             <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
 
             <button class="btn" type="submit">Register</button>
+
+            <div asp-validation-summary="All" class="text-danger"></div>
         </form>
         <p>Already have an account? <a href="/Account/Login">Log in here</a></p>
     </div>

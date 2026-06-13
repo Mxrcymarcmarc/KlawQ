@@ -1,8 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using KlawQ.Models;
+﻿using BCrypt.Net;
+using Humanizer.Configuration;
 using KlawQ.Data;
-using BCrypt.Net;
+using KlawQ.Models;
+using MailKit.Net.Smtp;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using MimeKit;
 using System;
 using System.Linq;
 
@@ -11,28 +16,45 @@ namespace KlawQ.Controllers
     public class RegisterController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IConfiguration _configuration;
 
-        public RegisterController(ApplicationDbContext context)
+        // Constructor cleanly handles dependency injection for everything you need
+        public RegisterController(
+            ApplicationDbContext context,
+            SignInManager<IdentityUser> signInManager,
+            UserManager<IdentityUser> userManager,
+            IConfiguration configuration)
         {
             _context = context;
+            _signInManager = signInManager;
+            _userManager = userManager;
+            _configuration = configuration; // FIX: Added this line so your configuration isn't null!
         }
 
         // STEP 1: Display Registration Page
         [HttpGet]
-        public IActionResult Register() => View();
+        public IActionResult Register()
+        {
+            return View("~/Views/Account/Register.cshtml");
+        }
 
         // STEP 1 POST: Process Details & Send Verification Code
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Register(RegisterViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                return View("~/Views/Account/Register.cshtml", model);
+            }
 
             // Check if email already exists in DB
             if (_context.Users.Any(u => u.Email == model.Email))
             {
                 ModelState.AddModelError("Email", "This email address is already registered.");
-                return View(model);
+                return View("~/Views/Account/Register.cshtml", model);
             }
 
             try
@@ -49,16 +71,16 @@ namespace KlawQ.Controllers
                 HttpContext.Session.SetString("Reg_PasswordHash", secureHash);
                 HttpContext.Session.SetString("Reg_VerificationCode", verificationCode);
 
-                // Send the email code (Call your email service here)
+                // Send the email code 
                 SendEmailCode(model.Email, verificationCode);
 
                 // Redirect to the verification entry screen
                 return RedirectToAction("VerifyEmail", new { email = model.Email });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, "An error occurred. Please try again.");
-                return View(model);
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View("~/Views/Account/Register.cshtml", model);
             }
         }
 
@@ -67,7 +89,7 @@ namespace KlawQ.Controllers
         public IActionResult VerifyEmail(string email)
         {
             var model = new VerifyCodeViewModel { Email = email };
-            return View(model);
+            return View("~/Views/Account/VerifyEmail.cshtml", model);
         }
 
         // STEP 2 POST: Confirm Code & Commit User to Database
@@ -75,7 +97,10 @@ namespace KlawQ.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult VerifyEmail(VerifyCodeViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                return View("~/Views/Account/VerifyEmail.cshtml", model);
+            }
 
             // Retrieve stored data from Session
             string? cachedCode = HttpContext.Session.GetString("Reg_VerificationCode");
@@ -87,42 +112,40 @@ namespace KlawQ.Controllers
             if (string.IsNullOrEmpty(cachedCode) || cachedEmail != model.Email)
             {
                 ModelState.AddModelError(string.Empty, "Verification session expired. Please register again.");
-                return View(model);
+                return View("~/Views/Account/VerifyEmail.cshtml", model);
             }
 
             // Check if the user entered the correct code
             if (model.Code != cachedCode)
             {
                 ModelState.AddModelError("Code", "Invalid verification code.");
-                return View(model);
+                return View("~/Views/Account/VerifyEmail.cshtml", model);
             }
 
             try
             {
                 // 1. Create the Microsoft Identity user that _context.Users expects
-                var identityUser = new Microsoft.AspNetCore.Identity.IdentityUser
+                var identityUser = new IdentityUser
                 {
                     UserName = cachedEmail,
                     Email = cachedEmail,
-                    EmailConfirmed = true // They just verified via email code!
+                    EmailConfirmed = true
                 };
 
                 // 2. Add the Identity User to the context first
                 _context.Users.Add(identityUser);
 
                 // 3. Map the data to your leader's custom profile entity 
-                // (Assuming your DbContext has a separate DbSet for your custom table, like CustomUsers or AppUsers)
                 var customUserProfile = new KlawQ.Models.Users
                 {
                     Full_Name = cachedFullName!,
                     Email = cachedEmail!,
-                    PasswordHash = cachedHash!, // Storing your BCrypt hash here
+                    PasswordHash = cachedHash!,
                     Role = "Client",
-                    IdentityUserId = identityUser.Id // Link it to the Identity account we just created above!
+                    IdentityUserId = identityUser.Id
                 };
 
                 // 4. Save the custom profile to its specific table
-                // Note: Replace "CustomUsers" with whatever your leader named your custom table DbSet in ApplicationDbContext.cs
                 _context.UserProfiles.Add(customUserProfile);
 
                 // 5. Commit everything to the SQL database at once
@@ -135,24 +158,65 @@ namespace KlawQ.Controllers
                 HttpContext.Session.Remove("Reg_VerificationCode");
 
                 TempData["SuccessMessage"] = "Email verified! Registration successful.";
+
                 return RedirectToAction("Login", "Account");
             }
             catch (Exception)
             {
                 ModelState.AddModelError(string.Empty, "Error finalizing your account database entry.");
-                return View(model);
+                return View("~/Views/Account/VerifyEmail.cshtml", model);
             }
         }
 
-        // Dummy method placeholder for sending your emails
+        // Real functional method for sending emails via MailKit
         private void SendEmailCode(string email, string code)
         {
-            // Integrate SMTP, SendGrid, or FluentEmail here
-            // Example concept: 
-            // _emailService.Send(email, "Your Verification Code", $"Your code is: {code}");
+            // IMPORTANT: Replace these placeholders with your real credentials for testing!
+            string yourGmail = "klawqwebapp@gmail.com";
+            string yourAppPassword = "tqwc jyao ujds bedm";
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("Klaw By Krys", yourGmail));
+            message.To.Add(new MailboxAddress("", email));
+            message.Subject = "Your KlawQ Verification Code";
+
+            var bodyBuilder = new BodyBuilder
+            {
+                HtmlBody = $@"
+                    <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; max-width: 500px; margin: 0 auto;'>
+                        <h2 style='color: #333;'>Welcome to Klaw By Krys!</h2>
+                        <p>Thank you for signing up. Please use the following 6-digit verification code to complete your registration:</p>
+                        <div style='font-size: 28px; font-weight: bold; color: #d63384; letter-spacing: 4px; padding: 15px; background-color: #f8f9fa; text-align: center; border-radius: 5px; margin: 20px 0;'>
+                            {code}
+                        </div>
+                        <p style='color: #666;'>This code will expire in 15 minutes.</p>
+                        <hr style='border: none; border-top: 1px solid #eee;' />
+                        <p style='font-size: 11px; color: #999; text-align: center;'>If you did not request this code, you can safely ignore this email.</p>
+                    </div>"
+            };
+            message.Body = bodyBuilder.ToMessageBody();
+
+            using (var client = new SmtpClient())
+            {
+                try
+                {
+                    client.Connect("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+                    client.Authenticate(yourGmail, yourAppPassword);
+                    client.Send(message);
+                    client.Disconnect(true);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Email dispatch error: {ex.Message}");
+                    throw new Exception("We encountered an issue sending your verification email. Please check your credentials.");
+                }
+            }
         }
 
         [HttpGet]
-        public IActionResult Login() => View();
+        public IActionResult Login()
+        {
+            return View("~/Views/Account/Login.cshtml");
+        }
     }
 }
