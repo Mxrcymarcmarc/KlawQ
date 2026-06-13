@@ -1,7 +1,12 @@
 @{
     Layout = null;
-    var paymentId = (string)ViewData["PaymentId"];
-    var appointmentId = (int)ViewData["AppointmentId"];
+    var paymentId = ViewData["PaymentId"] as string ?? string.Empty;
+    int appointmentId = 0;
+    var appointmentObj = ViewData["AppointmentId"];
+    if (appointmentObj != null)
+    {
+        int.TryParse(appointmentObj.ToString(), out appointmentId);
+    }
 }
 <!DOCTYPE html>
 <html>
