@@ -10,18 +10,21 @@
     @RenderSection("Styles", required: false)
 </head>
 <body>
-    <nav>
+    <nav class="sticky-nav">
         <div class="nav-container">
             <a class="nav-brand" asp-controller="Home" asp-action="Index">🎀 Klaw By Krys</a>
             @if (ViewData["HideNavbar"] == null)
                 {
                     <ul class="nav-links">
                         <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                        <li><a asp-controller="Gallery" asp-action="Index">Gallery</a></li>  
-                        <li><a asp-controller="My Bookmarks" asp-action="Index">My Bookmarks</a></li>         
+                        <li><a asp-controller="Gallery" asp-action="Index">Gallery</a></li>
+                        <li><a asp-controller="Favorites" asp-action="Index">Favorites</a></li>
                         <li><a asp-controller="Appointment" asp-action="Index">Appointment</a></li>
                         <li><a href="/Account/Logout" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Logout</a></li>
                     </ul>
+                    <div class="cart-button">
+                        <a href="/Cart" title="Cart">🛒<span id="cartCount" class="cart-count">0</span></a>
+                    </div>
                 }
             </div>
     </nav>
@@ -30,7 +33,7 @@
         @RenderBody()
     </main>
 
-    <form id="logoutForm" action="/Account/Logout" method="post" style="display:none;"></form>
+    <form id="logoutForm" action="/Account/Logout" method="post" style="display:none;">@Html.AntiForgeryToken()</form>
 
     <footer class="site-footer">
         <div class="footer-inner">
@@ -54,10 +57,8 @@
             Made with ♥ by Klaw By Krys © 2026
         </div>
     </footer>
-<<<<<<< HEAD
-=======
 
     @RenderSection("Scripts", required: false)
->>>>>>> bfc05f5a10b3eda5a0645cc09bc761d3bebd7cb3
+ 
 </body>
 </html>

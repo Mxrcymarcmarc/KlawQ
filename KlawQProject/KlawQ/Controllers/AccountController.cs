@@ -71,6 +71,11 @@ namespace KlawQ.Controllers
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
             if (result.Succeeded)
             {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null && await _userManager.IsInRoleAsync(user, "Admin"))
+                {
+                    return Redirect("/admin");
+                }
                 return RedirectToLocal(returnUrl);
             }
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");

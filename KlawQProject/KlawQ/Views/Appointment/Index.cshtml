@@ -392,6 +392,35 @@
                 <div class="input">
                     <label>Design Reference (Image) *</label>
                     <input id="designImage" name="DesignImage" type="file" accept="image/*" />
+                    <input type="hidden" id="inspirationImage" name="Inspiration_Image" />
+                    <div id="designPreview" style="margin-top:8px;">
+                        <img id="designPreviewImg" src="" alt="" style="max-width:120px; display:none; border-radius:8px;" />
+                        <div id="designAttachedNote" style="display:none; margin-top:8px; color:#6b4228; font-weight:600;">Design attached from selected gallery item</div>
+                    </div>
+                    <script>
+                        (function(){
+                            try{
+                                const params = new URLSearchParams(window.location.search);
+                                const img = params.get('Inspiration_Image') || params.get('inspirationImage') || params.get('imageUrl') || params.get('DesignReferenceUrl');
+                                const title = params.get('Inspiration_Title') || params.get('title') || params.get('ProductName') || params.get('Name');
+                                if(img){
+                                    document.addEventListener('DOMContentLoaded', function(){
+                                        var hidden = document.getElementById('inspirationImage');
+                                        var fileInput = document.getElementById('designImage');
+                                        var note = document.getElementById('designAttachedNote');
+                                        // Attach the URL and show a descriptive note using the provided title (if any)
+                                        if(hidden) hidden.value = img;
+                                        if(fileInput){ fileInput.style.display = 'none'; fileInput.disabled = true; }
+                                        if(note){
+                                            if(title && title.length > 0) note.innerText = 'You selected ' + title + ' design from the gallery';
+                                            else note.innerText = 'Design attached from selected gallery item';
+                                            note.style.display = 'block';
+                                        }
+                                    });
+                                }
+                            }catch(e){ /* ignore */ }
+                        })();
+                    </script>
                 </div>
                 <div class="input" style="grid-column:1 / -1">
                     <label>Special Requests</label>
@@ -490,23 +519,49 @@
             const email = document.getElementById('email').value.trim();
             const phone = document.getElementById('phone').value.trim();
             const fileInput = document.getElementById('designImage');
-            const file = fileInput.files[0];
+            const hiddenInput = document.getElementById('inspirationImage');
+            const file = fileInput && !fileInput.disabled ? fileInput.files[0] : null;
 
             if (!fullName) { alert('Full Name is required'); return false; }
             if (!email)    { alert('Email is required');     return false; }
             if (!phone)    { alert('Phone is required');     return false; }
-            if (!file)     { alert('Design Reference image is required'); return false; }
+            // allow either uploaded file or attached inspiration URL
+            if (!file && (!hiddenInput || !hiddenInput.value)) { alert('Design Reference image is required'); return false; }
 
-            if (file.size > 2 * 1024 * 1024) {
-                alert('Image must be smaller than 2MB. Current size: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
-                return false;
+            let imageBase64 = null;
+
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Image must be smaller than 2MB. Current size: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
+                    return false;
+                }
+
+                imageBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+            } else if (hiddenInput && hiddenInput.value) {
+                // fetch referenced image and convert to base64 (best-effort)
+                try {
+                    const res = await fetch(hiddenInput.value);
+                    if (!res.ok) throw new Error('fetch failed');
+                    const blob = await res.blob();
+                    if (blob.size > 2 * 1024 * 1024) {
+                        alert('Referenced image is larger than 2MB. Please upload a smaller image.');
+                        return false;
+                    }
+                    imageBase64 = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (e) {
+                    console.error('Failed to fetch referenced image', e);
+                    alert('Failed to retrieve referenced image. Please upload the design image manually.');
+                    return false;
+                }
             }
-
-            const imageBase64 = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.readAsDataURL(file);
-            });
 
             tempAppointmentData = {
                 Full_Name: fullName,

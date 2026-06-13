@@ -11,6 +11,8 @@
         <p class="heading">Welcome Back!</p>
         <p class="description">Enter your Username & Password</p>
         <form asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
             <input asp-for="Email" class="input-field" type="email" placeholder="Email" />
             <input asp-for="Password" class="input-field" placeholder="Password" type="password" />
             <div>

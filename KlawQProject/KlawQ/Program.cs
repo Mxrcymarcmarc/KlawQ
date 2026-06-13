@@ -1,4 +1,5 @@
 using KlawQ.Data;
+using KlawQ.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -61,6 +62,32 @@ using (var scope = app.Services.CreateScope())
             await userManager.AddToRoleAsync(adminUser, "Admin");
         }
     }
+    else
+    {
+        if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+        {
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+        if (!await userManager.CheckPasswordAsync(adminUser, adminPassword))
+        {
+            var token = await userManager.GeneratePasswordResetTokenAsync(adminUser);
+            await userManager.ResetPasswordAsync(adminUser, token, adminPassword);
+        }
+    }
+
+    var customAdminProfile = await services.GetRequiredService<ApplicationDbContext>().UserProfiles.FirstOrDefaultAsync(u => u.Email == adminEmail);
+    if (customAdminProfile == null && adminUser != null)
+    {
+        services.GetRequiredService<ApplicationDbContext>().UserProfiles.Add(new Users
+        {
+            Full_Name = "Administrator",
+            Email = adminEmail,
+            PasswordHash = adminUser.PasswordHash ?? string.Empty,
+            Role = "Admin",
+            IdentityUserId = adminUser.Id
+        });
+        await services.GetRequiredService<ApplicationDbContext>().SaveChangesAsync();
+    }
 
     // Seed test user
     var testUserEmail = "lemuel@gmail.com";
@@ -74,6 +101,32 @@ using (var scope = app.Services.CreateScope())
         {
             await userManager.AddToRoleAsync(testUser, "User");
         }
+    }
+    else
+    {
+        if (!await userManager.IsInRoleAsync(testUser, "User"))
+        {
+            await userManager.AddToRoleAsync(testUser, "User");
+        }
+        if (!await userManager.CheckPasswordAsync(testUser, testUserPassword))
+        {
+            var token = await userManager.GeneratePasswordResetTokenAsync(testUser);
+            await userManager.ResetPasswordAsync(testUser, token, testUserPassword);
+        }
+    }
+
+    var customTestProfile = await services.GetRequiredService<ApplicationDbContext>().UserProfiles.FirstOrDefaultAsync(u => u.Email == testUserEmail);
+    if (customTestProfile == null && testUser != null)
+    {
+        services.GetRequiredService<ApplicationDbContext>().UserProfiles.Add(new Users
+        {
+            Full_Name = "Test User",
+            Email = testUserEmail,
+            PasswordHash = testUser.PasswordHash ?? string.Empty,
+            Role = "User",
+            IdentityUserId = testUser.Id
+        });
+        await services.GetRequiredService<ApplicationDbContext>().SaveChangesAsync();
     }
 }
 
