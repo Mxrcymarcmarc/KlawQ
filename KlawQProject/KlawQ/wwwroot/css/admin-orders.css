@@ -1,0 +1,202 @@
+﻿:root {
+    --primary-font: 'Shadows Into Light Two', cursive;
+    --secondary-font: 'Montserrat', sans-serif;
+    --text-brown: #5d4037;
+    --text-dark-brown: #795548;
+    --bg-white: #ffffff;
+    --border-pink: #f8bbd0;
+    --accent-pink: #fce4ec;
+    --accent-green: #a7c47d;
+    --accent-green-hover: #92b068;
+    --status-completed: #2e7d32;
+    --status-pending: #f57c00;
+    --status-cancelled: #d32f2f;
+    --shadow-soft: 0 8px 25px rgba(248, 187, 208, 0.4);
+    --shadow-btn: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.admin-orders-wrapper {
+    background-color: transparent;
+    padding: 2rem 1rem 4rem 1rem;
+    min-height: 80vh;
+}
+
+.admin-orders-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    color: var(--text-brown);
+}
+
+    .admin-orders-container h1 {
+        font-family: var(--primary-font);
+        font-weight: normal;
+    }
+
+    .admin-orders-container p,
+    .admin-orders-container table,
+    .tab-btn,
+    .btn-action {
+        font-family: var(--secondary-font);
+    }
+
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    font-size: 3.5rem;
+    margin: 0;
+    color: var(--text-dark-brown);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.title-icon {
+    color: var(--accent-green);
+    font-size: 2.5rem;
+}
+
+.orders-board {
+    background: var(--bg-white);
+    border-radius: 16px;
+    border: 2px solid var(--border-pink);
+    box-shadow: var(--shadow-soft);
+    padding: 2.5rem;
+}
+
+.tabs-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    flex: 1;
+    min-width: 120px;
+    background: var(--bg-white);
+    color: var(--text-brown);
+    border: none;
+    border-radius: 30px;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: var(--shadow-btn);
+    transition: all 0.2s ease;
+}
+
+    .tab-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .tab-btn.active {
+        background: var(--accent-green);
+        color: white;
+    }
+
+.table-responsive {
+    overflow-x: auto;
+    padding-top: 1rem;
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    text-align: center;
+    min-width: 900px;
+}
+
+    .orders-table th {
+        background-color: var(--accent-green);
+        color: white;
+        font-weight: 600;
+        padding: 1.2rem 1rem;
+        font-size: 0.95rem;
+    }
+
+        .orders-table th:first-child {
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+        }
+
+        .orders-table th:last-child {
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+
+    .orders-table td {
+        padding: 1.2rem 1rem;
+        color: var(--text-brown);
+        font-size: 0.95rem;
+        border-bottom: 1px solid #f0e6e8;
+        vertical-align: middle;
+    }
+
+    .orders-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .orders-table tbody tr:hover {
+        background-color: #fafafa;
+    }
+
+.status-completed {
+    color: var(--status-completed);
+    font-weight: 700;
+}
+
+.status-pending {
+    color: var(--status-pending);
+    font-weight: 700;
+}
+
+.status-cancelled {
+    color: var(--status-cancelled);
+    font-weight: 700;
+}
+
+.btn-action {
+    background: var(--accent-pink);
+    color: var(--text-brown);
+    border: 1px solid var(--border-pink);
+    border-radius: 20px;
+    padding: 0.4rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+    .btn-action:hover {
+        background: #f8bbd0;
+    }
+
+.btn-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .orders-board {
+        padding: 1.5rem;
+    }
+
+    .page-title {
+        font-size: 2.8rem;
+    }
+
+    .tab-btn {
+        padding: 0.8rem 1rem;
+        font-size: 0.95rem;
+    }
+}

@@ -1,0 +1,89 @@
+﻿@{
+    ViewData["Title"] = "Upcoming Appointment";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="~/css/manage-appointment.css" />
+}
+
+<div class="manage-appt-wrapper">
+    <div class="manage-appt-container">
+
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-bookmark title-icon"></i>
+                Upcoming Appointment
+                <i class="fas fa-bookmark title-icon"></i>
+            </h1>
+            <p class="page-subtitle">View and Edit your appointments.</p>
+        </div>
+
+        <div class="appointment-card">
+
+            <div class="card-actions">
+                <button type="button" class="btn-update">Update</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="appointment-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#1</td>
+                            <td>Home Service</td>
+                            <td class="date-col">mm/dd/year/time</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button type="button" class="action-btn edit-btn" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+                                    <button type="button" class="action-btn delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#2</td>
+                            <td>Home Service</td>
+                            <td class="date-col">mm/dd/year/time</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button type="button" class="action-btn edit-btn" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+                                    <button type="button" class="action-btn delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#3</td>
+                            <td>Studio-based Service</td>
+                            <td class="date-col">mm/dd/year/time</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button type="button" class="action-btn edit-btn" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+                                    <button type="button" class="action-btn delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <p class="reschedule-note">
+            Note: You Can Reschedule for one time . Rescheduling fee will take affect only after using the first one.
+        </p>
+
+    </div>
+</div>
