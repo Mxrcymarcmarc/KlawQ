@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
-
     [ApiController]
     [Route("api/[controller]")]
     public class CalendarController : ControllerBase
@@ -63,29 +62,34 @@ namespace KlawQ.Controllers
             return DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
         }
 
-
+        // Combines the current month and next month views, and conditionally includes the month after if availability is running low
         [HttpGet("current-view-status")]
         public async Task<IActionResult> GetCurrentCalendarView()
         {
             DateTime today = TodayInPH();
+
             var currentMonthDays = await GetDaysStatusForMonth(today.Year, today.Month);
-
-            int availableDaysLeft = currentMonthDays
-                .Count(d => d.IsAvailable && DateTime.Parse(d.DateString) >= today);
-
             var finalResponse = new List<CalendarDayStatus>(currentMonthDays);
+
+            DateTime nextMonthDate = today.AddMonths(1);
+            var nextMonthDays = await GetDaysStatusForMonth(nextMonthDate.Year, nextMonthDate.Month);
+            finalResponse.AddRange(nextMonthDays);
+
+            int availableDaysLeft = finalResponse
+                .Count(d => d.IsAvailable && DateTime.Parse(d.DateString) >= today);
 
             if (availableDaysLeft <= ALMOST_FULL_THRESHOLD)
             {
-                DateTime nextMonthDate = today.AddMonths(1);
-                var nextMonthDays = await GetDaysStatusForMonth(nextMonthDate.Year, nextMonthDate.Month);
-                finalResponse.AddRange(nextMonthDays);
+                DateTime nextNextMonthDate = today.AddMonths(2);
+                var nextNextMonthDays = await GetDaysStatusForMonth(nextNextMonthDate.Year, nextNextMonthDate.Month);
+                finalResponse.AddRange(nextNextMonthDays);
             }
 
             return Ok(finalResponse);
         }
 
 
+        // Checks for both existing paid bookings and admin configuration blocks
         [HttpGet("day-slots-status")]
         public async Task<IActionResult> GetDaySlotsStatus([FromQuery] string chosenDate)
         {
@@ -104,6 +108,11 @@ namespace KlawQ.Controllers
                 .Where(s => s.Appointment_Date.Date == parsedDate.Date)
                 .ToListAsync();
 
+            // Fetch admin configuration constraints for this exact date layout
+            var adminHourlyBlocks = await _context.CalendarConfigures
+                .Where(o => o.TargetDate.Date == parsedDate.Date)
+                .ToListAsync();
+
             int[] businessHours = GetBusinessHoursForDay(parsedDate.DayOfWeek);
             DateTime nowPH = NowInPH();
             var hourlySlots = new List<object>();
@@ -117,11 +126,15 @@ namespace KlawQ.Controllers
                     b.Appointment != null &&
                     b.Appointment.Down_Payment_Paid);
 
+                // Check if admin blocked either the entire day (null) or this specific business hour slot
+                bool isSlotBlockedByAdmin = adminHourlyBlocks.Any(o => o.BlockedHour == null || o.BlockedHour == hour);
+
                 hourlySlots.Add(new
                 {
                     SlotHour = hour,
                     FormattedTime = GetFormattedTime(hour),
-                    IsAvailable = !isAlreadyBooked && exactSlotTime >= nowPH
+                    // Drop option if it is booked, explicitly blocked by an admin setting, or in the past
+                    IsAvailable = !isAlreadyBooked && !isSlotBlockedByAdmin && exactSlotTime >= nowPH
                 });
             }
 
@@ -248,7 +261,6 @@ namespace KlawQ.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // Returns the styled layout, then routes back to the home index route
             string htmlContent = @"
             <!DOCTYPE html>
             <html>
@@ -334,7 +346,6 @@ namespace KlawQ.Controllers
         }
 
 
-        // 🌟 MODIFIED: FORCE CLEAN DEPENDENCY DROPS FOR FAILED/ABORTED PAYMENTS
         [HttpGet("payment-cancelled")]
         public async Task<IActionResult> HandlePaymentCancelled([FromQuery] int schedulerId)
         {
@@ -346,10 +357,8 @@ namespace KlawQ.Controllers
             {
                 var pendingAppointment = schedulerRecord.Appointment;
 
-                // 1. Remove the child scheduler entity first to satisfy relational layouts
                 _context.Schedulers.Remove(schedulerRecord);
 
-                // 2. Remove the parent appointment entity only if it was never paid for
                 if (pendingAppointment != null && !pendingAppointment.Down_Payment_Paid)
                 {
                     _context.Appointments.Remove(pendingAppointment);
@@ -357,7 +366,6 @@ namespace KlawQ.Controllers
 
                 try
                 {
-                    // 3. Force commit changes to your SQL Express instance cleanly
                     await _context.SaveChangesAsync();
                 }
                 catch (Exception ex)
@@ -370,11 +378,17 @@ namespace KlawQ.Controllers
         }
 
 
+        // Syncs month grid views with active table override rules
         private async Task<List<CalendarDayStatus>> GetDaysStatusForMonth(int year, int month)
         {
             var monthlyBookings = await _context.Schedulers
                 .Include(s => s.Appointment)
                 .Where(s => s.Appointment_Date.Year == year && s.Appointment_Date.Month == month)
+                .ToListAsync();
+
+            // Fetch admin configuration rules targeting this month context layout
+            var adminBlocks = await _context.CalendarConfigures
+                .Where(o => o.TargetDate.Year == year && o.TargetDate.Month == month)
                 .ToListAsync();
 
             DateTime todayPH = TodayInPH();
@@ -391,11 +405,15 @@ namespace KlawQ.Controllers
                     b.Appointment != null &&
                     b.Appointment.Down_Payment_Paid);
 
+                // Identify if an admin profile explicitly blocked out this entire date row (BlockedHour is null)
+                bool isDayBlockedByAdmin = adminBlocks.Any(o => o.TargetDate.Date == loopDate.Date && o.BlockedHour == null);
+
                 bool isAvailable;
                 if (loopDate.Date < todayPH) isAvailable = false;
                 else if (loopDate.Date == todayPH) isAvailable = false;
                 else if (loopDate.Date == todayPH.AddDays(1)) isAvailable = false;
                 else if (loopDate.DayOfWeek == DayOfWeek.Tuesday) isAvailable = false;
+                else if (isDayBlockedByAdmin) isAvailable = false; // Gray out if explicitly locked by an admin setting
                 else if (totalBookingsForDay >= maxSlotsForThisDay) isAvailable = false;
                 else isAvailable = true;
 
