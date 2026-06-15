@@ -76,6 +76,7 @@
                 }
                 else if (Model.Product_Type != null && Model.Product_Type.ToLower().Contains("press"))
                 {
+                    <button class="btn btn-fav btn-add-cart" data-id="@Model.ProductID" id="addCartBtn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
                     <a href="/Order/Start?productId=@Model.ProductID" class="btn btn-order">Order Press-On</a>
                 }
                 else
@@ -144,4 +145,5 @@
             });
         });
     </script>
+    <script src="~/js/gallery-details-cart.js"></script>
 }

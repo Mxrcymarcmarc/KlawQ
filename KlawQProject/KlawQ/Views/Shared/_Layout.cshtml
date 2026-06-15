@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&family=Indie+Flower&family=Caveat:wght@400;700&family=Kalam:wght@300;400&display=swap">
     <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     @RenderSection("Styles", required: false)
 </head>
 <body>
@@ -23,7 +24,7 @@
                         <li><a href="/Account/Logout" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">Logout</a></li>
                     </ul>
                     <div class="cart-button">
-                        <a href="/Cart" title="Cart">🛒<span id="cartCount" class="cart-count">0</span></a>
+                        <a href="/Cart" id="cartLink" title="Cart">🛒<span id="cartCount" class="cart-count">0</span></a>
                     </div>
                 }
             </div>
@@ -32,8 +33,10 @@
     <main role="main" class="main-content">
         @RenderBody()
     </main>
-
     <form id="logoutForm" action="/Account/Logout" method="post" style="display:none;">@Html.AntiForgeryToken()</form>
+    <form id="logoutForm" action="/Account/Logout" method="post" style="display:none;">@Html.AntiForgeryToken()</form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <footer class="site-footer">
         <div class="footer-inner">
@@ -58,7 +61,8 @@
         </div>
     </footer>
 
+    <script src="~/js/cart-popup.js"></script>
     @RenderSection("Scripts", required: false)
- 
+  
 </body>
 </html>
