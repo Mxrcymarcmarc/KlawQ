@@ -15,12 +15,4 @@ namespace KlawQ.Models
         public required string Product_Type { get; set; } = "Original";
     }
 
-    public class OrderItem
-    {
-        public int OrderItemID { get; set; }
-        public int OrderID { get; set; }
-        public int ProductID { get; set; }
-        public required int Quantity { get; set; } = 1;
-        public required int Subtotal { get; set; }
-    }
 }
