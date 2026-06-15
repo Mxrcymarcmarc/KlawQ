@@ -1,79 +1,102 @@
 @model IEnumerable<KlawQ.Models.Products>
 @{
-    ViewData["Title"] = "Gallery";
+    ViewData["Title"] = "Nail Works";
 }
-<link rel="stylesheet" href="/css/site.css" />
-<style>
-/* Gallery layout */
-.gallery-wrap{max-width:1100px;margin:36px auto;padding:0 12px}
-.controls{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
-.btn-toggle{padding:10px 20px;border-radius:24px;border:1px solid #e9cfd6;background:#fff;color:#8b4b3b;cursor:pointer}
-.btn-toggle.active{background:#88b04b;color:#fff;border-color:#88b04b}
 
-.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
-.gallery-item{background:#fff;border-radius:16px;overflow:hidden;position:relative;border:6px solid transparent;box-shadow:0 8px 18px rgba(0,0,0,.06)}
-.gallery-item.image-card{border-color:#fde6ea}
-.gallery-item .thumb{width:100%;aspect-ratio:1;background-size:cover;background-position:center}
-.gallery-item .meta{padding:10px 12px;background:linear-gradient(180deg, rgba(255,255,255,0.0), #fff);}
-.gallery-item h4{margin:6px 0;color:#8b4b3b;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gallery-item p{margin:0;color:#7a5046;font-size:13px}
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-/* First card special */
-.gallery-item.custom{border:2px dashed #d9a6b2;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#b86a7f}
-.gallery-item.custom .icon{font-size:28px;margin-bottom:8px}
-.gallery-item.custom small{color:#b86a7f}
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
 
-/* favorite button */
-.fav-btn{position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.95);border:none;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.08)}
-.fav-btn .heart{font-size:20px;color:#e2557a;line-height:1}
-.fav-btn .heart.outline{color:#aaa}
-.fav-btn .heart.filled{color:#e60023}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-/* ensure heart doesn't stretch */
-.fav-btn img{max-width:20px;height:auto}
+    <link rel="stylesheet" href="~/css/nail-works.css" />
 
-/* responsive */
-@@media(max-width:900px){.gallery-grid{grid-template-columns:repeat(2,1fr)}}
-@@media(max-width:560px){.gallery-grid{grid-template-columns:1fr}}
-</style>
+    <style>
+    /* Merged gallery styles from Backend for consistent appearance */
+    .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:20px}
+    .gallery-card, .gallery-item{background:#fff;border-radius:16px;overflow:hidden;position:relative;border:6px solid transparent;box-shadow:0 8px 18px rgba(0,0,0,.06);display:flex;flex-direction:column}
+    /* make all cards square and same size */
+    .gallery-card, .gallery-card.image-card, .custom-request-card{aspect-ratio:1;min-height:260px}
+    .gallery-card.image-card{border-color:#fde6ea}
+    .gallery-card.image-card img{width:100%;height:100%;object-fit:cover;display:block}
+    /* center custom request content */
+    .custom-request-card{display:flex;align-items:center;justify-content:center;padding:0;border:2px dashed #d9a6b2}
+    .custom-request-content{text-align:center;padding:20px}
+    .favorite-btn{position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.95);border:none;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+    .heart-solid{display:none;color:#e60023}
+    .favorite-btn.favorited .heart-solid{display:inline-block}
+    .favorite-btn.favorited .heart-outline{display:none}
+    @@media(max-width:900px){.gallery-grid{grid-template-columns:repeat(2,1fr)}}
+    @@media(max-width:560px){.gallery-grid{grid-template-columns:1fr}}
+    </style>
+}
 
-<div class="gallery-wrap">
-    <div class="controls">
-        <button class="btn-toggle active" data-filter="presson">Press-On Sets</button>
-        <button class="btn-toggle" data-filter="original">Original Sets</button>
-    </div>
+<div class="nail-works-wrapper">
+    <div class="nail-works-container">
 
-    <div class="gallery-grid">
-        <!-- first card: custom request -->
-        <div class="gallery-item custom" data-type="presson original">
-            <a href="/Appointment" style="display:flex;align-items:center;justify-content:center;flex-direction:column;padding:28px 12px;text-decoration:none;color:inherit;">
-                <div class="icon">📦</div>
-                <h4>Custom Request</h4>
-                <small>Click here to design your own set</small>
-            </a>
+        <div class="page-header">
+            <div class="header-icons">
+                <i class="fas fa-sparkles"></i>
+                <i class="fas fa-heart"></i>
+                <i class="fas fa-sparkles"></i>
+            </div>
+            <h1 class="page-title">Nail Works</h1>
+            <p class="page-subtitle">Explore our collection of stunning nail art across different styles</p>
         </div>
 
-@{
-    var favIds = ViewData["FavoritedIds"] as List<int> ?? new List<int>();
-}
-@foreach(var p in Model ?? Enumerable.Empty<KlawQ.Models.Products>()){
-    var imgPath = p.Product_Image;
-    if (string.IsNullOrWhiteSpace(imgPath)) imgPath = Url.Content("~/images/placeholder.png");
-    else if (imgPath.StartsWith("~")) imgPath = Url.Content(imgPath);
-    else if (!imgPath.StartsWith("/")) imgPath = Url.Content("~/" + imgPath.TrimStart('/'));
-    else imgPath = Url.Content(imgPath);
+        <div class="category-tabs">
+            <button class="tab-btn active" data-filter="presson">Press-On Sets</button>
+            <button class="tab-btn" data-filter="original">Original Sets</button>
+        </div>
 
-    var isFav = favIds.Contains(p.ProductID);
-    // use Product_Type field
-    var isPressOn = (p.Product_Type ?? "").ToLower() == "presson";
-    var dataType = isPressOn ? "presson" : "original";
-    var detailsLink = "/Gallery/Details/" + p.ProductID;
-    <div class="gallery-item image-card" data-type="@dataType">
-        <a class="card-link" href="@detailsLink" style="display:block">
-            <div class="thumb" style="background-image:url('@imgPath')"></div>
-        </a>
-    </div>
-}
+        <div class="gallery-grid">
+
+            <a href="/Home/CustomOrder" class="gallery-card custom-request-card" data-type="presson original">
+                <div class="custom-request-content">
+                    <i class="far fa-images custom-icon"></i>
+                    <h3>Custom Request</h3>
+                    <p>Click here to design your own set!</p>
+                </div>
+            </a>
+
+            @{
+                var favIds = ViewData["FavoritedIds"] as List<int> ?? new List<int>();
+            }
+
+            @foreach(var p in Model ?? Enumerable.Empty<KlawQ.Models.Products>()){
+                var imgPath = p.Product_Image;
+                if (string.IsNullOrWhiteSpace(imgPath)) imgPath = Url.Content("~/images/placeholder.png");
+                else if (imgPath.StartsWith("~")) imgPath = Url.Content(imgPath);
+                else if (!imgPath.StartsWith("/")) imgPath = Url.Content("~/" + imgPath.TrimStart('/'));
+                else imgPath = Url.Content(imgPath);
+
+                var isPressOn = (p.Product_Type ?? "").ToLower() == "presson";
+                var dataType = isPressOn ? "presson" : "original";
+                var detailsLink = "/Gallery/Details/" + p.ProductID;
+            <div class="gallery-card image-card" data-type="@dataType">
+                <button class="favorite-btn @(favIds.Contains(p.ProductID) ? "favorited" : "")" data-id="@p.ProductID" aria-label="Favorite this set">
+                    <i class="far fa-heart heart-outline"></i>
+                    <i class="fas fa-heart heart-solid"></i>
+                </button>
+                <a class="card-link" href="@detailsLink" style="display:block">
+                    @{
+                        // Robustly obtain a title for the alt attribute in case the model property name differs
+                        var titleObj = p.GetType().GetProperty("Product_Title")?.GetValue(p)
+                                       ?? p.GetType().GetProperty("ProductTitle")?.GetValue(p)
+                                       ?? p.GetType().GetProperty("Title")?.GetValue(p)
+                                       ?? p.GetType().GetProperty("Name")?.GetValue(p)
+                                       ?? (object)"";
+                        var title = titleObj?.ToString() ?? "";
+                    }
+                    <img src="@imgPath" alt="@title" class="nail-img" />
+                </a>
+            </div>
+            }
+
+        </div>
 
     </div>
 </div>
@@ -81,31 +104,36 @@
 @* hidden antiforgery token for AJAX *@
 <form style="display:none">@Html.AntiForgeryToken()</form>
 
-<script>
-// Category filter
-document.querySelectorAll('.btn-toggle').forEach(btn => btn.addEventListener('click', (e)=>{
-    document.querySelectorAll('.btn-toggle').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    const filter = btn.getAttribute('data-filter');
-    document.querySelectorAll('.gallery-item[data-type]').forEach(item=>{
-        if(filter==='all') item.style.display='block';
-        else {
-            const types = (item.getAttribute('data-type')||'').split(/\s+/);
-            item.style.display = types.includes(filter) ? 'block' : 'none';
-        }
-    });
-}));
+@section Scripts {
+    <script>
+    // Category filter (adapted from Backend)
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', (e)=>{
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.getAttribute('data-filter');
+        document.querySelectorAll('.gallery-card[data-type], .gallery-item[data-type]').forEach(item=>{
+            if(filter==='all') item.style.display='block';
+            else {
+                const types = (item.getAttribute('data-type')||'').split(/\s+/);
+                item.style.display = types.includes(filter) ? 'block' : 'none';
+            }
+        });
+    }));
 
-// apply default filter (presson);(function(){    const el = document.querySelector('.btn-toggle.active');    if(el) el.click();})();
+    // apply default filter (presson)
+    ;(function(){
+        const el = document.querySelector('.tab-btn.active');
+        if(el) el.click();
+    })();
 
-// favorite removed on index (handled on details page)
-
-
-// handle not-implemented links (press-on ordering)
-document.querySelectorAll('a[data-not-implemented]')?.forEach(a=>{
-    a.addEventListener('click', function(e){
+    // Favorite toggle (simple client-side toggle; server actions handled elsewhere)
+    document.addEventListener('click', function(e){
+        const btn = e.target.closest('.favorite-btn');
+        if(!btn) return;
         e.preventDefault();
-        alert('Ordering page not implemented yet.');
+        btn.classList.toggle('favorited');
+        // Optional: send AJAX to server to persist favorite (not implemented here)
     });
-});
-</script>
+    </script>
+    <script src="~/js/nail-works.js"></script>
+}
