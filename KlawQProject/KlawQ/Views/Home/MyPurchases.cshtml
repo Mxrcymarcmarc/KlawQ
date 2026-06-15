@@ -1,0 +1,117 @@
+﻿@{
+    ViewData["Title"] = "My Purchases";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="~/css/my-purchases.css" />
+}
+
+<div class="purchases-wrapper">
+    <div class="purchases-container">
+
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-sparkles title-icon"></i>
+                My Purchases
+            </h1>
+        </div>
+
+        <div class="purchases-board">
+
+            <div class="tabs-nav">
+                <button class="tab-btn active">All</button>
+                <button class="tab-btn">Completed</button>
+                <button class="tab-btn">Pending</button>
+                <button class="tab-btn">Cancelled</button>
+            </div>
+
+            <div class="orders-list">
+
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-info">06/04/2026 7:52 PM <span class="divider">|</span> Order No. ABC123</div>
+                        <div class="badge badge-completed">Completed</div>
+                    </div>
+
+                    <div class="order-body">
+                        <div class="order-item">
+                            <img src="~/images/purchase-1.jpg" alt="Strawberry Picnic set" class="item-img">
+                            <div class="item-details">
+                                <h3 class="item-title">Strawberry Picnic set</h3>
+                                <p class="item-price">₱400 &times; 1</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="order-footer">
+                        <p class="total-text">Total of 1 item: <strong>₱400</strong></p>
+                        <button class="btn-order-details">Order Details</button>
+                    </div>
+                </div>
+
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-info">06/04/2026 7:52 PM <span class="divider">|</span> Order No. ABC123</div>
+                        <div class="badge badge-pending">Pending</div>
+                    </div>
+
+                    <div class="order-body">
+                        <div class="order-item">
+                            <img src="~/images/purchase-2.jpg" alt="Red French tips" class="item-img">
+                            <div class="item-details">
+                                <h3 class="item-title">Red French tips with<br>Blooming gel flower set</h3>
+                                <p class="item-price">₱400 &times; 1</p>
+                            </div>
+                            <div class="item-line-total">₱400</div>
+                        </div>
+                        <div class="order-item">
+                            <img src="~/images/purchase-3.jpg" alt="Keroppi Set" class="item-img">
+                            <div class="item-details">
+                                <h3 class="item-title">Keroppi Set</h3>
+                                <p class="item-price">₱450 &times; 1</p>
+                            </div>
+                            <div class="item-line-total">+ ₱450</div>
+                        </div>
+                    </div>
+
+                    <div class="order-footer">
+                        <p class="total-text">Total of 2 items: <strong>₱850</strong></p>
+                        <button class="btn-order-details">Order Details</button>
+                    </div>
+                </div>
+
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-info">06/04/2026 7:52 PM <span class="divider">|</span> Order No. ABC123</div>
+                        <div class="badge badge-cancelled">Cancelled</div>
+                    </div>
+
+                    <div class="order-body">
+                        <div class="order-item">
+                            <img src="~/images/purchase-4.jpg" alt="Red asymmetrical french tips" class="item-img">
+                            <div class="item-details">
+                                <h3 class="item-title">Red asymmetrical french<br>tips with gold chrome set</h3>
+                                <p class="item-price">₱300 &times; 1</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="order-footer">
+                        <p class="total-text">Total of 1 item: <strong>₱300</strong></p>
+                        <button class="btn-order-details">Order Details</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>

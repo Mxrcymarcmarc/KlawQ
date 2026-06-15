@@ -1,0 +1,171 @@
+﻿:root {
+    --primary-font: 'Shadows Into Light Two', cursive;
+    --secondary-font: 'Montserrat', sans-serif;
+    --text-brown: #8d6e5d;
+    --text-dark-brown: #795548;
+    --card-bg: #ffffff;
+    --accent-green: #a7c47d;
+    --accent-green-hover: #92b068;
+    --accent-pink-light: #fce4ec;
+    --border-pink: #f8bbd0;
+    --action-bg: #ffebee;
+    --action-icon: #d88c9a;
+    --shadow-soft: 0 10px 30px rgba(121, 85, 72, 0.08);
+}
+
+.manage-appt-wrapper {
+    background-color: transparent;
+    padding: 3rem 1rem;
+    min-height: 80vh;
+}
+
+.manage-appt-container {
+    max-width: 900px;
+    margin: 0 auto;
+    color: var(--text-brown);
+}
+
+    .manage-appt-container h1 {
+        font-family: var(--primary-font);
+        font-weight: normal;
+    }
+
+    .manage-appt-container p,
+    .manage-appt-container table,
+    .manage-appt-container button {
+        font-family: var(--secondary-font);
+    }
+
+.page-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.page-title {
+    font-size: 3.5rem;
+    margin: 0;
+    color: var(--text-dark-brown);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.title-icon {
+    color: var(--accent-green);
+    font-size: 2rem;
+}
+
+.page-subtitle {
+    color: var(--text-brown);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+.appointment-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-soft);
+    margin-bottom: 2rem;
+    border: 2px solid var(--border-pink);
+}
+
+.card-actions {
+    margin-bottom: 2rem;
+}
+
+.btn-update {
+    background: var(--accent-green);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 0.6rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+    .btn-update:hover {
+        background: var(--accent-green-hover);
+    }
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.appointment-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+    .appointment-table th {
+        color: var(--text-dark-brown);
+        font-weight: 600;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--border-pink);
+    }
+
+    .appointment-table td {
+        padding: 1.5rem 0;
+        color: var(--text-brown);
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.95rem;
+    }
+
+    .appointment-table tbody tr:last-child td {
+        border-bottom: none;
+        padding-bottom: 0.5rem;
+    }
+
+.date-col {
+    color: var(--accent-green) !important;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.action-btn {
+    background: var(--action-bg);
+    color: var(--action-icon);
+    border: none;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s, filter 0.2s;
+    font-size: 0.9rem;
+}
+
+    .action-btn:hover {
+        filter: brightness(0.95);
+        transform: translateY(-1px);
+    }
+
+.reschedule-note {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-brown);
+    margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+    .appointment-card {
+        padding: 1.5rem;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+    }
+
+    .title-icon {
+        font-size: 1.5rem;
+    }
+}
