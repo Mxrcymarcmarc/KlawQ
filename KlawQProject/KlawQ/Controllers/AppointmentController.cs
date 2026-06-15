@@ -19,6 +19,7 @@ namespace KlawQ.Controllers
             _logger = logger;
         }
 
+        [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult Index()
         {
             return View();
