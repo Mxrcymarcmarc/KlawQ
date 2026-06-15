@@ -1,0 +1,146 @@
+﻿@{
+    ViewData["Title"] = "Custom Order";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="~/css/custom-order.css" />
+}
+
+<form action="#" method="post" enctype="multipart/form-data" class="custom-order-wrapper">
+    <div class="custom-order-container">
+
+        <div class="page-header">
+            <div class="header-icons">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-sparkles"></i>
+                <i class="fas fa-heart"></i>
+                <i class="fas fa-sparkles"></i>
+                <i class="fas fa-star"></i>
+            </div>
+            <h1 class="page-title">Design Your Dream<br>Press-on Set</h1>
+            <p class="page-subtitle">Tell us about your vision and we'll bring it to life!</p>
+        </div>
+
+        <div class="order-grid">
+
+            <div class="grid-col-left">
+
+                <div class="section-box">
+                    <h2 class="section-title"><i class="far fa-user"></i> Your Information</h2>
+
+                    <div class="form-row two-col">
+                        <div class="form-group">
+                            <label for="fullName">Full Name <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <i class="far fa-user input-icon"></i>
+                                <input type="text" id="fullName" name="fullName" placeholder="Jane Doe" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <i class="far fa-envelope input-icon"></i>
+                                <input type="email" id="email" name="email" placeholder="jane@example.com" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row two-col">
+                        <div class="form-group">
+                            <label for="phone">Phone <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-phone-alt input-icon"></i>
+                                <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="prefDate">Preferred Date <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <i class="far fa-calendar-alt input-icon"></i>
+                                <input type="date" id="prefDate" name="prefDate" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="address">Address <span class="required">*</span></label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-map-marker-alt input-icon"></i>
+                                <input type="text" id="address" name="address" placeholder="123 Street, City, State, Zip" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-box sizing-guide-box">
+                    <h2 class="section-title"><i class="fas fa-camera"></i> Important: Nail Sizing Guide</h2>
+
+                    <div class="info-alert">
+                        <p><strong>Once we agree on the final design,</strong> please send us a photo of your fingers for accurate sizing:</p>
+                        <p><strong>Bird's Eye View Photo:</strong> Lay your fingers flat on a surface beside a <strong>1 or 5 peso coin</strong> and take a photo from directly above.</p>
+                        <p class="text-muted">This helps us measure your nail bed accurately to ensure the perfect fit!</p>
+                    </div>
+
+                    <h4 class="example-title">Example Reference Photos:</h4>
+
+                    <div class="reference-photos">
+                        <div class="ref-card correct">
+                            <div class="ref-images-wrapper">
+                                <img src="~/images/right1.jpg" alt="Correct angle 1" class="ref-img">
+                                <img src="~/images/right2.jpg" alt="Correct angle 2" class="ref-img">
+                            </div>
+                            <p class="ref-label"><i class="fas fa-check"></i> Correct: Right Angle</p>
+                        </div>
+
+                        <div class="ref-card incorrect">
+                            <div class="ref-images-wrapper">
+                                <img src="~/images/wrong1.jpg" alt="Incorrect angle 1" class="ref-img">
+                                <img src="~/images/wrong2.jpg" alt="Incorrect angle 2" class="ref-img">
+                            </div>
+                            <p class="ref-label"><i class="fas fa-times"></i> Avoid: Low Angle</p>
+                        </div>
+                    </div>
+
+                    <p class="disclaimer-text">Don't worry! We'll guide you through the sizing process once your design is approved.</p>
+                </div>
+            </div>
+
+            <div class="grid-col-right">
+
+                <div class="section-box right-panel-box">
+
+                    <div class="form-group">
+                        <label>Upload Your Inspiration Images <span class="required">*</span></label>
+                        <div class="upload-area">
+                            <img src="~/images/retro-camera-icon.png" alt="Camera Icon" class="retro-camera-img">
+                            <h4>Click to upload inspiration images</h4>
+                            <p>PNG, JPG up to 10MB (You can upload multiple images)</p>
+                            <input type="file" id="inspirationImages" name="inspirationImages" accept="image/png, image/jpeg" multiple required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="designNotes">Design Notes & Theme Ideas <span class="required">*</span></label>
+                        <textarea id="designNotes" name="designNotes" rows="8" placeholder="Tell us about your dream nail set! What colors, themes, or styles inspire you? Any specific occasions or vibes you're going for?&#10;&#10;The more details, the better we can bring your vision to life!" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit-request">
+                        <i class="fas fa-upload"></i> Submit Request
+                    </button>
+                    <p class="submit-disclaimer">We'll review your request and get back to you within 24-48 hours to discuss pricing and timelines!</p>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>

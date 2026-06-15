@@ -1,147 +1,140 @@
 ﻿using KlawQ.Data;
 using KlawQ.Models;
+using KlawQ.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
-
     [ApiController]
     [Route("api/[controller]")]
     public class CalendarController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly PayMongoService _payMongoService;
 
-        // Philippine timezone is used consistently across all time comparisons
         private static readonly TimeZoneInfo PhilippineTimeZone =
             TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
 
-        // Threshold to determine when to show next month's availability in the calendar view
         private const int ALMOST_FULL_THRESHOLD = 5;
 
-        public CalendarController(ApplicationDbContext context)
+        public CalendarController(ApplicationDbContext context, PayMongoService payMongoService)
         {
             _context = context;
+            _payMongoService = payMongoService;
         }
 
-        // To determine max slots for a given day of the week
         private static int GetMaxSlotsForDay(DayOfWeek day) => day switch
         {
-            DayOfWeek.Tuesday => 0, // Closed
-            DayOfWeek.Wednesday => 3, // 10 AM, 2 PM, 10 PM
-            DayOfWeek.Saturday => 1, // 6 PM only
-            _ => 4  // Mon, Thu, Fri, Sun: 10 AM, 2 PM, 6 PM, 9 PM
+            DayOfWeek.Tuesday => 0,
+            DayOfWeek.Wednesday => 3,
+            DayOfWeek.Saturday => 1,
+            _ => 4
         };
 
-        // To determine business hours for a given day of the week
         private static int[] GetBusinessHoursForDay(DayOfWeek day) => day switch
         {
             DayOfWeek.Tuesday => Array.Empty<int>(),
-            DayOfWeek.Wednesday => new[] { 10, 14, 22 }, // 10 AM, 2 PM, 10 PM
-            DayOfWeek.Saturday => new[] { 18 },          // 6 PM only
-            _ => new[] { 10, 14, 18, 21 } // 10 AM, 2 PM, 6 PM, 9 PM
+            DayOfWeek.Wednesday => new[] { 10, 14, 22 },
+            DayOfWeek.Saturday => new[] { 18 },
+            _ => new[] { 10, 14, 18, 21 }
         };
 
-        // To format hour integers into user-friendly time strings (e.g. 14 -> "2:00 PM")
         private static string GetFormattedTime(int hour) =>
             new DateTime(2000, 1, 1, hour, 0, 0)
-                .ToString("h:mm tt", CultureInfo.InvariantCulture); // Example: "2:00 PM"
+                .ToString("h:mm tt", CultureInfo.InvariantCulture);
 
-        // To get current time in Philippine timezone
         private static DateTime NowInPH() =>
             TimeZoneInfo.ConvertTime(DateTime.UtcNow, PhilippineTimeZone);
 
-        // To get today's date in Philippine timezone (time component set to 00:00:00)
         private static DateTime TodayInPH() => NowInPH().Date;
 
+        private static DateTime NormalizeToPH(DateTime dt)
+        {
+            if (dt.Kind == DateTimeKind.Utc)
+                return TimeZoneInfo.ConvertTimeFromUtc(dt, PhilippineTimeZone);
+            return DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
+        }
 
-        // Endpoint to get availability status for each day of the current month (and next month if almost full)
+        // Combines the current month and next month views, and conditionally includes the month after if availability is running low
         [HttpGet("current-view-status")]
         public async Task<IActionResult> GetCurrentCalendarView()
         {
             DateTime today = TodayInPH();
-            int currentYear = today.Year;
-            int currentMonth = today.Month;
 
-            // Fetch availability for the current month
-            var currentMonthDays = await GetDaysStatusForMonth(currentYear, currentMonth);
-
-            // Count remaining available days from today onwards
-            int availableDaysLeft = currentMonthDays
-                .Count(d => d.IsAvailable && DateTime.Parse(d.DateString) >= today);
-
+            var currentMonthDays = await GetDaysStatusForMonth(today.Year, today.Month);
             var finalResponse = new List<CalendarDayStatus>(currentMonthDays);
 
-            // If almost full, also attach the next month
+            DateTime nextMonthDate = today.AddMonths(1);
+            var nextMonthDays = await GetDaysStatusForMonth(nextMonthDate.Year, nextMonthDate.Month);
+            finalResponse.AddRange(nextMonthDays);
+
+            int availableDaysLeft = finalResponse
+                .Count(d => d.IsAvailable && DateTime.Parse(d.DateString) >= today);
+
             if (availableDaysLeft <= ALMOST_FULL_THRESHOLD)
             {
-                DateTime nextMonthDate = today.AddMonths(1);
-                var nextMonthDays = await GetDaysStatusForMonth(nextMonthDate.Year, nextMonthDate.Month);
-                finalResponse.AddRange(nextMonthDays);
+                DateTime nextNextMonthDate = today.AddMonths(2);
+                var nextNextMonthDays = await GetDaysStatusForMonth(nextNextMonthDate.Year, nextNextMonthDate.Month);
+                finalResponse.AddRange(nextNextMonthDays);
             }
 
             return Ok(finalResponse);
         }
 
 
-        // Endpoint to get hourly slot availability for a specific day
+        // Checks for both existing paid bookings and admin configuration blocks
         [HttpGet("day-slots-status")]
         public async Task<IActionResult> GetDaySlotsStatus([FromQuery] string chosenDate)
         {
+            if (!DateTime.TryParseExact(chosenDate, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out DateTime parsedDate))
+                return BadRequest("Invalid date format. Please use yyyy-MM-dd.");
 
-            // Validate date format first (expects "yyyy-MM-dd")
-            if (!DateTime.TryParseExact(
-                    chosenDate,
-                    "yyyy-MM-dd",
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.None,
-                    out DateTime parsedDate))
-            {
-                return BadRequest("Invalid date format. Please use yyyy-MM-dd (e.g. 2025-06-15).");
-            }
-
-            // If the chosen date is in the past or today (compared to Philippine time), return empty array
             if (parsedDate.Date <= TodayInPH())
-            {
-                return Ok(new List<object>()); // Return empty array []
-            }
+                return Ok(new List<object>());
 
-            // If the chosen date is tomorrow, also return empty array since next-day bookings are not allowed
             if (parsedDate.Date == TodayInPH().AddDays(1))
-            {
-                return Ok(new List<object>()); // Return empty array []
-            }
+                return Ok(new List<object>());
 
-            // Fetch all existing bookings for this specific day in one DB trip
             var bookingsForDay = await _context.Schedulers
+                .Include(s => s.Appointment)
                 .Where(s => s.Appointment_Date.Date == parsedDate.Date)
                 .ToListAsync();
 
-            // Get the business hours for this day of the week
+            // Fetch admin configuration constraints for this exact date layout
+            var adminHourlyBlocks = await _context.CalendarConfigures
+                .Where(o => o.TargetDate.Date == parsedDate.Date)
+                .ToListAsync();
+
             int[] businessHours = GetBusinessHoursForDay(parsedDate.DayOfWeek);
-
-            // Use Philippine timezone for "is this slot in the past?" check
             DateTime nowPH = NowInPH();
-
-            // Build the response array with availability status for each hourly slot
             var hourlySlots = new List<object>();
 
-            // For each business hour, determine if it's already booked or in the past
             foreach (int hour in businessHours)
             {
                 DateTime exactSlotTime = parsedDate.Date.AddHours(hour);
 
-                bool isAlreadyBooked = bookingsForDay.Any(b => b.Time_Slot == exactSlotTime);
+                bool isAlreadyBooked = bookingsForDay.Any(b =>
+                    b.Time_Slot == exactSlotTime &&
+                    b.Appointment != null &&
+                    b.Appointment.Down_Payment_Paid);
 
-                // Compare against Philippine time, not server's local time
-                bool isPastTime = exactSlotTime < nowPH;
+                // Check if admin blocked either the entire day (null) or this specific business hour slot
+                bool isSlotBlockedByAdmin = adminHourlyBlocks.Any(o => o.BlockedHour == null || o.BlockedHour == hour);
 
                 hourlySlots.Add(new
                 {
                     SlotHour = hour,
-                    FormattedTime = GetFormattedTime(hour),      // Example: "2:00 PM"
-                    IsAvailable = !isAlreadyBooked && !isPastTime
+                    FormattedTime = GetFormattedTime(hour),
+                    // Drop option if it is booked, explicitly blocked by an admin setting, or in the past
+                    IsAvailable = !isAlreadyBooked && !isSlotBlockedByAdmin && exactSlotTime >= nowPH
                 });
             }
 
@@ -149,98 +142,253 @@ namespace KlawQ.Controllers
         }
 
 
-        // Endpoint to attempt booking a specific time slot on a specific day
         [HttpPost("booking")]
-        public async Task<IActionResult> BookSlot([FromBody] BookingRequest newBooking)
+        public async Task<IActionResult> BookSlot([FromBody] BookingWithAppointmentRequest request)
         {
-            // Guard against past bookings using Philippine time
-            if (newBooking.Time_Slot < NowInPH())
-            {
+            request.Appointment_Date = NormalizeToPH(request.Appointment_Date);
+            request.Time_Slot = NormalizeToPH(request.Time_Slot);
+
+            // --- Validation Guards ---
+            if (request.Time_Slot < NowInPH())
                 return BadRequest("Booking failed: You cannot select a time slot in the past!");
-            }
 
-            // Guard against same-day bookings using Philippine time
-            if (newBooking.Appointment_Date.Date == TodayInPH())
-            {
+            if (request.Appointment_Date.Date == TodayInPH())
                 return BadRequest("Booking failed: You cannot book a time slot for the current day!");
-            }
 
-            if (newBooking.Appointment_Date.Date == TodayInPH().AddDays(1))
-            {
+            if (request.Appointment_Date.Date == TodayInPH().AddDays(1))
                 return BadRequest("Booking failed: You cannot book a time slot for tomorrow!");
-            }
 
-            if (newBooking.AppId <= 0)
-            {
-                return BadRequest("Booking failed: A valid Appointment ID is required!");
-            }
+            if (string.IsNullOrWhiteSpace(request.Full_Name))
+                return BadRequest("Booking failed: Full Name is required!");
 
-            bool appointmentExists = await _context.Appointments
-                .AnyAsync(a => a.AppId == newBooking.AppId);
-
-            if (!appointmentExists)
-            {
-                return BadRequest("Booking failed: The provided Appointment ID does not exist!");
-            }
-
-            DayOfWeek dayOfWeek = newBooking.Appointment_Date.DayOfWeek;
-
-            // Appointment is closed on Tuesdays
+            DayOfWeek dayOfWeek = request.Appointment_Date.DayOfWeek;
             if (dayOfWeek == DayOfWeek.Tuesday)
-            {
                 return BadRequest("Booking failed: The shop is closed on Tuesdays!");
-            }
 
-            // Check if the submitted time slot is a valid business hour
-            int[] validHours = GetBusinessHoursForDay(newBooking.Appointment_Date.DayOfWeek);
-            int submittedHour = newBooking.Time_Slot.Hour;
-
-            if (!validHours.Contains(submittedHour))
-            {
+            int[] validHours = GetBusinessHoursForDay(dayOfWeek);
+            if (!validHours.Contains(request.Time_Slot.Hour))
                 return BadRequest("Booking failed: The submitted time slot is not a valid business hour for this day!");
-            }
 
-            // Uses shared helper : no duplicated switch block here
-            int maxSlotsForThisDay = GetMaxSlotsForDay(dayOfWeek);
-
-            // Exact time slot is already taken (race-condition safety)
-            bool isExactSlotTaken = await _context.Schedulers.AnyAsync(s =>
-                s.Appointment_Date.Date == newBooking.Appointment_Date.Date &&
-                s.Time_Slot == newBooking.Time_Slot);
+            bool isExactSlotTaken = await _context.Schedulers
+                .Include(s => s.Appointment)
+                .AnyAsync(s =>
+                    s.Appointment_Date.Date == request.Appointment_Date.Date &&
+                    s.Time_Slot == request.Time_Slot &&
+                    s.Appointment != null &&
+                    s.Appointment.Down_Payment_Paid);
 
             if (isExactSlotTaken)
-            {
-                return BadRequest("Booking failed: This specific time slot has already been reserved!");
-            }
+                return BadRequest("Booking failed: This specific time slot has already been reserved and paid for!");
 
-            // Daily capacity limit reached
+            int maxSlotsForThisDay = GetMaxSlotsForDay(dayOfWeek);
             int totalBookingsForDay = await _context.Schedulers
-                .CountAsync(s => s.Appointment_Date.Date == newBooking.Appointment_Date.Date);
+                .Include(s => s.Appointment)
+                .CountAsync(s =>
+                    s.Appointment_Date.Date == request.Appointment_Date.Date &&
+                    s.Appointment != null &&
+                    s.Appointment.Down_Payment_Paid);
 
             if (totalBookingsForDay >= maxSlotsForThisDay)
-            {
                 return BadRequest("Booking failed: This date has reached full operational capacity!");
-            }
+            // --- End of Validation Guards ---
+
+
+            // Create a PENDING appointment placeholder.
+            var pendingAppointment = new Appointment
+            {
+                Full_Name = request.Full_Name,
+                Social_Account = request.Social_Account,
+                Phone = request.Phone,
+                Additional_Notes = request.Additional_Notes,
+                Appointment_Type = request.Appointment_Type,
+                Inspiration_Image = request.Inspiration_Image ?? string.Empty,
+                Down_Payment_Paid = false,
+                Status = 0
+            };
+
+            _context.Appointments.Add(pendingAppointment);
+            await _context.SaveChangesAsync(); // generates AppId
 
             var scheduler = new Scheduler
             {
-                AppId = newBooking.AppId,
-                Appointment_Date = newBooking.Appointment_Date,
-                Time_Slot = newBooking.Time_Slot
+                AppId = pendingAppointment.AppId,
+                Appointment_Date = request.Appointment_Date,
+                Time_Slot = request.Time_Slot
             };
 
             _context.Schedulers.Add(scheduler);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(); // generates SchedulerID
 
-            return Ok("Appointment locked in and saved to database successfully!");
+            string domain = $"{Request.Scheme}://{Request.Host}";
+            string successUrl = $"{domain}/api/Calendar/payment-success?schedulerId={scheduler.SchedulerID}";
+            string cancelUrl = $"{domain}/api/Calendar/payment-cancelled?schedulerId={scheduler.SchedulerID}";
+
+            try
+            {
+                string checkoutUrl = await _payMongoService.CreateCheckoutSessionAsync(
+                    amountInPhp: 150.00m,
+                    description: $"₱150 Reservation Deposit for {pendingAppointment.Full_Name}",
+                    successUrl: successUrl,
+                    cancelUrl: cancelUrl
+                );
+
+                return Ok(new { CheckoutUrl = checkoutUrl, Message = "Reservation down-payment initiated." });
+            }
+            catch (Exception ex)
+            {
+                _context.Schedulers.Remove(scheduler);
+                _context.Appointments.Remove(pendingAppointment);
+                await _context.SaveChangesAsync();
+                return StatusCode(500, $"Payment gateway communication failed: {ex.Message}");
+            }
         }
 
-        // To get availability status for each day of a given month and year
+
+        // Payment confirmed by PayMongo : mark the appointment as paid and show success card
+        [HttpGet("payment-success")]
+        public async Task<IActionResult> HandlePaymentSuccess([FromQuery] int schedulerId)
+        {
+            var schedulerRecord = await _context.Schedulers
+                .Include(s => s.Appointment)
+                .FirstOrDefaultAsync(s => s.SchedulerID == schedulerId);
+
+            if (schedulerRecord == null)
+                return NotFound("Reservation reference records are missing.");
+
+            if (schedulerRecord.Appointment != null)
+            {
+                schedulerRecord.Appointment.Down_Payment_Paid = true;
+                await _context.SaveChangesAsync();
+            }
+
+            string htmlContent = @"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset=""utf-8"">
+                <title>Payment Successful</title>
+                <style>
+                    body {
+                        background-color: #fff5f6;
+                        font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                    }
+                    .card {
+                        background-color: #fdeef0;
+                        padding: 40px;
+                        border-radius: 16px;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+                        border: 1px solid #fde0e2;
+                        text-align: center;
+                        max-width: 450px;
+                        width: 90%;
+                        box-sizing: border-box;
+                    }
+                    .emoji {
+                        font-size: 48px; 
+                        margin-bottom: 16px;
+                    }
+                    h3 {
+                        color: #8b4b3b;
+                        font-size: 24px;
+                        margin-bottom: 12px;
+                        margin-top: 0;
+                    }
+                    p {
+                        color: #8a6a62;
+                        font-size: 15px;
+                        line-height: 1.6;
+                        margin-bottom: 20px;
+                    }
+                    .redirect-text {
+                        font-size: 13px; 
+                        color: #a08077; 
+                        font-style: italic; 
+                        margin-bottom: 28px;
+                    }
+                    .btn {
+                        background-color: #88b04b;
+                        color: #ffffff;
+                        padding: 12px 32px;
+                        border-radius: 24px;
+                        text-decoration: none;
+                        font-weight: 600;
+                        display: inline-block;
+                        box-shadow: 0 6px 12px rgba(136,176,75,0.18);
+                        transition: background 0.2s ease;
+                    }
+                    .btn:hover {
+                        background-color: #76993f;
+                    }
+                </style>
+                <script>
+                    setTimeout(function() {
+                        window.location.href = '/Home/Index';
+                    }, 5000);
+                </script>
+            </head>
+            <body>
+                <div class=""card"">
+                    <div class=""emoji"">✨</div>
+                    <h3>Payment Received!</h3>
+                    <p>Your ₱150 reservation downpayment via GCash has been processed successfully. Your appointment slot is officially secured!</p>
+                    <p class=""redirect-text"">Redirecting you back home automatically in 5 seconds...</p>
+                    <a href=""/Home/Index"" class=""btn"">Return Home Immediately</a>
+                </div>
+            </body>
+            </html>";
+
+            return Content(htmlContent, "text/html; charset=utf-8");
+        }
+
+
+        [HttpGet("payment-cancelled")]
+        public async Task<IActionResult> HandlePaymentCancelled([FromQuery] int schedulerId)
+        {
+            var schedulerRecord = await _context.Schedulers
+                .Include(s => s.Appointment)
+                .FirstOrDefaultAsync(s => s.SchedulerID == schedulerId);
+
+            if (schedulerRecord != null)
+            {
+                var pendingAppointment = schedulerRecord.Appointment;
+
+                _context.Schedulers.Remove(schedulerRecord);
+
+                if (pendingAppointment != null && !pendingAppointment.Down_Payment_Paid)
+                {
+                    _context.Appointments.Remove(pendingAppointment);
+                }
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Cascading transaction clean-up fallback notice: {ex.Message}");
+                }
+            }
+
+            return Content("<h3>Payment was cancelled. Your reservation attempt was not processed.</h3>", "text/html");
+        }
+
+
+        // Syncs month grid views with active table override rules
         private async Task<List<CalendarDayStatus>> GetDaysStatusForMonth(int year, int month)
         {
-            // Pull all entries for this month in one DB trip (avoids N+1 queries)
             var monthlyBookings = await _context.Schedulers
+                .Include(s => s.Appointment)
                 .Where(s => s.Appointment_Date.Year == year && s.Appointment_Date.Month == month)
+                .ToListAsync();
+
+            // Fetch admin configuration rules targeting this month context layout
+            var adminBlocks = await _context.CalendarConfigures
+                .Where(o => o.TargetDate.Year == year && o.TargetDate.Month == month)
                 .ToListAsync();
 
             DateTime todayPH = TodayInPH();
@@ -250,37 +398,24 @@ namespace KlawQ.Controllers
             for (int day = 1; day <= daysInMonth; day++)
             {
                 var loopDate = new DateTime(year, month, day);
-
-                // Uses shared helper : no duplicated switch block here
                 int maxSlotsForThisDay = GetMaxSlotsForDay(loopDate.DayOfWeek);
-                int totalBookingsForDay = monthlyBookings.Count(b => b.Appointment_Date.Date == loopDate.Date);
+
+                int totalBookingsForDay = monthlyBookings.Count(b =>
+                    b.Appointment_Date.Date == loopDate.Date &&
+                    b.Appointment != null &&
+                    b.Appointment.Down_Payment_Paid);
+
+                // Identify if an admin profile explicitly blocked out this entire date row (BlockedHour is null)
+                bool isDayBlockedByAdmin = adminBlocks.Any(o => o.TargetDate.Date == loopDate.Date && o.BlockedHour == null);
 
                 bool isAvailable;
-
-                if (loopDate.Date < todayPH)
-                {
-                    isAvailable = false; // Past dates are locked
-                }
-                else if (loopDate.Date == todayPH)
-                {
-                    isAvailable = false; // Same-day bookings are not allowed
-                }
-                else if (loopDate.Date == todayPH.AddDays(1))
-                {
-                    isAvailable = false; // Next-day bookings are not allowed
-                }
-                else if (loopDate.DayOfWeek == DayOfWeek.Tuesday)
-                {
-                    isAvailable = false; // Appointment is closed on Tuesdays
-                }
-                else if (totalBookingsForDay >= maxSlotsForThisDay)
-                {
-                    isAvailable = false; // Day is fully booked
-                }
-                else
-                {
-                    isAvailable = true;
-                }
+                if (loopDate.Date < todayPH) isAvailable = false;
+                else if (loopDate.Date == todayPH) isAvailable = false;
+                else if (loopDate.Date == todayPH.AddDays(1)) isAvailable = false;
+                else if (loopDate.DayOfWeek == DayOfWeek.Tuesday) isAvailable = false;
+                else if (isDayBlockedByAdmin) isAvailable = false; // Gray out if explicitly locked by an admin setting
+                else if (totalBookingsForDay >= maxSlotsForThisDay) isAvailable = false;
+                else isAvailable = true;
 
                 daysList.Add(new CalendarDayStatus
                 {

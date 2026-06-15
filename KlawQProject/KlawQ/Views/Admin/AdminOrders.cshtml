@@ -1,0 +1,153 @@
+﻿@{
+    ViewData["Title"] = "Admin Orders";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="~/css/admin-orders.css" />
+}
+
+<div class="admin-orders-wrapper">
+    <div class="admin-orders-container">
+
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-sparkles title-icon"></i>
+                Orders
+            </h1>
+        </div>
+
+        <div class="orders-board">
+
+            <div class="tabs-nav">
+                <button class="tab-btn active">All Orders</button>
+                <button class="tab-btn">Completed</button>
+                <button class="tab-btn">Pending</button>
+                <button class="tab-btn">Cancelled</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Customer Name</th>
+                            <th>Order ID</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Size</th>
+                            <th>Details</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Juan Dela Cruz</td>
+                            <td>123</td>
+                            <td>10</td>
+                            <td>450</td>
+                            <td>4500</td>
+                            <td class="status-completed">Completed</td>
+                            <td>SML</td>
+                            <td><button class="btn-action">View</button></td>
+                            <td>
+                                <button class="btn-action btn-status">
+                                    <i class="fas fa-chevron-down"></i> Status
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Juan Dela Cruz</td>
+                            <td>123</td>
+                            <td>10</td>
+                            <td>450</td>
+                            <td>4500</td>
+                            <td class="status-cancelled">Cancelled</td>
+                            <td>SML</td>
+                            <td><button class="btn-action">View</button></td>
+                            <td>
+                                <button class="btn-action btn-status">
+                                    <i class="fas fa-chevron-down"></i> Status
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Juan Dela Cruz</td>
+                            <td>123</td>
+                            <td>10</td>
+                            <td>450</td>
+                            <td>4500</td>
+                            <td class="status-pending">Pending</td>
+                            <td>SML</td>
+                            <td><button class="btn-action">View</button></td>
+                            <td>
+                                <button class="btn-action btn-status">
+                                    <i class="fas fa-chevron-down"></i> Status
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Juan Dela Cruz</td>
+                            <td>123</td>
+                            <td>10</td>
+                            <td>450</td>
+                            <td>4500</td>
+                            <td class="status-completed">Completed</td>
+                            <td>SML</td>
+                            <td><button class="btn-action">View</button></td>
+                            <td>
+                                <button class="btn-action btn-status">
+                                    <i class="fas fa-chevron-down"></i> Status
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Juan Dela Cruz</td>
+                            <td>123</td>
+                            <td>10</td>
+                            <td>450</td>
+                            <td>4500</td>
+                            <td class="status-completed">Completed</td>
+                            <td>SML</td>
+                            <td><button class="btn-action">View</button></td>
+                            <td>
+                                <button class="btn-action btn-status">
+                                    <i class="fas fa-chevron-down"></i> Status
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Juan Dela Cruz</td>
+                            <td>123</td>
+                            <td>10</td>
+                            <td>450</td>
+                            <td>4500</td>
+                            <td class="status-cancelled">Cancelled</td>
+                            <td>SML</td>
+                            <td><button class="btn-action">View</button></td>
+                            <td>
+                                <button class="btn-action btn-status">
+                                    <i class="fas fa-chevron-down"></i> Status
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
