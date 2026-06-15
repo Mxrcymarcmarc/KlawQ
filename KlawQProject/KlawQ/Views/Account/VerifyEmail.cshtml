@@ -21,6 +21,13 @@
             <span asp-validation-for="Code" class="text-danger"></span>
 
             <button type="submit" class="btn">Verify & Register</button>
+
+            <p>
+              Didn’t receive a code?
+              <a href="#" id="resendLink">Resend</a>
+            </p>
+
+            <p id="statusMsg"></p>
         </form>
 
         <p><a href="/Account/Register">Back to Registration</a></p>
@@ -28,6 +35,61 @@
 </div>
 
 @section Scripts {
+    <script>
+    let cooldown = 60; // seconds
+    let canResend = true;
+
+    const resendLink = document.getElementById("resendLink");
+    const statusMsg = document.getElementById("statusMsg");
+
+    resendLink.addEventListener("click", async function (e) {
+        e.preventDefault();
+
+        if (!canResend) return;
+
+        canResend = false;
+        resendLink.style.pointerEvents = "none";
+
+        statusMsg.innerText = "Sending new code...";
+
+        try {
+            // Call backend API (change URL depending on your setup)
+            const response = await fetch("/Account/ResendCode", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (response.ok) {
+                statusMsg.innerText = "New code sent!";
+            } else {
+                statusMsg.innerText = "Failed to resend code.";
+            }
+
+        } catch (err) {
+            statusMsg.innerText = "Error sending request.";
+        }
+
+        // Start cooldown timer
+        let timeLeft = cooldown;
+
+        const interval = setInterval(() => {
+            resendLink.innerText = `Resend (${timeLeft}s)`;
+
+            timeLeft--;
+
+            if (timeLeft < 0) {
+                clearInterval(interval);
+                canResend = true;
+                resendLink.style.pointerEvents = "auto";
+                resendLink.innerText = "Resend";
+                statusMsg.innerText = "";
+            }
+        }, 1000);
+    });
+    </script>
+
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
