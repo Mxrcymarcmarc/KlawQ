@@ -50,7 +50,7 @@ namespace KlawQ.Controllers
         private static DateTime TodayInPH() => NowInPH().Date;
 
 
-        // 🌟 NEW ENDPOINT: Fetches an entire month status grid for the Admin layout view.
+        // Fetches an entire month status grid for the Admin layout view.
         // It strictly follows the User Calendar rules for IsAvailable, but allows infinite month browsing.
         [HttpGet("month-admin-status")]
         public async Task<IActionResult> GetMonthAdminStatus([FromQuery] int year, [FromQuery] int month)
