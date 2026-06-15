@@ -71,7 +71,7 @@ namespace KlawQ.Services
                 .GetProperty("data")
                 .GetProperty("attributes")
                 .GetProperty("checkout_url")
-                .GetString();
+                .GetString() ?? string.Empty;
         }
     }
 }
