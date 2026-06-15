@@ -4,14 +4,34 @@
 }
 <link rel="stylesheet" href="/css/site.css" />
 <div style="max-width:1100px;margin:28px auto">
-    <h2>My Bookmarks</h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;margin-top:18px">
-        @foreach(var f in Model ?? Enumerable.Empty<KlawQ.Models.Favorite>()){
-            <div style="background:#fff;padding:12px;border-radius:10px;box-shadow:0 6px 12px rgba(0,0,0,.06)">
-                <img src="@f.Product?.Product_Image" style="width:100%;height:160px;object-fit:cover;border-radius:8px" />
-                <h4 style="margin:8px 0">@f.Product?.Product_Name</h4>
-                <p style="color:#7a5046;font-size:13px">@f.Product?.Product_Description</p>
-            </div>
+    <h2>My Favorites</h2>
+    <div style="margin-top:18px">
+        @if(!(Model?.Any() ?? false)){
+            <p>You have not favorited any items yet. Visit the <a href="/Gallery">Gallery</a> to add favorites.</p>
+        } else {
+            <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:18px">
+                @foreach(var f in Model ?? Enumerable.Empty<KlawQ.Models.Favorite>()){
+                    var prod = f.Product;
+                    var img = prod?.Product_Image;
+                    if(string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
+                    else if(img.StartsWith("~")) img = Url.Content(img);
+                    else if(!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
+                    else img = Url.Content(img);
+                    <li style="background:#fff;padding:18px 24px;border-radius:10px;box-shadow:0 6px 12px rgba(0,0,0,.06);display:flex;gap:18px;align-items:center">
+                        <a href="@Url.Action("Details", "Gallery", new { id = prod?.ProductID })" style="display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;width:100%">
+                            <img src="@img" alt="@(string.IsNullOrWhiteSpace(prod?.Product_Name) ? "Nail set image" : prod.Product_Name)" style="width:110px;height:110px;object-fit:cover;border-radius:8px;flex:0 0 110px" />
+                            <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center">
+                                <h3 style="margin:0 0 6px 0;font-size:18px;color:#5c2b27">@(prod?.Product_Name ?? "Untitled")</h3>
+                                <p style="margin:0;color:#7a5046;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-height:3.6em">@prod?.Product_Description</p>
+                                <div style="margin-top:8px;font-size:13px;color:#8b4b3b">Type: @(prod?.Product_Type ?? "-")</div>
+                            </div>
+                            <div style="flex:0 0 auto;margin-left:12px;opacity:0.9">
+                                <!-- reserved for future buttons (e.g., remove favorite) -->
+                            </div>
+                        </a>
+                    </li>
+                }
+            </ul>
         }
     </div>
 </div>
