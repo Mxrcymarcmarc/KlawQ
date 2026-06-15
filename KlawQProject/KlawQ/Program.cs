@@ -26,9 +26,10 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(15);
-    options.Cookie.HttpOnly = true;   // Add ".Cookie" here
-    options.Cookie.IsEssential = true; // Add ".Cookie" here
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true; 
 });
+builder.Services.AddHttpClient<KlawQ.Services.PayMongoService>();
 
 
 
