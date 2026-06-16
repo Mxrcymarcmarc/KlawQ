@@ -1,0 +1,238 @@
+﻿:root {
+    --primary-font: 'Shadows Into Light Two', cursive;
+    --secondary-font: 'Montserrat', sans-serif;
+    --text-brown: #795548;
+    --text-light: #a1887f;
+    --bg-white: #ffffff;
+    --border-pink: #f8bbd0;
+    --accent-green: #a7c47d;
+    --accent-green-hover: #92b068;
+    --accent-pink: #fce4ec;
+    --shadow-soft: 0 10px 30px rgba(121, 85, 72, 0.08);
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+.form-wrapper {
+    padding: 3rem 1rem 5rem;
+    min-height: 80vh;
+    background-color: transparent;
+}
+
+.form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    color: var(--text-brown);
+}
+
+h1, h2 {
+    font-family: var(--primary-font);
+    font-weight: normal;
+}
+
+p, label, input, textarea, button, h4 {
+    font-family: var(--secondary-font);
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.page-title {
+    font-size: 3.5rem;
+    margin: 0;
+    color: var(--text-brown);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.title-icon {
+    color: var(--accent-green);
+    font-size: 2.5rem;
+}
+
+.page-subtitle {
+    color: var(--text-light);
+    margin-top: 0.5rem;
+}
+
+.grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.section-box {
+    background: var(--bg-white);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--shadow-soft);
+    margin-bottom: 2rem;
+    border: 2px solid var(--border-pink);
+}
+
+.highlight-box {
+    border: 2px solid var(--text-brown);
+}
+
+.section-title {
+    font-size: 2.2rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+    .section-title i {
+        color: var(--accent-green);
+    }
+
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+    .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group input, .form-group textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.8rem 1rem;
+        border: 1px solid var(--border-pink);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        outline: none;
+        transition: 0.2s;
+        color: var(--text-brown);
+    }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--text-brown);
+        }
+
+.upload-area {
+    border: 2px dashed var(--text-brown);
+    border-radius: 12px;
+    padding: 2rem 1rem;
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+    transition: 0.2s;
+    background: #fffafb;
+}
+
+    .upload-area:hover {
+        background-color: var(--accent-pink);
+    }
+
+    .upload-area input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+.retro-camera {
+    font-size: 2.5rem;
+    color: var(--text-brown);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.upload-area h4 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.info-alert {
+    background: var(--accent-pink);
+    padding: 1.2rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+    .info-alert p {
+        margin: 0;
+    }
+
+.reference-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.ref-card {
+    background: var(--accent-pink);
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px dashed var(--text-brown);
+    text-align: center;
+}
+
+.ref-img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.ref-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.correct .ref-label {
+    color: #2e7d32;
+}
+
+.incorrect .ref-label {
+    color: #d32f2f;
+}
+
+.btn-submit {
+    background: var(--accent-green);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 1.2rem;
+    width: 100%;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(167, 196, 125, 0.4);
+}
+
+    .btn-submit:hover {
+        background: var(--accent-green-hover);
+        transform: translateY(-2px);
+    }
+
+@media (max-width: 900px) {
+    .grid-layout {
+        grid-template-columns: 1fr;
+    }
+}
