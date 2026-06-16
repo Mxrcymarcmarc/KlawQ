@@ -76,14 +76,19 @@ namespace KlawQ.Controllers
 
                 var cart = await GetOrCreateCart();
 
+                // determine quantity from form or querystring (default 1)
+                string qtyStr = Request.Form["quantity"].FirstOrDefault() ?? Request.Query["quantity"].ToString();
+                int qty = 1;
+                if (!string.IsNullOrWhiteSpace(qtyStr) && int.TryParse(qtyStr, out var q) && q > 0) qty = q;
+
                 var existing = await _context.CartItems.FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.ProductID == id);
                 if (existing != null)
                 {
-                    existing.Quantity++;
+                    existing.Quantity += qty;
                 }
                 else
                 {
-                    var cartItem = new CartItem { CartId = cart.CartId, ProductID = id, Quantity = 1 };
+                    var cartItem = new CartItem { CartId = cart.CartId, ProductID = id, Quantity = qty };
                     _context.CartItems.Add(cartItem);
                 }
 

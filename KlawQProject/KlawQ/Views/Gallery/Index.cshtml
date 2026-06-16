@@ -19,16 +19,22 @@
     .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:20px}
     .gallery-card, .gallery-item{background:#fff;border-radius:16px;overflow:hidden;position:relative;border:6px solid transparent;box-shadow:0 8px 18px rgba(0,0,0,.06);display:flex;flex-direction:column}
     /* make all cards square and same size */
-    .gallery-card, .gallery-card.image-card, .custom-request-card{aspect-ratio:1;min-height:260px}
+    .gallery-card, .gallery-card.image-card, .custom-request-card{aspect-ratio:1;min-height:260px;max-height:400px;width:100%}
     .gallery-card.image-card{border-color:#fde6ea}
     .gallery-card.image-card img{width:100%;height:100%;object-fit:cover;display:block}
     /* center custom request content */
-    .custom-request-card{display:flex;align-items:center;justify-content:center;padding:0;border:2px dashed #d9a6b2}
+    .gallery-card.custom-request-card{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0;border:2px dashed #d9a6b2}
     .custom-request-content{text-align:center;padding:20px}
-    .favorite-btn{position:absolute;top:10px;right:10px;background:rgba(255,255,255,0.95);border:none;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.08)}
-    .heart-solid{display:none;color:#e60023}
-    .favorite-btn.favorited .heart-solid{display:inline-block}
-    .favorite-btn.favorited .heart-outline{display:none}
+    .btn-heart, .favorite-btn{width:44px;height:44px;border-radius:999px;border:3px solid #fde6ea;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.08);transition:transform 0.2s ease}
+    .btn-heart:hover, .favorite-btn:hover{transform:scale(1.1)}
+    /* Two-icon approach: hollow shown by default, solid hidden */
+    .btn-heart .heart-hollow, .favorite-btn .heart-hollow{color:#e2557a;display:inline}
+    .btn-heart .heart-filled, .favorite-btn .heart-filled{color:#e2557a;display:none}
+    /* When favorited: flip visibility */
+    .btn-heart.favorited .heart-hollow, .favorite-btn.favorited .heart-hollow{display:none}
+    .btn-heart.favorited .heart-filled, .favorite-btn.favorited .heart-filled{display:inline}
+    .fav-pop { animation: heartPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
     @@media(max-width:900px){.gallery-grid{grid-template-columns:repeat(2,1fr)}}
     @@media(max-width:560px){.gallery-grid{grid-template-columns:1fr}}
     </style>
@@ -77,9 +83,9 @@
                 var dataType = isPressOn ? "presson" : "original";
                 var detailsLink = "/Gallery/Details/" + p.ProductID;
             <div class="gallery-card image-card" data-type="@dataType">
-                <button class="favorite-btn @(favIds.Contains(p.ProductID) ? "favorited" : "")" data-id="@p.ProductID" aria-label="Favorite this set">
-                    <i class="far fa-heart heart-outline"></i>
-                    <i class="fas fa-heart heart-solid"></i>
+                <button class="favorite-btn btn-heart @(favIds.Contains(p.ProductID) ? "favorited" : "")" data-id="@p.ProductID" aria-label="Favorite this set">
+                    <i class="fa-regular fa-heart heart-hollow"></i>
+                    <i class="fa-solid fa-heart heart-filled"></i>
                 </button>
                 <a class="card-link" href="@detailsLink" style="display:block">
                     @{
@@ -112,10 +118,10 @@
         btn.classList.add('active');
         const filter = btn.getAttribute('data-filter');
         document.querySelectorAll('.gallery-card[data-type], .gallery-item[data-type]').forEach(item=>{
-            if(filter==='all') item.style.display='block';
+            if(filter==='all') item.style.display='';
             else {
                 const types = (item.getAttribute('data-type')||'').split(/\s+/);
-                item.style.display = types.includes(filter) ? 'block' : 'none';
+                item.style.display = types.includes(filter) ? '' : 'none';
             }
         });
     }));

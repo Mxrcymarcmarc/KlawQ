@@ -19,7 +19,7 @@
     }
 
     .appointment-wrap {
-        max-width: 1000px !important;
+        max-width: 1100px !important;
         margin: 0 auto !important;
         padding: 10px 20px;
         box-sizing: border-box;
@@ -46,11 +46,11 @@
     .service-card {
         background: var(--panel-pink);
         border-radius: 12px;
-        padding: 18px;
+        padding: 22px;
         box-shadow: 0 10px 25px rgba(0,0,0,.06);
         border: 1px solid var(--accent-pink);
-        width: 95%;
-        max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .service-options {
@@ -125,7 +125,39 @@
     .proceed {
         text-align: center;
         margin-top: 28px;
+        margin-bottom: 60px;
         width: 100%;
+    }
+
+    .upload-area {
+        border: 2px dashed var(--brand-brown);
+        border-radius: 12px;
+        padding: 24px 16px;
+        text-align: center;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #fff;
+        margin-top: 8px;
+    }
+
+    .upload-area:hover {
+        background-color: var(--panel-pink);
+        border-color: var(--brand-brown);
+    }
+
+    .retro-camera {
+        font-size: 32px;
+        color: var(--brand-brown);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .upload-area h4 {
+        margin: 0;
+        font-size: 14px;
+        color: #7a5046;
+        font-weight: 500;
     }
 
     .btn-proceed {
@@ -399,10 +431,6 @@
                     <label>Phone *</label>
                     <input id="phone" name="Phone" type="text" placeholder="(+63) 912-345-6789" />
                 </div>
-                <div class="input">
-                    <label>Design Reference (Image) *</label>
-                    <input id="designImage" name="DesignImage" type="file" accept="image/*" />
-                </div>
                 <div class="input" style="grid-column:1 / -1">
                     <label>Special Requests</label>
                     <textarea id="notes" name="Additional_Notes" placeholder="Tell me about your dream nail design ..."></textarea>
@@ -423,16 +451,22 @@
                     <input id="h-phone" type="text" placeholder="(+63) 912-345-6789" />
                 </div>
                 <div class="input">
-                    <label>Design Reference (Image) *</label>
-                    <input id="designImage" name="DesignImage" type="file" accept="image/*" />
-                </div>
-                <div class="input">
                     <label>Address *</label>
                     <input id="h-address" type="text" placeholder="123 Main St" />
                 </div>  
                 <div class="input" style="grid-column:1 / -1">
                     <label>Special Requests</label>
                     <textarea id="h-notes" placeholder="Tell me about your dream nail design ..."></textarea>
+                </div>
+            </div>
+
+            <!-- Unified Design Reference Image Upload Area -->
+            <div class="form-group" style="margin-top:20px;">
+                <label style="font-size: 13px; color: #7a5046; margin-bottom: 6px; display: block; font-weight: 600;">Design Reference (Image) *</label>
+                <div class="upload-area" id="designImageUploadArea">
+                    <i class="fas fa-upload retro-camera" id="upload-icon"></i>
+                    <h4 id="upload-status-text">Click or drag to upload design reference image</h4>
+                    <input type="file" id="designImageFile" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
                 </div>
             </div>
         </div>
@@ -525,6 +559,71 @@
         let currentMonth = new Date();
         let allDays = [];
         let tempAppointmentData = null;
+        let attachedImageSrc = null;
+
+        // On page load: parse URL parameters and handle image upload elements
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const inspirationImg = urlParams.get('Inspiration_Image');
+            const inspirationTitle = urlParams.get('Inspiration_Title');
+
+            if (inspirationImg) {
+                attachedImageSrc = inspirationImg;
+                const displayName = inspirationTitle || inspirationImg.substring(inspirationImg.lastIndexOf('/') + 1);
+                document.getElementById('upload-status-text').innerHTML = `Attached Design: <strong>${displayName}</strong> <span id="clear-image-btn" style="color: #d32f2f; cursor: pointer; margin-left: 8px; font-weight: bold; font-size: 16px;">✕</span>`;
+                document.getElementById('upload-icon').className = 'fas fa-image retro-camera';
+            }
+
+            const fileInput = document.getElementById('designImageFile');
+            fileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Image must be smaller than 2MB.');
+                    fileInput.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    attachedImageSrc = event.target.result;
+                    document.getElementById('upload-status-text').innerHTML = `Attached: <strong>${file.name}</strong> <span id="clear-image-btn" style="color: #d32f2f; cursor: pointer; margin-left: 8px; font-weight: bold; font-size: 16px;">✕</span>`;
+                    document.getElementById('upload-icon').className = 'fas fa-image retro-camera';
+                };
+                reader.readAsDataURL(file);
+            });
+
+            const uploadArea = document.getElementById('designImageUploadArea');
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = 'var(--panel-pink)';
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.backgroundColor = '';
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = '';
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    fileInput.files = files;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            });
+
+            // Handle inline clear button click
+            document.getElementById('upload-status-text').addEventListener('click', (e) => {
+                if (e.target.id === 'clear-image-btn') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    attachedImageSrc = null;
+                    fileInput.value = '';
+                    document.getElementById('upload-status-text').innerHTML = "Click or drag to upload design reference image";
+                    document.getElementById('upload-icon').className = 'fas fa-upload retro-camera';
+                }
+            });
+        });
 
         // Store form data temporarily (don't save yet)
         async function validateAndStoreFormData() {
@@ -546,47 +645,25 @@
             if (!fullName) { alert('Full Name is required'); return false; }
             if (!email)    { alert('Email is required');     return false; }
             if (!phone)    { alert('Phone is required');     return false; }
+            if (!attachedImageSrc) { alert('Design Reference image is required'); return false; }
 
+            let fullNotes = notes;
             if (isHome) {
                 const address = document.getElementById('h-address').value.trim();
                 if (!address) { alert('Address is required'); return false; }
-
-                tempAppointmentData = {
-                    Full_Name: fullName,
-                    Social_Account: email,
-                    Phone: phone,
-                    Additional_Notes: notes,
-                    Down_Payment_Paid: false,
-                    Appointment_Type: 'H',
-                    Status: 0,
-                    Inspiration_Image: null
-                };
-            } else {
-                const fileInput = document.getElementById('designImage');
-                const file = fileInput.files[0];
-                if (!file) { alert('Design Reference image is required'); return false; }
-                if (file.size > 2 * 1024 * 1024) {
-                    alert('Image must be smaller than 2MB.');
-                    return false;
-                }
-
-                const imageBase64 = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.readAsDataURL(file);
-                });
-
-                tempAppointmentData = {
-                    Full_Name: fullName,
-                    Social_Account: email,
-                    Phone: phone,
-                    Additional_Notes: notes,
-                    Down_Payment_Paid: false,
-                    Appointment_Type: 'S',
-                    Status: 0,
-                    Inspiration_Image: imageBase64
-                };
+                fullNotes = `Address: ${address}\n\n${notes}`;
             }
+
+            tempAppointmentData = {
+                Full_Name: fullName,
+                Social_Account: email,
+                Phone: phone,
+                Additional_Notes: fullNotes,
+                Down_Payment_Paid: false,
+                Appointment_Type: isHome ? 'H' : 'S',
+                Status: 0,
+                Inspiration_Image: attachedImageSrc
+            };
 
             return true;
         }

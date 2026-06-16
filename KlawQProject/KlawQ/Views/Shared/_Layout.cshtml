@@ -18,14 +18,18 @@
 
     <nav class="sticky-nav">
         <div class="nav-container">
-            <a class="nav-brand" asp-controller="Home" asp-action="Index">🎀 Klaw By Krys</a>
+            <a class="nav-brand" asp-controller="Home" asp-action="Index">
+                <img src="~/images/gallery/logoklawqicon.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
+                Klaw By Krys
+            </a>
             @if (navbarMode == "full")
             {
+                var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
                 <ul class="nav-links">
-                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li><a asp-controller="Gallery" asp-action="Index">Gallery</a></li>
-                    <li><a asp-controller="Favorites" asp-action="Index">Favorites</a></li>
-                    <li><a asp-controller="Appointment" asp-action="Index">Appointment</a></li>
+                    <li><a class="@(currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><a class="@(currentController == "Gallery" || currentController == "GalleryDetails" ? "active" : "")" asp-controller="Gallery" asp-action="Index">Gallery</a></li>
+                    <li><a class="@(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">Favorites</a></li>
+                    <li><a class="@(currentController == "Appointment" ? "active" : "")" asp-controller="Appointment" asp-action="Index">Appointment</a></li>
                 </ul>
 
                 <div class="cart-button">

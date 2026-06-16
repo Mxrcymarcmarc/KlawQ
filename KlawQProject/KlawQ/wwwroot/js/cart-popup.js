@@ -34,11 +34,13 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("cartTotal").textContent = formatPeso(total);
   }
 
-  async function loadCart() {
+  async function loadCart(redirectOn401 = false) {
     try {
       const res = await fetch("/Cart/items");
       if (res.status === 401) {
-        window.location.href = "/Account/Login";
+        if (redirectOn401) {
+          window.location.href = "/Account/Login";
+        }
         return;
       }
       const json = await res.json();
@@ -47,6 +49,11 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!json.items || json.items.length === 0) {
         itemsEl.innerHTML =
           '<div style="padding:16px;text-align:center;color:#666">Your cart is empty.</div>';
+        // ensure counts and total reflect empty cart
+        document.getElementById("cartItemCount").textContent = "0 items";
+        const ccEl = document.getElementById("cartCount");
+        if (ccEl) ccEl.textContent = 0;
+        updateTotal();
       } else {
         json.items.forEach((it) => {
           const itemEl = document.createElement("div");
@@ -141,16 +148,21 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function refresh() {
-    await loadCart();
+    await loadCart(false);
   }
 
-  cartLink.addEventListener("click", function (e) {
-    e.preventDefault();
-    if (modal.style.display === "none") {
-      modal.style.display = "block";
-      loadCart();
-    } else modal.style.display = "none";
-  });
+  if (cartLink) {
+    // Silently fetch and update the cart count on page load
+    loadCart(false);
+
+    cartLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (modal.style.display === "none") {
+        modal.style.display = "block";
+        loadCart(true);
+      } else modal.style.display = "none";
+    });
+  }
 
   // Checkout action: collect selected productIds and redirect to order start
   document.addEventListener("click", function (e) {
@@ -163,12 +175,16 @@ document.addEventListener("DOMContentLoaded", function () {
         .map((div) => div.getAttribute("data-productid"))
         .filter((x) => x)
         .join("&productIds=");
+      const qtys = selected
+        .map((div) => div.getAttribute("data-qty") || "1")
+        .filter((x) => x)
+        .join("&qtys=");
       if (!ids) {
         alert("Please select at least one item to purchase.");
         return;
       }
-      // redirect to Order Start with selected ids
-      const url = `/Order/Start?productIds=${ids}`;
+      // redirect to Order Start with selected ids and quantities (aligned by index)
+      const url = `/Order/Start?productIds=${ids}${qtys ? `&qtys=${qtys}` : ''}`;
       window.location.href = url;
     }
   });

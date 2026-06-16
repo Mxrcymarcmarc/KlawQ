@@ -11,10 +11,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
-{
-    options.SignIn.RequireConfirmedAccount = false;
-})
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
@@ -27,7 +24,7 @@ builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(15);
     options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true; 
+    options.Cookie.IsEssential = true;
 });
 builder.Services.AddHttpClient<KlawQ.Services.PayMongoService>();
 
@@ -42,7 +39,7 @@ using (var scope = app.Services.CreateScope())
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
 
-    string[] roles = new[] { "Admin", "User" };
+    string[] roles = ["Admin", "User"];
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
@@ -91,8 +88,8 @@ using (var scope = app.Services.CreateScope())
     }
 
     // Seed test user
-    var testUserEmail = "lemuel@gmail.com";
-    var testUserPassword = "Marc123!";
+    const string testUserEmail = "lemuel@gmail.com";
+    const string testUserPassword = "Marc123!";
     var testUser = await userManager.FindByEmailAsync(testUserEmail);
     if (testUser == null)
     {

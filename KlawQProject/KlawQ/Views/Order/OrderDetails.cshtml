@@ -1,5 +1,54 @@
-﻿@{
+@model KlawQ.Models.Order
+@{
     ViewData["Title"] = "Order Details";
+    var statusClass = "status-confirmed";
+    var statusText = "Pending";
+    if (Model.Status.Equals("Confirmed", StringComparison.OrdinalIgnoreCase))
+    {
+        statusClass = "status-confirmed";
+        statusText = "Confirmed";
+    }
+    else if (Model.Status.Equals("In Progress", StringComparison.OrdinalIgnoreCase))
+    {
+        statusClass = "status-progress";
+        statusText = "In Progress";
+    }
+    else if (Model.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+    {
+        statusClass = "status-completed";
+        statusText = "Completed";
+    }
+    else if (Model.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+    {
+        statusClass = "";
+        statusText = "Cancelled";
+    }
+
+    string designNotes = "";
+    List<string> inspirations = new List<string>();
+    if (Model.Order_Type == 'C' && !string.IsNullOrWhiteSpace(Model.Thumb_Photo))
+    {
+        try
+        {
+            var doc = System.Text.Json.JsonDocument.Parse(Model.Thumb_Photo);
+            if (doc.RootElement.TryGetProperty("designNotes", out var dnProp))
+            {
+                designNotes = dnProp.GetString() ?? "";
+            }
+            if (doc.RootElement.TryGetProperty("inspirations", out var inspProp) && inspProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                foreach (var element in inspProp.EnumerateArray())
+                {
+                    var base64 = element.GetString();
+                    if (!string.IsNullOrWhiteSpace(base64))
+                    {
+                        inspirations.Add(base64);
+                    }
+                }
+            }
+        }
+        catch { }
+    }
 }
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -401,14 +450,21 @@
 <div class="order-view-body">
     <div class="order-wrap">
 
-        <div class="card status-progress">
+        <div class="card @statusClass">
             <div class="card-header-row">
                 <div>
                     <p class="card-title"><i class="fa-solid fa-box"></i> Order Details</p>
-                    <p class="order-meta">Order ORD-2026-123</p>
-                    <p class="order-meta">Placed on 6/5/2026</p>
+                    <p class="order-meta">Order ORD-@Model.OrderID</p>
+                    <p class="order-meta">Placed on @Model.Order_Date.ToString("MM/dd/yyyy")</p>
                 </div>
-                <span class="badge-confirmed">✓ Confirmed</span>
+                @if (Model.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+                {
+                    <span class="badge-cancelled" style="background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">✕ Cancelled</span>
+                }
+                else
+                {
+                    <span class="badge-confirmed">✓ @statusText</span>
+                }
             </div>
 
             <div class="timeline-label"><i class="fa-regular fa-clock"></i> Order Timeline</div>
@@ -422,7 +478,18 @@
                 <span class="step-2" style="text-align: center;">In Progress</span>
                 <span class="step-3" style="text-align: right;">Completed</span>
             </div>
-            <p class="estimated">Estimated Completion: <strong>idk</strong></p>
+            @if (Model.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                <p class="estimated">Completed on: <strong>@Model.Order_Date.AddDays(3).ToString("MM/dd/yyyy")</strong></p>
+            }
+            else if (Model.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+            {
+                <p class="estimated">Cancelled on: <strong>@Model.Order_Date.AddDays(1).ToString("MM/dd/yyyy")</strong></p>
+            }
+            else
+            {
+                <p class="estimated">Estimated Completion: <strong>@Model.Order_Date.AddDays(7).ToString("MM/dd/yyyy")</strong></p>
+            }
         </div>
 
         <div class="two-col">
@@ -434,7 +501,7 @@
                     <label class="info-label">Name</label>
                     <div class="input-icon-wrap">
                         <i class="fa-regular fa-user"></i>
-                        <input type="text" class="form-input-display bold-text" value="Name Name" disabled />
+                        <input type="text" class="form-input-display bold-text" value="@Model.Full_Name" disabled />
                     </div>
                 </div>
 
@@ -442,7 +509,7 @@
                     <label class="info-label">Email</label>
                     <div class="input-icon-wrap">
                         <i class="fa-regular fa-envelope"></i>
-                        <input type="email" class="form-input-display" value="customer@gmail.com" disabled />
+                        <input type="email" class="form-input-display" value="@ViewBag.UserEmail" disabled />
                     </div>
                 </div>
 
@@ -450,34 +517,113 @@
                     <label class="info-label">Phone</label>
                     <div class="input-icon-wrap">
                         <i class="fa-solid fa-phone"></i>
-                        <input type="text" class="form-input-display" value="(555) 123-4567" disabled />
+                        <input type="text" class="form-input-display" value="@Model.Contact_Number" disabled />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="info-label">Social Account</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-hashtag"></i>
+                        <input type="text" class="form-input-display" value="@Model.Social_Account" disabled />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="info-label">Delivery Location</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <input type="text" class="form-input-display" value="@Model.Delivery_Location" disabled />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="info-label">Delivery Method</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-truck"></i>
+                        <input type="text" class="form-input-display" value="@Model.Delivery_Method" disabled />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="info-label">Payment Method</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-credit-card"></i>
+                        <input type="text" class="form-input-display" value="@Model.Payment_Method" disabled />
                     </div>
                 </div>
             </div>
 
             <div class="card">
                 <p class="section-title"><i class="fa-solid fa-receipt"></i> Order Summary</p>
-                <div class="order-item-row">
-                    <span class="order-item-name">Custom Nail Art Design</span>
-                    <span class="order-item-price">₱100</span>
-                </div>
-                <div class="order-item-meta">Qty: 1 &nbsp;|&nbsp; <span class="badge-size">Size: M</span></div>
-
-                <div class="order-details-label">Details:</div>
-                <div class="addon-row"><span>Rhinestones & Gems</span><span>₱10</span></div>
-                <div class="addon-row"><span>Chrome/Mirror Finish</span><span>₱10</span></div>
+                @foreach (var item in Model.Items)
+                {
+                    <div class="order-item-row">
+                        <span class="order-item-name">@(item.Product?.Product_Name ?? "Press-On Set")</span>
+                        <span class="order-item-price">₱@((item.Product?.Product_Price ?? 0).ToString("N2"))</span>
+                    </div>
+                    <div class="order-item-meta">Qty: @item.Quantity &nbsp;|&nbsp; <span class="badge-size">Size: @(Model.Order_Type == 'C' ? "Custom" : "Standard")</span></div>
+                }
                 <hr class="divider-line" />
                 <div class="total-row">
                     <span>Total</span>
-                    <span class="total-amount">₱100</span>
+                    @{
+                        var totalAmount = Model.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity);
+                    }
+                    <span class="total-amount">₱@totalAmount.ToString("N2")</span>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <p class="section-title"><i class="fa-regular fa-star"></i> Special Notes</p>
-            <textarea class="notes-textarea" disabled>text instructions or customization requirements go here...</textarea>
-        </div>
+        @if (Model.Order_Type == 'C')
+        {
+            <div class="card">
+                <p class="section-title"><i class="fa-regular fa-star"></i> Special Notes & Design Details</p>
+                @if (!string.IsNullOrWhiteSpace(designNotes))
+                {
+                    <textarea class="notes-textarea" disabled>@designNotes</textarea>
+                }
+                else
+                {
+                    <p style="font-size: 13px; color: #aaa; margin: 0 0 10px 0;">No custom design notes provided.</p>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Hand_Photo))
+                {
+                    <div style="margin-top: 15px;">
+                        <p class="info-label" style="margin-bottom: 8px;">Hand Sizing Photo</p>
+                        <img src="@Model.Hand_Photo" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--accent-pink);" />
+                    </div>
+                }
+
+                @if (inspirations.Any())
+                {
+                    <div style="margin-top: 15px;">
+                        <p class="info-label" style="margin-bottom: 8px;">Inspiration Images</p>
+                        <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px;">
+                            @foreach (var img in inspirations)
+                            {
+                                <img src="@img" style="max-height: 150px; border-radius: 8px; border: 1px solid var(--accent-pink);" />
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <p class="section-title"><i class="fa-regular fa-star"></i> Special Notes</p>
+                @if (!string.IsNullOrWhiteSpace(Model.Hand_Photo))
+                {
+                    <div style="margin-bottom: 15px;">
+                        <p class="info-label" style="margin-bottom: 8px;">Hand Sizing Photo</p>
+                        <img src="@Model.Hand_Photo" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--accent-pink);" />
+                    </div>
+                }
+                <textarea class="notes-textarea" disabled>Standard Press-On order. Sizing: Standard.</textarea>
+            </div>
+        }
 
         <div class="card">
             <div class="help-cancel-row">

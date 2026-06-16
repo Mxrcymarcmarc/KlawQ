@@ -1,5 +1,8 @@
 /*Base Layout, Wag galawin*/
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 html, body {
     height: 100%;
@@ -13,6 +16,7 @@ body {
     font-family: "Segoe UI", Roboto, Arial;
     background: #fff5f6;
     color: #8b4b3b;
+    padding-top: 70px; /* Offset for fixed navbar */
 }
 
 /* Para ma-anchor sa bottom yung footer */
@@ -20,6 +24,9 @@ body {
     width: 100%;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 /*Navbar*/
@@ -35,7 +42,13 @@ nav {
 }
 
 /* Sticky navbar */
-.sticky-nav{position:sticky;top:0;z-index:1000}
+.sticky-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
 
 /* Fixed cart button */
 .cart-button{position:fixed;top:14px;right:20px;z-index:1100}
@@ -44,7 +57,7 @@ nav {
 
 
 .nav-container {
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -53,8 +66,9 @@ nav {
 }
 
 .nav-brand {
-    font-size: 20px;
-    font-weight: 700;
+    font-family: 'Shadows Into Light Two', cursive;
+    font-size: 26px; /* slightly larger for cursive font readability */
+    font-weight: 500;
     color: #8b4b3b;
     text-decoration: none;
 }
@@ -63,15 +77,21 @@ nav {
     display: flex;
     gap: 30px;
     list-style: none;
+    align-items: center;
 }
 
     .nav-links a {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 600;
         color: #8b4b3b;
         text-decoration: none;
         font-size: 14px;
+        letter-spacing: 0.5px;
+        transition: color 0.2s ease;
     }
 
-        .nav-links a:hover {
+        .nav-links a:hover,
+        .nav-links a.active {
             color: #88b04b;
         }
 
@@ -116,7 +136,6 @@ nav {
     text-decoration: none;
     font-weight: 600;
     font-size: 14px;
-    vertical-align: 
 }
 
 .footer-right {

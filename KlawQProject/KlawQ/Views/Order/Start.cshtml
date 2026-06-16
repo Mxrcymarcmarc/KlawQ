@@ -4,351 +4,85 @@
     ViewData["Title"] = "Order Summary";
 }
 
-<style>
-.order-container {
-    max-width: 900px;
-    margin: 24px auto;
-    padding: 0 12px;
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/checkout-forms.css" />
 }
 
-.order-header {
-    font-family: 'Brush Script MT', cursive;
-    font-size: 32px;
-    color: #8b4b3b;
-    margin-bottom: 24px;
-    text-align: center;
-}
+<div class="form-wrapper">
+    <div class="form-container" style="max-width:650px;">
 
-.order-items-section {
-    background: #fff;
-    border-radius: 16px;
-    border: 6px solid #fde6ea;
-    padding: 24px;
-    margin-bottom: 24px;
-}
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-shopping-bag title-icon"></i> Order Summary</h1>
+            <p class="page-subtitle">Review your selected press-on designs and quantities before checking out.</p>
+        </div>
 
-.order-item {
-    display: flex;
-    gap: 16px;
-    padding: 16px;
-    border-bottom: 1px solid #f0e0e6;
-    align-items: center;
-}
-
-.order-item:last-child {
-    border-bottom: none;
-}
-
-.order-item-image {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 3px solid #fde6ea;
-}
-
-.order-item-details {
-    flex: 1;
-}
-
-.order-item-name {
-    font-weight: 700;
-    color: #5c2b27;
-    margin-bottom: 8px;
-}
-
-.order-item-price {
-    color: #e2557a;
-    font-weight: 600;
-}
-
-.order-form-section {
-    background: #fff;
-    border-radius: 16px;
-    border: 6px solid #f8e8ed;
-    padding: 24px;
-    margin-bottom: 24px;
-}
-
-.form-group {
-    margin-bottom: 16px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 6px;
-    color: #8b4b3b;
-    font-weight: 600;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 10px;
-    border: 2px solid #f0e0e6;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 14px;
-    box-sizing: border-box;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: #88b04b;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-.order-summary {
-    background: #f8e8ed;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 24px;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    font-size: 14px;
-}
-
-.summary-row.total {
-    border-top: 1px solid #fde6ea;
-    padding-top: 12px;
-    font-weight: 700;
-    font-size: 16px;
-    color: #e2557a;
-}
-
-.file-upload-group {
-    margin-top: 12px;
-}
-
-.file-upload-group label {
-    display: block;
-    margin-bottom: 6px;
-    color: #666;
-    font-size: 13px;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-}
-
-.btn {
-    border-radius: 999px;
-    padding: 12px 24px;
-    font-size: 14px;
-    border: 0;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-}
-
-.btn-primary {
-    background: #88b04b;
-    color: #fff;
-    box-shadow: 0 4px 10px rgba(100, 120, 80, .08);
-}
-
-.btn-primary:hover {
-    background: #7a9a3f;
-    text-decoration: none;
-}
-
-.btn-secondary {
-    background: #ddd;
-    color: #666;
-}
-
-.btn-secondary:hover {
-    background: #ccc;
-}
-
-@@media (max-width: 768px) {
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .order-item {
-        flex-direction: column;
-        text-align: center;
-    }
-}
-</style>
-
-<div class="order-container">
-    <div class="order-header">Order Summary</div>
-
-    <!-- Order Items -->
-    <div class="order-items-section">
-        <h3 style="color: #8b4b3b; margin-top: 0;">Items to Order</h3>
-        @if (Model.Products?.Count > 0)
-        {
-            @foreach (var product in Model.Products)
+        <div class="section-box">
+            <h2 class="section-title"><i class="fas fa-list"></i> Selected Designs</h2>
+            
+            @if (Model.Products?.Count > 0)
             {
-                var imgUrl = product.Product_Image as string;
-                if (string.IsNullOrWhiteSpace(imgUrl)) imgUrl = Url.Content("~/images/placeholder.png");
-                else if (imgUrl.StartsWith("~")) imgUrl = Url.Content(imgUrl);
-                else if (!imgUrl.StartsWith("/")) imgUrl = Url.Content("~/" + imgUrl.TrimStart('/'));
-                else imgUrl = Url.Content(imgUrl);
+                <div style="display:flex; flex-direction:column; gap:1.2rem;">
+                    @foreach (var product in Model.Products)
+                    {
+                        var imgUrl = product.Product_Image as string;
+                        if (string.IsNullOrWhiteSpace(imgUrl)) imgUrl = Url.Content("~/images/placeholder.png");
+                        else if (imgUrl.StartsWith("~")) imgUrl = Url.Content(imgUrl);
+                        else if (!imgUrl.StartsWith("/")) imgUrl = Url.Content("~/" + imgUrl.TrimStart('/'));
+                        else imgUrl = Url.Content(imgUrl);
 
-                <div class="order-item">
-                    <img src="@imgUrl" alt="@product.Product_Name" class="order-item-image" />
-                    <div class="order-item-details">
-                        <div class="order-item-name">@product.Product_Name</div>
-                        <div class="order-item-price">₱@product.Product_Price.ToString("0.00")</div>
-                    </div>
+                        var qty = Model.ProductQuantities.ContainsKey(product.ProductID) ? Model.ProductQuantities[product.ProductID] : 1;
+
+                        <div style="display:flex; gap:1.2rem; align-items:center; padding-bottom:1rem; border-bottom:1px solid #fce4ec; margin-bottom: 0.5rem;">
+                            <div style="width:80px; height:80px; border-radius:8px; overflow:hidden; border:2px solid var(--border-pink); flex-shrink:0;">
+                                <img src="@imgUrl" alt="@product.Product_Name" style="width:100%; height:100%; object-fit:cover;" />
+                            </div>
+                            <div style="flex:1;">
+                                <div style="font-weight:600; font-size:1.1rem; color:var(--text-brown); margin-bottom:0.25rem;">@product.Product_Name</div>
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div style="color:var(--text-light); font-size:0.9rem;">₱@product.Product_Price.ToString("0.00") × @qty</div>
+                                    <div style="font-weight:700; color:var(--text-brown); font-size:1.1rem;">₱@((product.Product_Price * qty).ToString("0.00"))</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             }
-        }
+            else
+            {
+                <p style="text-align:center; color:var(--text-light); margin:20px 0;">No items found in your selection.</p>
+            }
+        </div>
+
+        <form method="get" action="/Order/CheckoutStandard">
+            @foreach (var p in Model.Products ?? new List<Products>())
+            {
+                <input type="hidden" name="productIds" value="@p.ProductID" />
+                <input type="hidden" name="qtys" value="@(Model.ProductQuantities.ContainsKey(p.ProductID) ? Model.ProductQuantities[p.ProductID] : 1)" />
+            }
+
+            <!-- Total Box -->
+            <div class="info-alert" style="margin-top:1.5rem; background:#fffafb; border:2px solid var(--border-pink);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.6rem; font-size:1rem; color:var(--text-light); font-weight: 500;">
+                    <span>Subtotal</span>
+                    <span>₱@((Model.Products?.Sum(p => p.Product_Price * (Model.ProductQuantities.ContainsKey(p.ProductID) ? Model.ProductQuantities[p.ProductID] : 1)) ?? 0m).ToString("0.00"))</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-weight:700; font-size:1.25rem; color:var(--text-brown); border-top:1px dashed var(--border-pink); padding-top:0.6rem;">
+                    <span>Total Amount</span>
+                    <span>₱@((Model.Products?.Sum(p => p.Product_Price * (Model.ProductQuantities.ContainsKey(p.ProductID) ? Model.ProductQuantities[p.ProductID] : 1)) ?? 0m).ToString("0.00"))</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display:flex; gap:1.2rem; margin-top:2rem;">
+                <a href="javascript:history.back()" class="btn-submit" style="background:#cccccc; color:#555555; text-decoration:none; box-shadow:none; flex:1; text-align:center; padding:1.2rem 0; display:inline-block; border-radius:30px;">Back</a>
+                <button type="submit" class="btn-submit" style="flex:2; padding:1.2rem 0;">Proceed to Checkout</button>
+            </div>
+        </form>
+
     </div>
-
-    <!-- Order Form -->
-    <form method="post" action="/Order/Confirm" enctype="multipart/form-data">
-        @Html.AntiForgeryToken()
-
-        <input type="hidden" name="ProductIds" value="@string.Join(",", Model.Products?.Select(p => p.ProductID) ?? new List<int>())" />
-
-        <div class="order-form-section">
-            <h3 style="color: #8b4b3b; margin-top: 0;">Delivery Information</h3>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="FullName">Full Name</label>
-                    <input type="text" id="FullName" name="FullName" value="@(Model.Submit?.FullName ?? "")" required />
-                </div>
-                <div class="form-group">
-                    <label for="ContactNumber">Contact Number</label>
-                    <input type="tel" id="ContactNumber" name="ContactNumber" value="@(Model.Submit?.ContactNumber ?? "")" required />
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="DeliveryLocation">Delivery Location</label>
-                <input type="text" id="DeliveryLocation" name="DeliveryLocation" value="@(Model.Submit?.DeliveryLocation ?? "")" placeholder="Enter your delivery address" required />
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="DeliveryMethod">Delivery Method</label>
-                    <select id="DeliveryMethod" name="DeliveryMethod" required>
-                        <option value="">Select delivery method</option>
-                        @if (Model.Submit?.DeliveryMethod == "Pickup")
-                        {
-                            <option value="Pickup" selected>Pickup</option>
-                        }
-                        else
-                        {
-                            <option value="Pickup">Pickup</option>
-                        }
-                        @if (Model.Submit?.DeliveryMethod == "Delivery")
-                        {
-                            <option value="Delivery" selected>Delivery</option>
-                        }
-                        else
-                        {
-                            <option value="Delivery">Delivery</option>
-                        }
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="PaymentMethod">Payment Method</label>
-                    <select id="PaymentMethod" name="PaymentMethod" required>
-                        <option value="">Select payment method</option>
-                        @if (Model.Submit?.PaymentMethod == "Cash")
-                        {
-                            <option value="Cash" selected>Cash</option>
-                        }
-                        else
-                        {
-                            <option value="Cash">Cash</option>
-                        }
-                        @if (Model.Submit?.PaymentMethod == "GCash")
-                        {
-                            <option value="GCash" selected>GCash</option>
-                        }
-                        else
-                        {
-                            <option value="GCash">GCash</option>
-                        }
-                        @if (Model.Submit?.PaymentMethod == "Online")
-                        {
-                            <option value="Online" selected>Online Payment</option>
-                        }
-                        else
-                        {
-                            <option value="Online">Online Payment</option>
-                        }
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="SocialAccount">Social Media Account (Optional)</label>
-                <input type="text" id="SocialAccount" name="SocialAccount" value="@(Model.Submit?.SocialAccount ?? "")" placeholder="Instagram/Facebook handle" />
-            </div>
-
-            <h3 style="color: #8b4b3b; margin-top: 24px;">Hand Reference Photos (Optional)</h3>
-            <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Upload photos of your hands to help us create the best fit for you.</p>
-
-            <div class="file-upload-group">
-                <label for="HandPhoto">Hand Photo</label>
-                <input type="file" id="HandPhoto" name="HandPhoto" accept="image/*" />
-            </div>
-
-            <div class="file-upload-group">
-                <label for="ThumbPhoto">Thumb Photo</label>
-                <input type="file" id="ThumbPhoto" name="ThumbPhoto" accept="image/*" />
-            </div>
-        </div>
-
-        <!-- Order Summary -->
-        <div class="order-summary">
-            <div class="summary-row">
-                <span>Subtotal</span>
-                <span>₱@(Model.Products?.Sum(p => p.Product_Price).ToString("0.00") ?? "0.00")</span>
-            </div>
-            <div class="summary-row total">
-                <span>Total</span>
-                <span>₱@(Model.Products?.Sum(p => p.Product_Price).ToString("0.00") ?? "0.00")</span>
-            </div>
-        </div>
-
-        <!-- Validation Summary -->
-        @if (!ViewData.ModelState.IsValid)
-        {
-            <div style="color: #d9534f; background: #f2dede; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
-                <strong>Please check the following:</strong>
-                <ul style="margin: 8px 0 0; padding-left: 20px;">
-                    @foreach (var key in ViewData.ModelState.Keys)
-                    {
-                        foreach (var error in ViewData.ModelState[key].Errors)
-                        {
-                            <li>@error.ErrorMessage</li>
-                        }
-                    }
-                </ul>
-            </div>
-        }
-
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
-            <button type="submit" class="btn btn-primary">Confirm Order</button>
-        </div>
-    </form>
 </div>

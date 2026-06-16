@@ -1,37 +1,396 @@
 @model IEnumerable<KlawQ.Models.Favorite>
 @{
-    ViewData["Title"] = "My Bookmarks";
+    ViewData["Title"] = "My Favorites";
 }
-<link rel="stylesheet" href="/css/site.css" />
-<div style="max-width:1100px;margin:28px auto">
-    <h2>My Favorites</h2>
-    <div style="margin-top:18px">
-        @if(!(Model?.Any() ?? false)){
-            <p>You have not favorited any items yet. Visit the <a href="/Gallery">Gallery</a> to add favorites.</p>
-        } else {
-            <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:18px">
-                @foreach(var f in Model ?? Enumerable.Empty<KlawQ.Models.Favorite>()){
-                    var prod = f.Product;
-                    var img = prod?.Product_Image;
-                    if(string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
-                    else if(img.StartsWith("~")) img = Url.Content(img);
-                    else if(!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
-                    else img = Url.Content(img);
-                    <li style="background:#fff;padding:18px 24px;border-radius:10px;box-shadow:0 6px 12px rgba(0,0,0,.06);display:flex;gap:18px;align-items:center">
-                        <a href="@Url.Action("Details", "Gallery", new { id = prod?.ProductID })" style="display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;width:100%">
-                            <img src="@img" alt="@(string.IsNullOrWhiteSpace(prod?.Product_Name) ? "Nail set image" : prod.Product_Name)" style="width:110px;height:110px;object-fit:cover;border-radius:8px;flex:0 0 110px" />
-                            <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center">
-                                <h3 style="margin:0 0 6px 0;font-size:18px;color:#5c2b27">@(prod?.Product_Name ?? "Untitled")</h3>
-                                <p style="margin:0;color:#7a5046;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-height:3.6em">@prod?.Product_Description</p>
-                                <div style="margin-top:8px;font-size:13px;color:#8b4b3b">Type: @(prod?.Product_Type ?? "-")</div>
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/home-page.css" />
+    <style>
+        .home-wrapper {
+            background-color: var(--bg-soft-pink) !important;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .favorites-section {
+            padding: 3rem 1rem;
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .favorites-subheading {
+            font-family: var(--primary-font);
+            font-size: 2.2rem;
+            color: var(--text-dark-brown);
+            text-align: center;
+            margin: 32px 0 16px;
+            font-weight: normal;
+        }
+        .favorites-card {
+            position: relative;
+            aspect-ratio: 1; /* Make it a square */
+            border-radius: 16px;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            border: 6px solid #fde6ea;
+            box-shadow: 0 8px 18px rgba(0,0,0,.06);
+            display: flex;
+            align-items: flex-end;
+            text-decoration: none;
+            transition: transform 0.3s ease, border-color 0.3s, box-shadow 0.3s;
+        }
+        .favorites-card:hover {
+            transform: translateY(-5px);
+            border-color: #f0b8cc;
+            box-shadow: 0 12px 24px rgba(240, 184, 204, 0.35);
+        }
+        .card-overlay {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(4px);
+            padding: 12px 8px;
+            text-align: center;
+            border-top: 1px solid #fde6ea;
+            transition: background 0.3s ease;
+            box-sizing: border-box;
+        }
+        .favorites-card:hover .card-overlay {
+            background: rgba(255, 255, 255, 0.95);
+        }
+        .card-title {
+            font-family: var(--secondary-font);
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-dark-brown);
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin: 0;
+        }
+        .favorites-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        @@media (max-width: 900px) {
+            .favorites-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @@media (max-width: 600px) {
+            .favorites-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .empty-favorites {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 16px;
+            border: 2px solid var(--border-pink);
+            box-shadow: var(--shadow-soft);
+            color: var(--text-light-brown);
+        }
+        .btn-gallery {
+            display: inline-block;
+            margin-top: 1.5rem;
+            background: var(--accent-green);
+            color: white;
+            text-decoration: none;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(167, 196, 125, 0.4);
+            transition: transform 0.2s, background 0.2s;
+        }
+        .btn-gallery:hover {
+            background: var(--accent-green-hover);
+            transform: translateY(-2px);
+        }
+
+        /* Heart Button (Matches Gallery Design) */
+        .btn-heart, .favorite-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            border: 3px solid #fde6ea;
+            background: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,.08);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+        }
+        .btn-heart:hover, .favorite-btn:hover {
+            transform: scale(1.1);
+        }
+        .btn-heart .heart-hollow, .favorite-btn .heart-hollow {
+            color: #e2557a;
+            display: inline;
+        }
+        .btn-heart .heart-filled, .favorite-btn .heart-filled {
+            color: #e2557a;
+            display: none;
+        }
+        .btn-heart.favorited .heart-hollow, .favorite-btn.favorited .heart-hollow {
+            display: none;
+        }
+        .btn-heart.favorited .heart-filled, .favorite-btn.favorited .heart-filled {
+            display: inline;
+        }
+        .fav-pop {
+            animation: heartPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @@keyframes heartPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+    </style>
+}
+
+<div class="home-wrapper">
+    @Html.AntiForgeryToken()
+    <div class="favorites-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-heart title-icon-pink"></i> My Favorites <i class="fas fa-heart title-icon-pink"></i>
+            </h2>
+            <p class="section-subtitle">Your personally curated collection of favorite designs</p>
+        </div>
+
+        @{
+            var pressOnFavs = Model?
+                .Where(f => f.Product != null && f.Product.Product_Type != null && f.Product.Product_Type.Contains("press", StringComparison.OrdinalIgnoreCase))
+                .ToList() ?? [];
+
+            var originalFavs = Model?
+                .Where(f => f.Product != null && (f.Product.Product_Type == null || !f.Product.Product_Type.Contains("press", StringComparison.OrdinalIgnoreCase)))
+                .ToList() ?? [];
+        }
+
+        @if (!pressOnFavs.Any() && !originalFavs.Any())
+        {
+            <div class="empty-favorites">
+                <i class="fas fa-heart-crack" style="font-size: 4rem; color: var(--border-pink); margin-bottom: 1.5rem;"></i>
+                <h3 style="font-family: var(--secondary-font); font-size: 1.3rem; margin: 0 0 0.5rem; color: var(--text-dark-brown);">No Favorites Yet</h3>
+                <p style="margin: 0;">You haven't added any designs to your favorites list.</p>
+                <a href="/Gallery" class="btn-gallery">Browse Gallery</a>
+            </div>
+        }
+        else
+        {
+            @if (originalFavs.Any())
+            {
+                <div id="original-favs-section">
+                    <h3 class="favorites-subheading" id="original-title">Original Sets</h3>
+                    <div class="favorites-grid">
+                        @foreach (var f in originalFavs)
+                        {
+                            var p = f.Product!;
+                            var img = p.Product_Image;
+                            if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
+                            else if (img.StartsWith("~")) img = Url.Content(img);
+                            else if (!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
+                            else img = Url.Content(img);
+
+                            <div class="favorites-card-wrapper" style="position: relative;">
+                                <a href="/Gallery/Details/@p.ProductID" class="favorites-card" style="background-image: url('@img');">
+                                    <div class="card-overlay">
+                                        <span class="card-title">@p.Product_Name</span>
+                                    </div>
+                                </a>
+                                <button class="favorite-btn btn-heart favorited" data-id="@p.ProductID" aria-label="Remove from Favorites">
+                                    <i class="fa-regular fa-heart heart-hollow"></i>
+                                    <i class="fa-solid fa-heart heart-filled"></i>
+                                </button>
                             </div>
-                            <div style="flex:0 0 auto;margin-left:12px;opacity:0.9">
-                                <!-- reserved for future buttons (e.g., remove favorite) -->
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (pressOnFavs.Any())
+            {
+                <div id="presson-favs-section">
+                    <h3 class="favorites-subheading" id="presson-title">Press-On Sets</h3>
+                    <div class="favorites-grid">
+                        @foreach (var f in pressOnFavs)
+                        {
+                            var p = f.Product!;
+                            var img = p.Product_Image;
+                            if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
+                            else if (img.StartsWith("~")) img = Url.Content(img);
+                            else if (!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
+                            else img = Url.Content(img);
+
+                            <div class="favorites-card-wrapper" style="position: relative;">
+                                <a href="/Gallery/Details/@p.ProductID" class="favorites-card" style="background-image: url('@img');">
+                                    <div class="card-overlay">
+                                        <span class="card-title">@p.Product_Name</span>
+                                    </div>
+                                </a>
+                                <button class="favorite-btn btn-heart favorited" data-id="@p.ProductID" aria-label="Remove from Favorites">
+                                    <i class="fa-regular fa-heart heart-hollow"></i>
+                                    <i class="fa-solid fa-heart heart-filled"></i>
+                                </button>
                             </div>
-                        </a>
-                    </li>
-                }
-            </ul>
+                        }
+                    </div>
+                </div>
+            }
         }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.favorite-btn[data-id]');
+                if (!btn) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const id = btn.getAttribute('data-id');
+                const cardWrapper = btn.closest('.favorites-card-wrapper');
+
+                // Visual optimistic feedback (toggle state and pulse)
+                btn.classList.toggle('favorited');
+                btn.classList.add('fav-pop');
+                setTimeout(() => btn.classList.remove('fav-pop'), 350);
+
+                if (cardWrapper) {
+                    cardWrapper.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    cardWrapper.style.opacity = '0';
+                    cardWrapper.style.transform = 'scale(0.8)';
+                }
+
+                // Sync to localStorage and broadcast channel optimistically
+                try {
+                    const map = JSON.parse(localStorage.getItem('fav_map') || '{}');
+                    map[String(id)] = false;
+                    localStorage.setItem('fav_map', JSON.stringify(map));
+                    localStorage.setItem('fav_change', JSON.stringify({ id: String(id), favorited: false, ts: Date.now() }));
+                    
+                    if (typeof BroadcastChannel !== 'undefined') {
+                        const bc = new BroadcastChannel('fav_channel');
+                        bc.postMessage({ id: id, favorited: false });
+                        bc.close();
+                    }
+                } catch (err) {
+                    console.error("Local storage sync error:", err);
+                }
+
+                try {
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                    const res = await fetch('/Gallery/toggle-favorite/' + id, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token
+                        }
+                    });
+                    const data = await res.json();
+                    
+                    if (data && data.success) {
+                        setTimeout(() => {
+                            if (cardWrapper) cardWrapper.remove();
+                            updateFavoritesSections();
+                        }, 300);
+                    } else {
+                        // Revert on failure
+                        btn.classList.add('favorited');
+                        if (cardWrapper) {
+                            cardWrapper.style.opacity = '1';
+                            cardWrapper.style.transform = '';
+                        }
+                        // Revert localStorage
+                        try {
+                            const map = JSON.parse(localStorage.getItem('fav_map') || '{}');
+                            map[String(id)] = true;
+                            localStorage.setItem('fav_map', JSON.stringify(map));
+                            localStorage.setItem('fav_change', JSON.stringify({ id: String(id), favorited: true, ts: Date.now() }));
+                            if (typeof BroadcastChannel !== 'undefined') {
+                                const bc = new BroadcastChannel('fav_channel');
+                                bc.postMessage({ id: id, favorited: true });
+                                bc.close();
+                            }
+                        } catch (_) {}
+                        alert(data.error || "Could not update favorite status.");
+                    }
+                } catch (err) {
+                    // Revert on network error
+                    btn.classList.add('favorited');
+                    if (cardWrapper) {
+                        cardWrapper.style.opacity = '1';
+                        cardWrapper.style.transform = '';
+                    }
+                    // Revert localStorage
+                    try {
+                        const map = JSON.parse(localStorage.getItem('fav_map') || '{}');
+                        map[String(id)] = true;
+                        localStorage.setItem('fav_map', JSON.stringify(map));
+                        localStorage.setItem('fav_change', JSON.stringify({ id: String(id), favorited: true, ts: Date.now() }));
+                        if (typeof BroadcastChannel !== 'undefined') {
+                            const bc = new BroadcastChannel('fav_channel');
+                            bc.postMessage({ id: id, favorited: true });
+                            bc.close();
+                        }
+                    } catch (_) {}
+                    console.error("Favorite toggle error:", err);
+                }
+            });
+        });
+
+        function updateFavoritesSections() {
+            // Check if there are original set cards left
+            const originalGrid = document.querySelector('#original-favs-section .favorites-grid');
+            if (originalGrid && originalGrid.children.length === 0) {
+                document.getElementById('original-favs-section')?.remove();
+            }
+
+            // Check if there are press-on cards left
+            const pressOnGrid = document.querySelector('#presson-favs-section .favorites-grid');
+            if (pressOnGrid && pressOnGrid.children.length === 0) {
+                document.getElementById('presson-favs-section')?.remove();
+            }
+
+            // If both grids are gone, show empty state
+            const remainingCards = document.querySelectorAll('.favorites-card-wrapper');
+            if (remainingCards.length === 0) {
+                const section = document.querySelector('.favorites-section');
+                if (section) {
+                    section.innerHTML = `
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                <i class="fas fa-heart title-icon-pink"></i> My Favorites <i class="fas fa-heart title-icon-pink"></i>
+                            </h2>
+                            <p class="section-subtitle">Your personally curated collection of favorite designs</p>
+                        </div>
+                        <div class="empty-favorites">
+                            <i class="fas fa-heart-crack" style="font-size: 4rem; color: var(--border-pink); margin-bottom: 1.5rem;"></i>
+                            <h3 style="font-family: var(--secondary-font); font-size: 1.3rem; margin: 0 0 0.5rem; color: var(--text-dark-brown);">No Favorites Yet</h3>
+                            <p style="margin: 0;">You haven't added any designs to your favorites list.</p>
+                            <a href="/Gallery" class="btn-gallery">Browse Gallery</a>
+                        </div>
+                    `;
+                }
+            }
+        }
+    </script>
+}

@@ -5,10 +5,10 @@ namespace KlawQ.Models
     public class OrderSubmitModel
     {
         [Required]
-        public int[] ProductIds { get; set; } = new int[0];
+        public int[] ProductIds { get; set; } = [];
 
         // Quantities aligned with ProductIds by index (optional, defaults to 1)
-        public int[] Quantities { get; set; } = new int[0];
+        public int[] Quantities { get; set; } = [];
 
         [Required]
         public string FullName { get; set; } = string.Empty;
@@ -26,7 +26,6 @@ namespace KlawQ.Models
         [Required]
         public string DeliveryMethod { get; set; } = string.Empty;
 
-        [Required]
         public string PaymentMethod { get; set; } = string.Empty;
 
         [Required]
@@ -39,7 +38,7 @@ namespace KlawQ.Models
     public class CustomOrderSubmitModel : OrderSubmitModel
     {
         // Allow custom orders without selecting existing products
-        public new int[] ProductIds { get; set; } = new int[0];
+        public new int[] ProductIds { get; set; } = [];
 
         [Required]
         public string DesignNotes { get; set; } = string.Empty;
@@ -47,10 +46,10 @@ namespace KlawQ.Models
 
     public class OrderStartViewModel
     {
-        public List<Products> Products { get; set; } = new();
+        public List<Products> Products { get; set; } = [];
         public OrderSubmitModel Submit { get; set; } = new();
 
         // Map of ProductID -> Quantity for quick access in views
-        public Dictionary<int,int> ProductQuantities { get; set; } = new();
+        public Dictionary<int,int> ProductQuantities { get; set; } = [];
     }
 }
