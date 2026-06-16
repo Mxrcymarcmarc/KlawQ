@@ -23,13 +23,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function updateTotal() {
-    const selected = Array.from(document.querySelectorAll("#cartItems > div")).filter(
-      (div) => div.getAttribute("data-selected") === "true"
-    );
+    const selected = Array.from(
+      document.querySelectorAll("#cartItems > div"),
+    ).filter((div) => div.getAttribute("data-selected") === "true");
     const total = selected.reduce((sum, div) => {
       const price = parseFloat(div.getAttribute("data-price")) || 0;
       const qty = parseInt(div.getAttribute("data-qty")) || 1;
-      return sum + (price * qty);
+      return sum + price * qty;
     }, 0);
     document.getElementById("cartTotal").textContent = formatPeso(total);
   }
@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
           const itemEl = document.createElement("div");
           itemEl.style.cssText =
             "position:relative;display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:8px;background:#fbfbfb";
-          
+
           // Set data attributes for tracking
           itemEl.setAttribute("data-productid", it.productId);
           itemEl.setAttribute("data-cartitemid", it.id);
@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
             e.stopPropagation();
             const isSelected = itemEl.getAttribute("data-selected") === "true";
             itemEl.setAttribute("data-selected", isSelected ? "false" : "true");
-            
+
             if (isSelected) {
               // Unchecked - show hollow box
               checkbox.innerHTML = "";
@@ -105,9 +105,10 @@ document.addEventListener("DOMContentLoaded", function () {
           imgContainer.appendChild(checkbox);
 
           const meta = document.createElement("div");
-          meta.style.cssText = "flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0";
+          meta.style.cssText =
+            "flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0";
           meta.innerHTML = `<div style="font-weight:700;color:#5c2b27;word-break:break-word">${it.name}</div><div style="font-size:13px;color:#666;margin:6px 0">Qty: ${it.qty} • ${formatPeso(it.price)}</div>`;
-          
+
           const remove = document.createElement("button");
           remove.innerHTML = "✖";
           remove.style.cssText =
@@ -123,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             await refresh();
           });
-          
+
           itemEl.appendChild(imgContainer);
           itemEl.appendChild(meta);
           itemEl.appendChild(remove);
@@ -157,9 +158,7 @@ document.addEventListener("DOMContentLoaded", function () {
       e.preventDefault();
       const selected = Array.from(
         document.querySelectorAll("#cartItems > div"),
-      ).filter(
-        (div) => div.getAttribute("data-selected") === "true"
-      );
+      ).filter((div) => div.getAttribute("data-selected") === "true");
       const ids = selected
         .map((div) => div.getAttribute("data-productid"))
         .filter((x) => x)
