@@ -1,0 +1,84 @@
+﻿@{
+    ViewData["Title"] = "Custom Order Sizing";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/checkout-forms.css" />
+}
+
+<div class="form-wrapper">
+    <div class="form-container">
+
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-paint-brush title-icon"></i> Custom Design Details</h1>
+            <p class="page-subtitle">Provide your inspiration and sizing to complete your custom request.</p>
+        </div>
+
+        <form action="#" method="post" enctype="multipart/form-data" class="grid-layout">
+
+            <div class="grid-col">
+                <div class="section-box">
+                    <h2 class="section-title"><i class="far fa-user"></i> Your Information</h2>
+                    <div class="form-group"><label>Full Name *</label><input type="text" name="fullName" required></div>
+                    <div class="form-group"><label>Email *</label><input type="email" name="email" required></div>
+                    <div class="form-group"><label>Phone *</label><input type="tel" name="phone" required></div>
+                    <div class="form-group"><label>Social (IG/FB) *</label><input type="text" name="social" required></div>
+                    <div class="form-group"><label>Delivery Address *</label><input type="text" name="address" required></div>
+                </div>
+
+                <div class="section-box highlight-box">
+                    <h2 class="section-title"><i class="far fa-images"></i> Design Inspiration</h2>
+                    <div class="form-group">
+                        <label>Upload Your Inspiration Images *</label>
+                        <div class="upload-area">
+                            <i class="fas fa-camera retro-camera"></i>
+                            <h4>Click to upload inspiration</h4>
+                            <input type="file" name="inspirationImages" accept="image/*" multiple required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Design Notes & Ideas *</label>
+                        <textarea name="designNotes" rows="4" required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-col">
+                <div class="section-box sizing-guide-box">
+                    <h2 class="section-title"><i class="fas fa-hand-paper"></i> Nail Sizing</h2>
+                    <div class="info-alert">
+                        <p><strong>Bird's Eye View Photo:</strong> Lay your fingers flat beside a <strong>1 or 5 peso coin</strong> and take a photo from directly above.</p>
+                    </div>
+
+                    <div class="reference-photos">
+                        <div class="ref-card correct">
+                            <img src="~/images/right1.jpg" alt="Correct" class="ref-img">
+                            <p class="ref-label"><i class="fas fa-check"></i> Correct Angle</p>
+                        </div>
+                        <div class="ref-card incorrect">
+                            <img src="~/images/wrong1.jpg" alt="Avoid" class="ref-img">
+                            <p class="ref-label"><i class="fas fa-times"></i> Avoid Angle</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Upload Your Sizing Photo *</label>
+                        <div class="upload-area sizing-upload">
+                            <i class="fas fa-upload retro-camera"></i>
+                            <h4>Click to upload sizing photo</h4>
+                            <input type="file" name="sizingPhoto" accept="image/*" required>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Submit Custom Request</button>
+            </div>
+
+        </form>
+    </div>
+</div>
