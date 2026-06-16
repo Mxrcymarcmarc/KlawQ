@@ -231,5 +231,32 @@ namespace KlawQ.Controllers
         {
             return View("~/Views/Account/Login.cshtml");
         }
+
+        [HttpPost]
+        [Route("Account/ResendCode")]
+        public IActionResult ResendCode()
+        {
+            string? cachedEmail = HttpContext.Session.GetString("Reg_Email");
+
+            if (string.IsNullOrEmpty(cachedEmail))
+            {
+                return BadRequest("Session expired. Please register again.");
+            }
+
+            try
+            {
+                // Generate a fresh code and overwrite the old one in session
+                string newCode = new Random().Next(100000, 999999).ToString();
+                HttpContext.Session.SetString("Reg_VerificationCode", newCode);
+
+                SendEmailCode(cachedEmail, newCode);
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }

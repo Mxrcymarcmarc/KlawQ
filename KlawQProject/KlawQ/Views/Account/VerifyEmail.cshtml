@@ -37,10 +37,26 @@
 @section Scripts {
     <script>
     let cooldown = 60; // seconds
-    let canResend = true;
+    let canResend = false;
 
     const resendLink = document.getElementById("resendLink");
     const statusMsg = document.getElementById("statusMsg");
+
+        resendLink.style.pointerEvents = "none";
+        let timeLeft = cooldown;
+
+        const initialInterval = setInterval(() => {
+            resendLink.innerText = `Resend (${timeLeft}s)`;
+
+            timeLeft--;
+
+            if (timeLeft < 0) {
+                clearInterval(initialInterval);
+                canResend = true;
+                resendLink.style.pointerEvents = "auto";
+                resendLink.innerText = "Resend";
+            }
+        }, 1000);
 
     resendLink.addEventListener("click", async function (e) {
         e.preventDefault();
@@ -53,6 +69,7 @@
         statusMsg.innerText = "Sending new code...";
 
         try {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             // Call backend API (change URL depending on your setup)
             const response = await fetch("/Account/ResendCode", {
                 method: "POST",
@@ -64,11 +81,12 @@
             if (response.ok) {
                 statusMsg.innerText = "New code sent!";
             } else {
-                statusMsg.innerText = "Failed to resend code.";
+                    const errText = await response.text();
+                statusMsg.innerText = "Failed to resend code." + errText;
             }
 
         } catch (err) {
-            statusMsg.innerText = "Error sending request.";
+            statusMsg.innerText = "Error sending request." + err.message;
         }
 
         // Start cooldown timer
