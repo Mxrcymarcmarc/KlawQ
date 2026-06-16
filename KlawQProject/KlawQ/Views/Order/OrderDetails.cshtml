@@ -1,0 +1,495 @@
+﻿@{
+    ViewData["Title"] = "Order Details";
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --bg-pink: #fff5f6;
+        --panel-pink: #fdeef0;
+        --accent-pink: #fde0e2;
+        --brand-brown: #8b4b3b;
+        --footer-brown: #6b4228;
+        --cta-green: #88b04b;
+        --font-brown: #8B5E34;
+        --grey-inactive: #e8d0d2;
+    }
+
+    .order-view-body {
+        background: var(--bg-pink);
+        font-family: 'Montserrat', sans-serif;
+        color: var(--font-brown);
+        padding: 20px 0;
+    }
+
+    .order-wrap {
+        max-width: 620px;
+        margin: 20px auto;
+        padding: 0 20px;
+        box-sizing: border-box;
+    }
+
+    /* ── Card base ── */
+    .card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 20px rgba(139, 75, 59, 0.06);
+        border: 1px solid var(--accent-pink);
+    }
+
+    /* ── Order Details header ── */
+    .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .card-title {
+        font-family: 'Shadows Into Light Two', cursive;
+        font-size: 28px;
+        color: var(--font-brown);
+        margin: 0;
+    }
+
+        .card-title i {
+            font-size: 22px;
+            margin-right: 6px;
+            color: var(--cta-green);
+        }
+
+    .order-meta {
+        font-size: 13px;
+        color: #bbb;
+        margin: 4px 0 0 0;
+    }
+
+    .badge-confirmed {
+        background: #eaf4fd;
+        color: #3a9bd5;
+        border: 1px solid #c0dff5;
+        border-radius: 20px;
+        padding: 4px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+    }
+
+    /* ── Timeline Track ── */
+    .timeline-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--font-brown);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .timeline-track {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .timeline-segment {
+        height: 8px;
+        border-radius: 4px;
+        background: var(--grey-inactive);
+        transition: background 0.3s ease;
+    }
+
+    .timeline-steps {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        margin-top: 6px;
+    }
+
+        .timeline-steps span {
+            font-size: 11px;
+            color: #bbb;
+            background: transparent !important;
+            display: inline-block;
+        }
+
+    /* Status Configs */
+    .status-confirmed .seg-1 {
+        background: var(--cta-green);
+    }
+
+    .status-confirmed .step-1 {
+        color: var(--cta-green) !important;
+        font-weight: 600;
+    }
+
+    .status-progress .seg-1,
+    .status-progress .seg-2 {
+        background: var(--cta-green);
+    }
+
+    .status-progress .step-1,
+    .status-progress .step-2 {
+        color: var(--cta-green) !important;
+        font-weight: 600;
+    }
+
+    .status-completed .seg-1,
+    .status-completed .seg-2,
+    .status-completed .seg-3 {
+        background: var(--cta-green);
+    }
+
+    .status-completed .step-1,
+    .status-completed .step-2,
+    .status-completed .step-3 {
+        color: var(--cta-green) !important;
+        font-weight: 600;
+    }
+
+    .estimated {
+        font-size: 13px;
+        color: #bbb;
+        margin-top: 14px;
+        margin-bottom: 0;
+    }
+
+        .estimated strong {
+            color: var(--font-brown);
+        }
+
+    /* ── Two column row ── */
+    .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    /* ── Headers ── */
+    .section-title {
+        font-family: 'Shadows Into Light Two', cursive;
+        font-size: 22px;
+        color: var(--font-brown);
+        margin: 0 0 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .section-title i {
+            color: var(--cta-green);
+            font-size: 18px;
+        }
+
+    /* ── 🛠️ UNIFORM INPUT FIELD LAYOUTS ── */
+    .form-group {
+        margin-bottom: 12px;
+    }
+
+    .info-label {
+        font-size: 11px;
+        color: #ccc;
+        margin: 0 0 4px 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+    }
+
+    .input-icon-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+        .input-icon-wrap i {
+            position: absolute;
+            left: 14px;
+            color: var(--accent-pink);
+            font-size: 14px;
+            width: 16px;
+            text-align: center;
+            pointer-events: none;
+        }
+
+    /* Styled inputs substituting raw divs */
+    .form-input-display {
+        width: 100%;
+        background: #fff;
+        border: 1px solid var(--accent-pink);
+        border-radius: 10px;
+        padding: 10px 12px 10px 40px; /* Space on left for icons */
+        font-family: 'Montserrat', sans-serif;
+        font-size: 13px;
+        color: var(--font-brown);
+        box-sizing: border-box;
+    }
+
+        .form-input-display:disabled {
+            background: #fff; /* Keeps white clean display panel look */
+            color: var(--font-brown);
+            opacity: 1; /* Prevents default browser opacity washing */
+        }
+
+        .form-input-display.bold-text {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+    /* ── Order Summary ── */
+    .order-item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 4px;
+    }
+
+    .order-item-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--font-brown);
+    }
+
+    .order-item-price {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--font-brown);
+        text-align: right;
+    }
+
+    .order-item-meta {
+        font-size: 11px;
+        color: #bbb;
+        margin-bottom: 12px;
+    }
+
+    .badge-size {
+        background: var(--bg-pink);
+        color: var(--cta-green);
+        border: 1px solid var(--accent-pink);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    .order-details-label {
+        font-size: 12px;
+        color: #ccc;
+        margin: 12px 0 6px;
+    }
+
+    .addon-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: var(--font-brown);
+        margin-bottom: 4px;
+    }
+
+        .addon-row span:first-child {
+            color: #aaa;
+        }
+
+            .addon-row span:first-child::before {
+                content: '• ';
+                color: var(--accent-pink);
+                margin-right: 4px;
+            }
+
+    .divider-line {
+        border: none;
+        border-top: 1px solid var(--accent-pink);
+        margin: 16px 0;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--font-brown);
+    }
+
+    .total-amount {
+        color: var(--cta-green);
+        font-size: 24px;
+    }
+
+    /* ── Special Notes Textarea ── */
+    .notes-textarea {
+        width: 100%;
+        background: #fff;
+        border: 1px solid var(--accent-pink);
+        border-radius: 12px;
+        padding: 14px 16px;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 13px;
+        color: var(--font-brown);
+        min-height: 70px;
+        resize: none;
+        box-sizing: border-box;
+    }
+
+        .notes-textarea:disabled {
+            background: #fff;
+            opacity: 1;
+        }
+
+    /* ── Help + Cancel row ── */
+    .help-cancel-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .help-text {
+        font-size: 13px;
+        color: var(--font-brown);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .help-text i {
+            color: var(--cta-green);
+            font-size: 20px;
+        }
+
+    .help-sub {
+        font-size: 12px;
+        color: #bbb;
+        font-weight: 400;
+        display: block;
+        margin-top: 2px;
+    }
+
+    .btn-cancel {
+        background: #ff3333;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 10px 24px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(255, 51, 51, 0.2);
+    }
+
+        .btn-cancel:hover {
+            background: #dd2222;
+            transform: translateY(-1px);
+        }
+
+</style>
+
+<div class="order-view-body">
+    <div class="order-wrap">
+
+        <div class="card status-progress">
+            <div class="card-header-row">
+                <div>
+                    <p class="card-title"><i class="fa-solid fa-box"></i> Order Details</p>
+                    <p class="order-meta">Order ORD-2026-123</p>
+                    <p class="order-meta">Placed on 6/5/2026</p>
+                </div>
+                <span class="badge-confirmed">✓ Confirmed</span>
+            </div>
+
+            <div class="timeline-label"><i class="fa-regular fa-clock"></i> Order Timeline</div>
+            <div class="timeline-track">
+                <div class="timeline-segment seg-1"></div>
+                <div class="timeline-segment seg-2"></div>
+                <div class="timeline-segment seg-3"></div>
+            </div>
+            <div class="timeline-steps">
+                <span class="step-1">Confirmed</span>
+                <span class="step-2" style="text-align: center;">In Progress</span>
+                <span class="step-3" style="text-align: right;">Completed</span>
+            </div>
+            <p class="estimated">Estimated Completion: <strong>idk</strong></p>
+        </div>
+
+        <div class="two-col">
+
+            <div class="card">
+                <p class="section-title"><i class="fa-regular fa-user"></i> Customer Information</p>
+
+                <div class="form-group">
+                    <label class="info-label">Name</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-regular fa-user"></i>
+                        <input type="text" class="form-input-display bold-text" value="Name Name" disabled />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="info-label">Email</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-regular fa-envelope"></i>
+                        <input type="email" class="form-input-display" value="customer@gmail.com" disabled />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="info-label">Phone</label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-phone"></i>
+                        <input type="text" class="form-input-display" value="(555) 123-4567" disabled />
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <p class="section-title"><i class="fa-solid fa-receipt"></i> Order Summary</p>
+                <div class="order-item-row">
+                    <span class="order-item-name">Custom Nail Art Design</span>
+                    <span class="order-item-price">₱100</span>
+                </div>
+                <div class="order-item-meta">Qty: 1 &nbsp;|&nbsp; <span class="badge-size">Size: M</span></div>
+
+                <div class="order-details-label">Details:</div>
+                <div class="addon-row"><span>Rhinestones & Gems</span><span>₱10</span></div>
+                <div class="addon-row"><span>Chrome/Mirror Finish</span><span>₱10</span></div>
+                <hr class="divider-line" />
+                <div class="total-row">
+                    <span>Total</span>
+                    <span class="total-amount">₱100</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <p class="section-title"><i class="fa-regular fa-star"></i> Special Notes</p>
+            <textarea class="notes-textarea" disabled>text instructions or customization requirements go here...</textarea>
+        </div>
+
+        <div class="card">
+            <div class="help-cancel-row">
+                <div class="help-text">
+                    <i class="fa-solid fa-circle-plus"></i>
+                    <div>
+                        Need help with your order?
+                        <span class="help-sub">Contact us via Instagram or email.</span>
+                    </div>
+                </div>
+                <button class="btn-cancel">✕ Cancel Order</button>
+            </div>
+        </div>
+    </div>
+</div>
