@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "Book Appointment";
-    ViewData["HideNavbar"] = true;
 }
 
 <style>
@@ -147,6 +146,7 @@
             box-shadow: 0 6px 16px rgba(0,0,0,0.15);
         }
 
+    /* Modal */
     .modal.hidden {
         display: none !important;
     }
@@ -190,6 +190,7 @@
             margin-bottom: 16px;
         }
 
+    /* Back button — inside top-left of the left card */
     .btn-back {
         background: none;
         border: none;
@@ -209,13 +210,14 @@
             opacity: 1;
         }
 
+    /* Calendar */
     .calendar-month {
         text-align: center;
         color: var(--brand-brown);
         font-weight: 600;
         margin-bottom: 12px;
     }
-
+    /* Always 6 rows × 7 cols — height never changes between months */
     .calendar-grid {
         display: grid;
         grid-template-columns: repeat(7,1fr);
@@ -258,6 +260,7 @@
             pointer-events: none;
         }
 
+    /* Time slots */
     .slot-btn {
         display: block;
         width: 100%;
@@ -294,6 +297,7 @@
         margin: 0 4px;
     }
 
+    /* Day-of-week header labels */
     .dow-header {
         display: grid;
         grid-template-columns: repeat(7,1fr);
@@ -310,6 +314,7 @@
             text-transform: uppercase;
         }
 
+    /* Right panel: flex column so button stays pinned to bottom */
     .time-panel {
         display: flex;
         flex-direction: column;
@@ -338,6 +343,7 @@
         cursor: pointer;
     }
 
+    /* Prevent background scroll when modal is open */
     body.modal-open {
         overflow: hidden;
     }
@@ -396,35 +402,34 @@
                 <div class="input">
                     <label>Design Reference (Image) *</label>
                     <input id="designImage" name="DesignImage" type="file" accept="image/*" />
-                    <input type="hidden" id="inspirationImage" name="Inspiration_Image" />
-                    <div id="designPreview" style="margin-top:8px;">
-                        <img id="designPreviewImg" src="" alt="" style="max-width:120px; display:none; border-radius:8px;" />
-                        <div id="designAttachedNote" style="display:none; margin-top:8px; color:#6b4228; font-weight:600;">Design attached from selected gallery item</div>
-                    </div>
-                    <script>
-                                            (function () {
-                                                try {
-                                                    const params = new URLSearchParams(window.location.search);
-                                                    const img = params.get('Inspiration_Image') || params.get('inspirationImage') || params.get('imageUrl') || params.get('DesignReferenceUrl');
-                                                    const title = params.get('Inspiration_Title') || params.get('title') || params.get('ProductName') || params.get('Name');
-                                                    if (img) {
-                                                        document.addEventListener('DOMContentLoaded', function () {
-                                                            var hidden = document.getElementById('inspirationImage');
-                                                            var fileInput = document.getElementById('designImage');
-                                                            var note = document.getElementById('designAttachedNote');
-                                                            if (hidden) hidden.value = img;
-                                                            if (fileInput) { fileInput.style.display = 'none'; fileInput.disabled = true; }
-                                                            if (note) {
-                                                                if (title && title.length > 0) note.innerText = 'You selected ' + title + ' design from the gallery';
-                                                                else note.innerText = 'Design attached from selected gallery item';
-                                                                note.style.display = 'block';
-                                                            }
-                                                        });
-                                                    }
-                                                } catch (e) { /* ignore */ }
-                                            })();
-                    </script>
                 </div>
+                <div class="input" style="grid-column:1 / -1">
+                    <label>Special Requests</label>
+                    <textarea id="notes" name="Additional_Notes" placeholder="Tell me about your dream nail design ..."></textarea>
+                </div>
+            </div>
+
+            <div class="info-grid" id="homeFields" style="display:none;">
+                <div class="input">
+                    <label>Full Name *</label>
+                    <input id="h-fullName" type="text" placeholder="Jane Doe" />
+                </div>
+                <div class="input">
+                    <label>Email *</label>
+                    <input id="h-email" type="email" placeholder="jane@example.com" />
+                </div>
+                <div class="input">
+                    <label>Phone *</label>
+                    <input id="h-phone" type="text" placeholder="(+63) 912-345-6789" />
+                </div>
+                <div class="input">
+                    <label>Design Reference (Image) *</label>
+                    <input id="designImage" name="DesignImage" type="file" accept="image/*" />
+                </div>
+                <div class="input">
+                    <label>Address *</label>
+                    <input id="h-address" type="text" placeholder="123 Main St" />
+                </div>  
                 <div class="input" style="grid-column:1 / -1">
                     <label>Special Requests</label>
                     <textarea id="h-notes" placeholder="Tell me about your dream nail design ..."></textarea>
@@ -438,14 +443,18 @@
     </form>
 </div>
 
+<!-- Modal: Date & Time Selection -->
 <div id="bookingModal" class="modal hidden">
     <div class="overlay">
         <div class="modal-box">
+            <!-- Left: Calendar -->
             <div class="modal-frame">
+                <!-- Back button inside the card, top left -->
                 <button type="button" class="btn-back" id="closeBookingModal">&#8592; Back</button>
                 <h4>1. Select Date</h4>
                 <p>Select a specific date on the calendar slot to reserve appointment schedule.</p>
                 <div class="calendar-month" id="calendarMonthLabel">June 2026</div>
+                <!-- Day-of-week labels -->
                 <div class="dow-header">
                     <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
                     <span>Thu</span><span>Fri</span><span>Sat</span>
@@ -457,6 +466,7 @@
                 </div>
             </div>
 
+            <!-- Right: Time Slots — flex column keeps button pinned at bottom -->
             <div class="modal-frame time-panel">
                 <h4>2. Appointment Time</h4>
                 <p id="selectedDateDisplay">Available time slot as of mm/dd/yyyy (Current Date)</p>
@@ -470,6 +480,8 @@
     </div>
 </div>
 
+
+<!-- Modal: Payment Confirmation -->
 <div id="paymentModal" class="modal hidden">
     <div class="overlay">
         <div class="modal-box" style="max-width:500px;">
@@ -491,6 +503,7 @@
 
 @section Scripts {
     <script>
+        // Service box toggle
         document.getElementById('box-studio').addEventListener('click', () => {
         document.getElementById('box-studio').classList.add('selected');
         document.getElementById('box-home').classList.remove('selected');
@@ -511,8 +524,9 @@
         let selectedSlotTime = null;
         let currentMonth = new Date();
         let allDays = [];
-        let tempAppointmentData = null; // holds form data until Pay Now
+        let tempAppointmentData = null;
 
+        // Store form data temporarily (don't save yet)
         async function validateAndStoreFormData() {
             const isHome = document.getElementById('box-home').classList.contains('selected');
 
@@ -532,7 +546,6 @@
             if (!fullName) { alert('Full Name is required'); return false; }
             if (!email)    { alert('Email is required');     return false; }
             if (!phone)    { alert('Phone is required');     return false; }
-            if (!file && (!hiddenInput || !hiddenInput.value)) { alert('Design Reference image is required'); return false; }
 
             if (isHome) {
                 const address = document.getElementById('h-address').value.trim();
@@ -556,53 +569,63 @@
                     alert('Image must be smaller than 2MB.');
                     return false;
                 }
-                imageBase64 = await new Promise((resolve) => {
+
+                const imageBase64 = await new Promise((resolve) => {
                     const reader = new FileReader();
                     reader.onload = (e) => resolve(e.target.result);
                     reader.readAsDataURL(file);
                 });
-            } else if (hiddenInput && hiddenInput.value) {
-                try {
-                    const res = await fetch(hiddenInput.value);
-                    if (!res.ok) throw new Error('fetch failed');
-                    const blob = await res.blob();
-                    if (blob.size > 2 * 1024 * 1024) {
-                        alert('Referenced image is larger than 2MB. Please upload a smaller image.');
-                        return false;
-                    }
-                    imageBase64 = await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => resolve(e.target.result);
-                        reader.readAsDataURL(blob);
-                    });
-                } catch (e) {
-                    alert('Failed to retrieve referenced image. Please upload the design image manually.');
-                    return false;
-                }
-            }
 
-            // Store form data in memory — NOT saved to DB yet
-            tempAppointmentData = {
-                Full_Name: fullName,
-                Social_Account: email,
-                Phone: phone,
-                Additional_Notes: document.getElementById('notes').value || '',
-                Appointment_Type: document.getElementById('box-home').classList.contains('selected') ? 'H' : 'S',
-                Inspiration_Image: imageBase64
-            };
+                tempAppointmentData = {
+                    Full_Name: fullName,
+                    Social_Account: email,
+                    Phone: phone,
+                    Additional_Notes: notes,
+                    Down_Payment_Paid: false,
+                    Appointment_Type: 'S',
+                    Status: 0,
+                    Inspiration_Image: imageBase64
+                };
+            }
 
             return true;
         }
 
+        // Create appointment in database (called only after payment confirmation)
+        async function createAppointment() {
+            if (!tempAppointmentData) {
+                alert('Form data not found. Please try again.');
+                return null;
+            }
+
+            const res = await fetch('/Appointment/create-json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(tempAppointmentData)
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                alert('Failed to create appointment:\n' + (errorData.error || 'Unknown error'));
+                return null;
+            }
+
+            const json = await res.json();
+            return json.AppId;
+        }
+
+        // Proceed button: validate form then show calendar (don't save yet)
         document.getElementById('proceedBtn').addEventListener('click', async () => {
             const isValid = await validateAndStoreFormData();
             if (!isValid) return;
 
             document.getElementById('bookingModal').classList.remove('hidden');
-            document.body.classList.add('modal-open');
+            document.body.classList.add('modal-open'); // lock background scroll
 
+            // Reset currentMonth to a fresh Date object (not mutated)
             currentMonth = new Date();
-            currentMonth.setDate(1);
+            currentMonth.setDate(1); // Normalize to 1st to avoid month-overflow issues
+
             await loadCalendar();
         });
 
@@ -617,20 +640,21 @@
             grid.innerHTML = '';
 
             const year  = currentMonth.getFullYear();
-            const month = currentMonth.getMonth();
+            const month = currentMonth.getMonth(); // 0-based
 
             document.getElementById('calendarMonthLabel').innerText =
                 currentMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
             const firstDayOfWeek = new Date(year, month, 1).getDay();
             const daysInMonth    = new Date(year, month + 1, 0).getDate();
-            const TOTAL_CELLS    = 42;
+            const TOTAL_CELLS    = 42; // always 6 rows × 7 cols — fixed height
 
             for (let cell = 0; cell < TOTAL_CELLS; cell++) {
                 const dayNumber = cell - firstDayOfWeek + 1;
                 const el = document.createElement('div');
 
                 if (dayNumber < 1 || dayNumber > daysInMonth) {
+                    // Empty filler cell — takes space but shows nothing
                     el.className = 'day empty';
                 } else {
                     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
@@ -649,12 +673,16 @@
                 grid.appendChild(el);
             }
 
+            // Collect all valid month keys (e.g. "2026-06") from allDays, ignoring undefined entries
             const validDays = allDays.filter(d => d && (d.DateString || d.dateString));
             const monthKeys = [...new Set(validDays.map(d => (d.DateString || d.dateString).substring(0, 7)))].sort();
             const currentKey = `${year}-${String(month + 1).padStart(2, '0')}`;
 
+            // Disable Prev if we are already on the earliest available month
             document.getElementById('prevMonth').disabled =
                 monthKeys.length === 0 || monthKeys[0] === currentKey;
+
+            // Disable Next if we are already on the latest available month
             document.getElementById('nextMonth').disabled =
                 monthKeys.length === 0 || monthKeys[monthKeys.length - 1] === currentKey;
         }
@@ -663,12 +691,13 @@
             document.querySelectorAll('.day.selected').forEach(d => d.classList.remove('selected'));
             element.classList.add('selected');
 
-            selectedDate     = dateStr;
+            selectedDate    = dateStr;
             selectedSlotHour = null;
             document.getElementById('confirmBooking').disabled = true;
 
+            // Parse date parts manually to avoid UTC-midnight timezone shift
             const [y, m, d] = dateStr.split('-').map(Number);
-            const localDate = new Date(y, m - 1, d);
+            const localDate = new Date(y, m - 1, d); // Local time, no UTC offset issue
             document.getElementById('selectedDateDisplay').innerText =
                 `Available time slot as of ${localDate.toLocaleDateString()} (Current Date)`;
 
@@ -687,9 +716,10 @@
                 const btn = document.createElement('button');
                 btn.className = 'slot-btn';
                 btn.type      = 'button';
+                // Support both PascalCase and camelCase from the API
                 const formattedTime = s.FormattedTime ?? s.formattedTime;
                 const isAvailable   = s.IsAvailable   ?? s.isAvailable   ?? false;
-                const slotHour      = s.SlotHour      ?? s.slotHour;
+                const slotHour      = s.SlotHour       ?? s.slotHour;
                 btn.innerText = formattedTime;
 
                 if (!isAvailable) {
@@ -736,56 +766,40 @@
                 return;
             }
 
-            const payBtn = document.getElementById('payNow');
-            const originalText = payBtn.innerText;
-            payBtn.disabled = true;
-            payBtn.innerText = "Processing...";
+            const appointmentId = await createAppointment();
+            if (!appointmentId) return;
 
-            try {
-                // Send form data + schedule together in one request.
-                // The backend creates a PENDING appointment + scheduler,
-                // then only confirms (Down_Payment_Paid = true) after
-                // PayMongo calls payment-success. If payment fails or is
-                // cancelled, payment-cancelled deletes both records cleanly.
-                const dateISO = selectedSlotDate + 'T00:00:00';
-                const timeISO = selectedSlotDate + 'T' + String(selectedSlotTime).padStart(2, '0') + ':00:00';
+            // Send explicit +08:00 offset so the server always receives PH time correctly
+            const dateISO = selectedSlotDate + 'T00:00:00+08:00';
+            const timeISO = selectedSlotDate + 'T' + String(selectedSlotTime).padStart(2, '0') + ':00:00+08:00';
 
-                const payload = {
-                    ...tempAppointmentData,
-                    Appointment_Date: dateISO,
-                    Time_Slot: timeISO
-                };
+            const booking = {
+                AppId: appointmentId,
+                Appointment_Date: dateISO,
+                Time_Slot: timeISO
+            };
 
-                const bookingRes = await fetch('/api/calendar/booking', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+            const bookingRes = await fetch('/api/calendar/booking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(booking)
+            });
 
-                if (!bookingRes.ok) {
-                    const msg = await bookingRes.text();
-                    alert('Booking Error: ' + msg);
-                    payBtn.disabled = false;
-                    payBtn.innerText = originalText;
-                    return;
-                }
+            if (!bookingRes.ok) {
+                const msg = await bookingRes.text();
+                alert('Booking failed: ' + msg);
+                return;
+            }
 
-                const responseData = await bookingRes.json();
-                const targetUrl = responseData.CheckoutUrl || responseData.checkoutUrl;
-
-                if (targetUrl) {
-                    window.location.href = targetUrl;
-                } else {
-                    alert('Error: No payment URL in response.\n\nServer returned: ' + JSON.stringify(responseData));
-                    payBtn.disabled = false;
-                    payBtn.innerText = originalText;
-                }
-
-            } catch (error) {
-                console.error("Booking error:", error);
-                alert("Critical Error: Could not execute booking transaction. Check console logs.");
-                payBtn.disabled = false;
-                payBtn.innerText = originalText;
+            const updateRes = await fetch(`/Appointment/UpdateDownPayment?id=${appointmentId}`, { method: 'POST' });
+            if (updateRes.ok) {
+                alert('✓ Downpayment recorded! Your appointment has been confirmed.');
+                document.getElementById('paymentModal').classList.add('hidden');
+                document.body.classList.remove('modal-open');
+                tempAppointmentData = null;
+                location.href = '/Home/Index';
+            } else {
+                alert('Error recording payment. Please try again.');
             }
         });
 
@@ -796,7 +810,7 @@
 
         document.getElementById('closeBookingModal').addEventListener('click', () => {
             document.getElementById('bookingModal').classList.add('hidden');
-            document.body.classList.remove('modal-open');
+            document.body.classList.remove('modal-open'); // restore background scroll
         });
     </script>
 }
