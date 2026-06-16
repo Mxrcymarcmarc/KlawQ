@@ -1,6 +1,6 @@
 @{
     ViewData["Title"] = "Admin Dashboard";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 @{
     ViewData["NavbarMode"] = "admin";
@@ -29,7 +29,7 @@
                 <p>Add/edit nail works</p>
             </div>
             <div class="card-actions">
-                <button type="button" class="btn" onclick="location.href='@Url.Action("PortfolioManager","Admin")'">Manage Portfolio</button>
+                <button type="button" class="btn" onclick="location.href='@Url.Action("PortfolioManager", "Admin")'">Manage Portfolio</button>
             </div>
         </div>
         <div class="card">
@@ -52,27 +52,31 @@
         <div class="card revenue-card">
             <div class="card-icon">₱</div>
             <h3>Total Revenue</h3>
-            <h2>₱1000</h2>
+            <h2>₱@(((decimal)(ViewData["TotalRevenue"] ?? 0m)).ToString("N2"))</h2>
             <p>From completed orders</p>
         </div>
-        <div class="card stat-card">
+
+        <div class="card stat-card" style="cursor: pointer;" onclick="location.href='/AdminOrders?status=All'">
             <div class="card-icon"><i class="fas fa-cube"></i></div>
             <h3>Total Orders</h3>
-            <h2>6</h2>
+            <h2>@(ViewData["TotalOrdersCount"] ?? 0)</h2>
             <p>All Time</p>
         </div>
-        <div class="card stat-card">
+
+        <div class="card stat-card" style="cursor: pointer;" onclick="location.href='/AdminOrders?status=Pending'">
             <div class="card-icon"><i class="far fa-clock"></i></div>
             <h3>Pending Orders</h3>
-            <h2>1</h2>
+            <h2>@(ViewData["PendingOrdersCount"] ?? 0)</h2>
             <p>Awaiting confirmation</p>
         </div>
-        <div class="card stat-card">
+
+        <div class="card stat-card" style="cursor: pointer;" onclick="location.href='/AdminOrders?status=Completed'">
             <div class="card-icon"><i class="far fa-check-circle"></i></div>
             <h3>Completed Orders</h3>
-            <h2>3</h2>
+            <h2>@(ViewData["CompletedOrdersCount"] ?? 0)</h2>
             <p>Successfully finished</p>
         </div>
+
         <div class="card stat-card">
             <div class="card-icon"><i class="far fa-calendar-alt"></i></div>
             <h3>This Week</h3>
@@ -81,11 +85,12 @@
         </div>
     </div>
 
+    <!-- 🌟 Top Services (Hardcoded UI elements, but cleaned up markup) -->
     <div class="section-box">
         <div class="section-header">
             <h2><i class="fas fa-star"></i> Top Services</h2>
         </div>
-        
+
         <div class="service-item">
             <div class="service-info">
                 <div class="rank-badge">#1</div>
@@ -95,7 +100,7 @@
                 </div>
             </div>
             <div class="service-price">
-                <h4>₱1020</h4>
+                <h4>₱1,020.00</h4>
                 <p>Total revenue</p>
             </div>
         </div>
@@ -109,7 +114,7 @@
                 </div>
             </div>
             <div class="service-price">
-                <h4>₱900</h4>
+                <h4>₱900.00</h4>
                 <p>Total revenue</p>
             </div>
         </div>
@@ -123,7 +128,7 @@
                 </div>
             </div>
             <div class="service-price">
-                <h4>₱975</h4>
+                <h4>₱975.00</h4>
                 <p>Total revenue</p>
             </div>
         </div>
@@ -137,16 +142,17 @@
                 </div>
             </div>
             <div class="service-price">
-                <h4>₱960</h4>
+                <h4>₱960.00</h4>
                 <p>Total revenue</p>
             </div>
         </div>
     </div>
 
+    <!-- 🌟 Recent Orders Dashboard List View Block -->
     <div class="section-box">
         <div class="section-header">
             <h2><i class="fas fa-user-friends"></i> Recent Orders</h2>
-            <span class="badge-total">6 total</span>
+            <span class="badge-total">@(ViewData["TotalOrdersCount"] ?? 0) total</span>
         </div>
 
         <div class="table-responsive">
@@ -155,88 +161,32 @@
                     <tr>
                         <th>Order #</th>
                         <th>Customer</th>
-                        <th>Service</th>
-                        <th>Qty</th>
-                        <th>Size</th>
-                        <th>Price</th>
-                        <th>Total</th>
-                        <th>Date & Time</th>
+                        <th>Delivery Method</th>
+                        <th>Payment Method</th>
+                        <th>Contact Number</th>
+                        <th>Type</th>
+                        <th>Date</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Note: Once you want to populate this table block seamlessly, you can
+                         pass a list from the controller and use: @* @foreach (var order in Model) *@ -->
                     <tr>
                         <td>D-1</td>
-                        <td class="customer-info">Name Name<p>@@email.com</p></td>
-                        <td class="service-td">Custom Nail Art Design<p>+Add-ons</p></td>
-                        <td>1</td>
-                        <td>SML</td>
-                        <td class="price-text">₱100</td>
-                        <td class="price-text">₱100</td>
-                        <td>6/1/2026<br>14:00</td>
+                        <td class="customer-info">Juan Dela Cruz<p>User Contact Details</p></td>
+                        <td>Standard Delivery</td>
+                        <td>GCash</td>
+                        <td>09123456789</td>
+                        <td><span class="badge">💅 Press-On</span></td>
+                        <td>2026-06-16</td>
                         <td><span class="status status-pending"><i class="far fa-clock"></i> Pending</span></td>
-                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
-                    </tr>
-                    <tr>
-                        <td>D-2</td>
-                        <td class="customer-info">Name Name<p>@@email.com</p></td>
-                        <td class="service-td">Gel Manicure<p>+Add-ons</p></td>
-                        <td>1</td>
-                        <td>SML</td>
-                        <td class="price-text">₱100</td>
-                        <td class="price-text">₱100</td>
-                        <td>6/7/2026<br>10:20</td>
-                        <td><span class="status status-confirmed"><i class="fas fa-check-double"></i> Confirmed</span></td>
-                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
-                    </tr>
-                    <tr>
-                        <td>D-4</td>
-                        <td class="customer-info">Name Name<p>@@email.com</p></td>
-                        <td class="service-td">Full Set with Tips<p>+Add-ons</p></td>
-                        <td>1</td>
-                        <td>SML</td>
-                        <td class="price-text">₱100</td>
-                        <td class="price-text">₱100</td>
-                        <td>6/8/2026<br>16:00</td>
-                        <td><span class="status status-completed"><i class="fas fa-check"></i> Completed</span></td>
-                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
-                    </tr>
-                    <tr>
-                        <td>D-4</td>
-                        <td class="customer-info">Name Name<p>@@email.com</p></td>
-                        <td class="service-td">Luxury Spa Package</td>
-                        <td>1</td>
-                        <td>SML</td>
-                        <td class="price-text">₱100</td>
-                        <td class="price-text">₱100</td>
-                        <td>6/5/2026<br>13:00</td>
-                        <td><span class="status status-completed"><i class="fas fa-check"></i> Completed</span></td>
-                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
-                    </tr>
-                    <tr>
-                        <td>D-5</td>
-                        <td class="customer-info">Name Name<p>@@email.com</p></td>
-                        <td class="service-td">Full Set Sculpted<p>+Add-ons</p></td>
-                        <td>1</td>
-                        <td>SML</td>
-                        <td class="price-text">₱100</td>
-                        <td class="price-text">₱100</td>
-                        <td>6/7/2026<br>11:00</td>
-                        <td><span class="status status-completed"><i class="fas fa-check"></i> Completed</span></td>
-                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
-                    </tr>
-                    <tr>
-                        <td>D-6</td>
-                        <td class="customer-info">Name Name<p>@@email.com</p></td>
-                        <td class="service-td">Basic Manicure<p>+Add-ons</p></td>
-                        <td>1</td>
-                        <td>SML</td>
-                        <td class="price-text">₱100</td>
-                        <td class="price-text">₱100</td>
-                        <td>6/3/2026<br>15:30</td>
-                        <td><span class="status status-cancelled"><i class="fas fa-times"></i> Cancelled</span></td>
-                        <td><button class="btn-action"><i class="fas fa-pencil-alt"></i></button></td>
+                        <td>
+                            <button type="button" class="btn-action" onclick="location.href='@Url.Action("Index", "AdminOrders", new { status = "Pending" })'">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </td>
                     </tr>
                 </tbody>
             </table>

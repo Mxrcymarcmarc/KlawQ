@@ -12,7 +12,7 @@ namespace KlawQ.Models
         public required string Delivery_Location { get; set; } = string.Empty;
         public required string Delivery_Method { get; set; } = string.Empty;
         public required string Payment_Method { get; set; } = string.Empty;
-        public required int Contact_Number { get; set; }
+        public required string Contact_Number { get; set; } = string.Empty;
         public required string Hand_Photo { get; set; } = string.Empty;
         public required string Thumb_Photo { get; set; } = string.Empty;
         public required char Order_Type { get; set; } // 'P' for press-ons and 'C' for custom requests
