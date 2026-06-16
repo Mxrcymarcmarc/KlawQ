@@ -1,151 +1,276 @@
+@model KlawQ.Models.AdminOrdersViewModel
+
 @{
     ViewData["Title"] = "Admin Orders";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["NavbarMode"] = "admin";
 }
 
 @section Styles {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="~/css/admin-orders.css" />
+    <style>
+        /* 🎨 GLOBAL PAGES AND WRAPPERS */
+        .admin-orders-wrapper {
+            background-color: #fdfafb;
+            min-height: 100vh;
+            padding: 30px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Aligns the dashboard back link gracefully to the left side */
+        .admin-outer-header-nav {
+            display: flex;
+            justify-content: flex-start;
+            max-width: 1200px;
+            margin: 0 auto 10px auto;
+            padding: 0 10px;
+        }
+
+            .admin-outer-header-nav .back-link {
+                color: #b5835a;
+                text-decoration: none;
+                font-weight: 500;
+                font-size: 0.9rem;
+                transition: color 0.2s;
+            }
+
+                .admin-outer-header-nav .back-link:hover {
+                    color: #8b4b3b;
+                    text-decoration: underline;
+                }
+
+        .main-title {
+            font-family: 'Shadows Into Light Two', cursive;
+            font-size: 3.5rem;
+            color: #8b4b3b;
+            text-align: center;
+            margin: 10px 0 30px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 👑 THE WHITE ROUNDED DASHBOARD BOARD */
+        .orders-board-card {
+            background: #ffffff;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(139, 75, 59, 0.06);
+            max-width: 1200px;
+            margin: 0 auto;
+            border: 1px solid #fdf1f2;
+        }
+
+        /* 📐 FLEX LAYOUT: INTERNAL CARD HEADER ROW */
+        .board-internal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            width: 100%;
+        }
+
+        /* Top-Left Inside Logo */
+        .board-brand {
+            font-weight: 700;
+            color: #8b4b3b;
+            font-size: 1.25rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Top-Right Side Filter Toolbar */
+        .filter-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            background-color: transparent;
+            padding: 0;
+            margin: 0;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+            .filter-group label {
+                font-weight: 600;
+                color: #8b4b3b;
+                font-size: 0.95rem;
+            }
+
+        .admin-dropdown {
+            padding: 10px 25px;
+            border-radius: 15px;
+            border: 2px solid #f4d0d4;
+            color: #8b4b3b;
+            background: white;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+            .admin-dropdown:focus {
+                border-color: #b9c68c;
+            }
+
+        /* 📊 TABLE LAYOUT STYLING */
+        .table-responsive {
+            width: 100%;
+            overflow-x: hidden; /* Removes clumsy layout scrollbars */
+        }
+
+        .orders-table-styled {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+            /* Custom Green Banner Header Elements */
+            .orders-table-styled thead th {
+                background-color: #b9c68c;
+                color: white;
+                padding: 16px 20px;
+                font-weight: 600;
+                font-size: 0.95rem;
+                text-align: left;
+                border: none;
+            }
+
+                .orders-table-styled thead th:first-child {
+                    border-radius: 15px 0 0 15px;
+                }
+
+                .orders-table-styled thead th:last-child {
+                    border-radius: 0 15px 15px 0;
+                }
+
+            .orders-table-styled tbody td {
+                padding: 20px;
+                border-bottom: 1px solid #f7ecee;
+                color: #555;
+                font-size: 0.9rem;
+                vertical-align: middle;
+            }
+
+            .orders-table-styled tbody tr:last-child td {
+                border-bottom: none;
+            }
+
+        /* Row Data Custom Indicators */
+        .status-text {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .status-completed {
+            color: #57c28d;
+        }
+
+        .status-cancelled {
+            color: #e57373;
+        }
+
+        .status-pending {
+            color: #ffb74d;
+        }
+    </style>
 }
 
 <div class="admin-orders-wrapper">
-    <div class="admin-orders-container">
+    <div class="admin-outer-header-nav">
+        <a href="/admin" class="back-link">« Back to Dashboard</a>
+    </div>
 
-        <div class="page-header">
-            <h1 class="page-title">
-                <i class="fas fa-sparkles title-icon"></i>
-                Orders
-            </h1>
+    <div class="admin-orders-container">
+        <div class="page-title-area">
+            <h1 class="main-title">✨ Orders</h1>
         </div>
 
-        <div class="orders-board">
+        <div class="orders-board-card">
 
-            <div class="tabs-nav">
-                <button class="tab-btn active">All Orders</button>
-                <button class="tab-btn">Completed</button>
-                <button class="tab-btn">Pending</button>
-                <button class="tab-btn">Cancelled</button>
+            <div class="board-internal-header">
+                <div class="board-brand">
+                    <span>🌸 Klaw By Krys</span>
+                </div>
+
+                <form method="get" action="@Url.Action("Index", "AdminOrders")" class="filter-toolbar">
+                    <div class="filter-group">
+                        <label>Status:</label>
+                        <select name="status" onchange="this.form.submit()" class="admin-dropdown">
+                            <!option value="All" @(Model.SelectedStatus == "All" ? "selected" : "")>All Orders</!option>
+                            <!option value="Pending" @(Model.SelectedStatus == "Pending" ? "selected" : "")>Pending</!option>
+                            <!option value="Completed" @(Model.SelectedStatus == "Completed" ? "selected" : "")>Completed</!option>
+                            <!option value="Cancelled" @(Model.SelectedStatus == "Cancelled" ? "selected" : "")>Cancelled</!option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>History:</label>
+                        <select name="months" onchange="this.form.submit()" class="admin-dropdown">
+                            <!option value="1" @(Model.SelectedMonthsFilter == 1 ? "selected" : "")>Past Month</!option>
+                            <!option value="3" @(Model.SelectedMonthsFilter == 3 ? "selected" : "")>Past 3 Months</!option>
+                            <!option value="6" @(Model.SelectedMonthsFilter == 6 ? "selected" : "")>Past 6 Months</!option>
+                            <!option value="12" @(Model.SelectedMonthsFilter == 12 ? "selected" : "")>Past Year</!option>
+                        </select>
+                    </div>
+                </form>
             </div>
 
             <div class="table-responsive">
-                <table class="orders-table">
+                <table class="orders-table-styled">
                     <thead>
                         <tr>
-                            <th>Customer Name</th>
                             <th>Order ID</th>
-                            <th>Qty</th>
-                            <th>Price</th>
-                            <th>Total</th>
+                            <th>Order Date</th>
+                            <th>Full Name</th>
+                            <th>Delivery</th>
+                            <th>Payment</th>
+                            <th>Contact</th>
+                            <th>Type</th>
                             <th>Status</th>
-                            <th>Size</th>
-                            <th>Details</th>
-                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Juan Dela Cruz</td>
-                            <td>123</td>
-                            <td>10</td>
-                            <td>450</td>
-                            <td>4500</td>
-                            <td class="status-completed">Completed</td>
-                            <td>SML</td>
-                            <td><button class="btn-action">View</button></td>
-                            <td>
-                                <button class="btn-action btn-status">
-                                    <i class="fas fa-chevron-down"></i> Status
-                                </button>
-                            </td>
-                        </tr>
+                        @if (!Model.Orders.Any())
+                        {
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #8b4b3b; padding: 40px; font-weight: 500; font-style: italic;">
+                                    No transaction records found matching these criteria.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var order in Model.Orders)
+                            {
+                                <tr>
+                                    <td style="font-weight: 700;">#@order.OrderID</td>
+                                    <td>@order.Order_Date.ToString("MM/dd/yyyy")</td>
+                                    <td>@order.Full_Name</td>
+                                    <td>@order.Delivery_Method</td>
+                                    <td>@order.Payment_Method</td>
 
-                        <tr>
-                            <td>Juan Dela Cruz</td>
-                            <td>123</td>
-                            <td>10</td>
-                            <td>450</td>
-                            <td>4500</td>
-                            <td class="status-cancelled">Cancelled</td>
-                            <td>SML</td>
-                            <td><button class="btn-action">View</button></td>
-                            <td>
-                                <button class="btn-action btn-status">
-                                    <i class="fas fa-chevron-down"></i> Status
-                                </button>
-                            </td>
-                        </tr>
+                                    <td>@(order.Contact_Number)</td>
 
-                        <tr>
-                            <td>Juan Dela Cruz</td>
-                            <td>123</td>
-                            <td>10</td>
-                            <td>450</td>
-                            <td>4500</td>
-                            <td class="status-pending">Pending</td>
-                            <td>SML</td>
-                            <td><button class="btn-action">View</button></td>
-                            <td>
-                                <button class="btn-action btn-status">
-                                    <i class="fas fa-chevron-down"></i> Status
-                                </button>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>Juan Dela Cruz</td>
-                            <td>123</td>
-                            <td>10</td>
-                            <td>450</td>
-                            <td>4500</td>
-                            <td class="status-completed">Completed</td>
-                            <td>SML</td>
-                            <td><button class="btn-action">View</button></td>
-                            <td>
-                                <button class="btn-action btn-status">
-                                    <i class="fas fa-chevron-down"></i> Status
-                                </button>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>Juan Dela Cruz</td>
-                            <td>123</td>
-                            <td>10</td>
-                            <td>450</td>
-                            <td>4500</td>
-                            <td class="status-completed">Completed</td>
-                            <td>SML</td>
-                            <td><button class="btn-action">View</button></td>
-                            <td>
-                                <button class="btn-action btn-status">
-                                    <i class="fas fa-chevron-down"></i> Status
-                                </button>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>Juan Dela Cruz</td>
-                            <td>123</td>
-                            <td>10</td>
-                            <td>450</td>
-                            <td>4500</td>
-                            <td class="status-cancelled">Cancelled</td>
-                            <td>SML</td>
-                            <td><button class="btn-action">View</button></td>
-                            <td>
-                                <button class="btn-action btn-status">
-                                    <i class="fas fa-chevron-down"></i> Status
-                                </button>
-                            </td>
-                        </tr>
+                                    <td>@(order.Order_Type == 'P' || order.Order_Type == 'p' ? "💅 Press-On" : "🎨 Custom")</td>
+                                    <td>
+                                        <span class="status-text status-@order.Status.ToLower()">
+                                            @order.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
                     </tbody>
                 </table>
             </div>

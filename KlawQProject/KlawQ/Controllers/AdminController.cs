@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
@@ -19,9 +22,27 @@ namespace KlawQ.Controllers
             _context = context;
         }
 
+        // 🖥️ GET: /admin
         [HttpGet("")]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            // 🌟 FIX: Eagerly load Items and their associated Products to safely access .Price
+            decimal totalRevenue = await _context.Orders
+                .Where(o => o.Status == "Completed")
+                .SelectMany(o => o.Items)
+                .SumAsync(i => (decimal?)i.Quantity * (i.Product != null ? i.Product.Product_Price : 0)) ?? 0;
+
+            // 🌟 2. Query dynamic metrics counts from the Orders table
+            int totalOrdersCount = await _context.Orders.CountAsync();
+            int pendingOrdersCount = await _context.Orders.CountAsync(o => o.Status == "Pending");
+            int completedOrdersCount = await _context.Orders.CountAsync(o => o.Status == "Completed");
+
+            // 🌟 3. Pass values to the view using ViewData maps
+            ViewData["TotalRevenue"] = totalRevenue;
+            ViewData["TotalOrdersCount"] = totalOrdersCount;
+            ViewData["PendingOrdersCount"] = pendingOrdersCount;
+            ViewData["CompletedOrdersCount"] = completedOrdersCount;
+
             return View();
         }
 
