@@ -1,0 +1,670 @@
+﻿@{
+    ViewData["Title"] = "Configure Time-Slots";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* 🎨 THEMED COLOR SCHEME & CANVAS WRAPPER */
+        .slot-config-wrapper {
+            background-color: #fdfafb;
+            min-height: 100vh;
+            padding: 30px;
+            font-family: 'Montserrat', sans-serif;
+            color: #644b39;
+            /* 🌟 FIX: Centers everything globally when zooming out */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .config-inner-container {
+            width: 100%;
+            max-width: 1300px; /* Expanded slightly for better visual breathing room */
+        }
+
+        .back-nav {
+            margin-bottom: 15px;
+        }
+
+            .back-nav a {
+                color: #b5835a;
+                text-decoration: none;
+                font-weight: 500;
+                font-size: 0.9rem;
+                transition: color 0.2s;
+            }
+
+                .back-nav a:hover {
+                    color: #8b4b3b;
+                    text-decoration: underline;
+                }
+
+        .page-title-area {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .main-title {
+            font-family: 'Shadows Into Light Two', cursive;
+            font-size: 3.2rem;
+            color: #8b4b3b;
+            margin: 0;
+        }
+
+        .subtitle {
+            color: #9c8a7c;
+            margin: 5px 0 0 0;
+            font-size: 1.05rem;
+        }
+
+        /* 📐 TWO-COLUMN BOARD WORKSPACE INTERACTION GRID */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 30px;
+            width: 100%;
+        }
+
+        .board-panel-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(139, 75, 59, 0.04);
+            border: 1px solid #fdf1f2;
+            height: fit-content;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #fdf5f6;
+            padding-bottom: 15px;
+        }
+
+            .panel-header h2 {
+                font-size: 1.3rem;
+                font-weight: 700;
+                color: #8b4b3b;
+                margin: 0;
+            }
+
+        /* 📅 CALENDAR CONTROL ACTIONS BAR */
+        .calendar-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-nav-month {
+            background: #fdf5f6;
+            border: 1px solid #f4d0d4;
+            color: #8b4b3b;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+            .btn-nav-month:hover {
+                background: #f4d0d4;
+            }
+
+        .current-month-display {
+            font-weight: 700;
+            font-size: 1.1rem;
+            min-width: 160px;
+            text-align: center;
+        }
+
+        /* 🗓️ MONTH GRID ARCHITECTURE OVERLAYS */
+        .calendar-days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+
+        .weekday-label {
+            font-weight: 700;
+            color: #b5835a;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            padding-bottom: 5px;
+        }
+
+        .day-tile {
+            background: #ffffff;
+            border: 2px solid #f7ecee;
+            border-radius: 12px;
+            min-height: 85px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+            .day-tile:hover {
+                transform: translateY(-2px);
+                border-color: #f4d0d4;
+                box-shadow: 0 5px 15px rgba(139, 75, 59, 0.05);
+            }
+
+            .day-tile.selected {
+                border-color: #b9c68c !important;
+                background: #fbfcf8;
+                box-shadow: 0 0 0 1px #b9c68c;
+            }
+
+        .day-number {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #644b39;
+            text-align: left;
+        }
+
+        /* 🏷️ STATE COLORS - MATCHES THE USER RULES SCHEMA */
+        .day-status-badge {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 6px;
+            text-align: center;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .status-available {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .status-fullybooked {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+
+        .status-adminblocked {
+            background-color: #f5f5f5;
+            color: #616161;
+            border: 1px dashed #bdbdbd;
+        }
+
+        .status-shopclosed {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-pastdate, .status-today, .status-tomorrow {
+            background-color: #fdf5f6;
+            color: #9c8a7c;
+            opacity: 0.6;
+        }
+
+        .slot-count-info {
+            font-size: 0.7rem;
+            color: #9c8a7c;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        /* 🕒 TIME SLOTS SLIDE SIDEBAR LIST CELLS */
+        .slots-sidebar-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-header-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .date-banner-info {
+            background: #fdf5f6;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #8b4b3b;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* 🌟 WHOLE DAY LOCK BUTTON ACTION */
+        .btn-whole-day {
+            width: 100%;
+            padding: 12px;
+            border-radius: 14px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+            .btn-whole-day.mode-block {
+                background-color: #8b4b3b;
+                color: white;
+            }
+
+                .btn-whole-day.mode-block:hover {
+                    background-color: #723c2f;
+                }
+
+            .btn-whole-day.mode-unblock {
+                background-color: #b9c68c;
+                color: white;
+            }
+
+                .btn-whole-day.mode-unblock:hover {
+                    background-color: #a8b874;
+                }
+
+        .slots-list-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .slot-row-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-radius: 14px;
+            border: 1px solid #f7ecee;
+            background: #ffffff;
+            transition: all 0.2s;
+        }
+
+        .slot-time-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .slot-indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* 🔘 ACTION SWITCH BUTTON CONTROL SYSTEM */
+        .btn-toggle-slot {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 6px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-block-action {
+            background-color: #f4d0d4;
+            color: #8b4b3b;
+        }
+
+            .btn-block-action:hover {
+                background-color: #ebd2d5;
+            }
+
+        .btn-unblock-action {
+            background-color: #b9c68c;
+            color: white;
+        }
+
+            .btn-unblock-action:hover {
+                background-color: #a8b874;
+            }
+
+        .badge-booked-text {
+            color: #d32f2f;
+            font-weight: 700;
+            font-size: 0.85rem;
+            background: #ffebee;
+            padding: 4px 12px;
+            border-radius: 8px;
+        }
+
+        .empty-slot-placeholder {
+            text-align: center;
+            color: #9c8a7c;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+
+        @@media (max-width: 992px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+<div class="slot-config-wrapper">
+    <div class="config-inner-container">
+        <div class="back-nav">
+            <a href="/admin">« Back to Dashboard</a>
+        </div>
+
+        <div class="page-title-area">
+            <h1 class="main-title">🕒 Schedule Configuration</h1>
+            <p class="subtitle">Open or block appointment timeslots for studio bookings</p>
+        </div>
+
+        <div class="workspace-grid">
+            <div class="board-panel-card">
+                <div class="panel-header">
+                    <h2>Monthly Overview Matrix</h2>
+                    <div class="calendar-controls">
+                        <button class="btn-nav-month" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                        <span class="current-month-display" id="monthLabelDisplay">June 2026</span>
+                        <button class="btn-nav-month" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="calendar-days-grid" id="calendarDaysGridBox">
+                </div>
+            </div>
+
+            <div class="board-panel-card slots-sidebar-container">
+                <div class="panel-header">
+                    <h2>Daily Slot Assignments</h2>
+                </div>
+
+                <div class="sidebar-header-actions">
+                    <div class="date-banner-info" id="activeDateBannerDisplay">
+                        Select a day to audit time-slots
+                    </div>
+                    <div id="wholeDayButtonPlacement" style="display: none;">
+                    </div>
+                </div>
+
+                <div class="slots-list-stack" id="daySlotsStackWrapper">
+                    <div class="empty-slot-placeholder">Click any calendar date frame to display runtime slots database profiles.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentYear = 2026;
+        let currentMonth = 6;
+        let currentlySelectedDateStr = "";
+        let isCurrentDayEntirelyBlocked = false;
+
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchMonthlyStatusGrid();
+        });
+
+        async function fetchMonthlyStatusGrid() {
+            document.getElementById("monthLabelDisplay").innerText = `${monthNames[currentMonth - 1]} ${currentYear}`;
+
+            try {
+                const response = await fetch(`/api/AdminCalendar/month-admin-status?year=${currentYear}&month=${currentMonth}`);
+                if (!response.ok) throw new Error("Could not pull network profile matrices.");
+                const daysData = await response.json();
+
+                renderCalendarMatrix(daysData);
+
+                // Keep layout sidebar state updated on refreshing data grids
+                if(currentlySelectedDateStr) {
+                    const updatedDayInfo = daysData.find(d => d.dateString === currentlySelectedDateStr);
+                    if(updatedDayInfo) {
+                        isCurrentDayEntirelyBlocked = (updatedDayInfo.status === "Admin Blocked");
+                        renderWholeDayActionButton();
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error synchronizing active database records matrix grid mappings.");
+            }
+        }
+
+        function renderCalendarMatrix(daysData) {
+            const gridContainer = document.getElementById("calendarDaysGridBox");
+            gridContainer.innerHTML = "";
+
+            dayLabels.forEach(label => {
+                const labelDiv = document.createElement("div");
+                labelDiv.className = "weekday-label";
+                labelDiv.innerText = label;
+                gridContainer.appendChild(labelDiv);
+            });
+
+            if (daysData.length > 0) {
+                const firstDayDate = new Date(daysData[0].dateString);
+                const firstDayOfWeekIndex = firstDayDate.getDay();
+
+                for (let i = 0; i < firstDayOfWeekIndex; i++) {
+                    const paddingDiv = document.createElement("div");
+                    gridContainer.appendChild(paddingDiv);
+                }
+            }
+
+            daysData.forEach(day => {
+                const dateObj = new Date(day.dateString);
+                const dayNum = dateObj.getDate();
+
+                const tile = document.createElement("div");
+                tile.className = `day-tile ${currentlySelectedDateStr === day.dateString ? 'selected' : ''}`;
+                tile.setAttribute("data-date", day.dateString);
+
+                tile.onclick = () => selectDayTile(day.dateString, day.status === "Admin Blocked");
+
+                let statusClassModifier = "status-" + day.status.toLowerCase().replace(" ", "");
+
+                tile.innerHTML = `
+                    <div class="day-number">${dayNum}</div>
+                    <div>
+                        <span class="day-status-badge ${statusClassModifier}">${day.status}</span>
+                        <div class="slot-count-info">${day.bookingsCount}/${day.maxSlotsAvailable} booked</div>
+                    </div>
+                `;
+
+                gridContainer.appendChild(tile);
+            });
+        }
+
+        function selectDayTile(chosenDateStr, isBlocked) {
+            currentlySelectedDateStr = chosenDateStr;
+            isCurrentDayEntirelyBlocked = isBlocked;
+
+            document.querySelectorAll(".day-tile").forEach(tile => tile.classList.remove("selected"));
+            const matchTile = document.querySelector(`.day-tile[data-date="${chosenDateStr}"]`);
+            if (matchTile) matchTile.classList.add("selected");
+
+            const formattedDateDisplay = new Date(chosenDateStr).toLocaleDateString("en-US", {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            document.getElementById("activeDateBannerDisplay").innerText = formattedDateDisplay;
+
+            // Make action button visible and mount it cleanly
+            document.getElementById("wholeDayButtonPlacement").style.display = "block";
+            renderWholeDayActionButton();
+
+            fetchDayTimeSlots(chosenDateStr);
+        }
+
+        // 🌟 GENERATE WHOLE DAY CONFIG BUTTON
+        function renderWholeDayActionButton() {
+            const btnPlacement = document.getElementById("wholeDayButtonPlacement");
+            if (!currentlySelectedDateStr) return;
+
+            if (isCurrentDayEntirelyBlocked) {
+                btnPlacement.innerHTML = `
+                    <button class="btn-whole-day mode-unblock" onclick="toggleWholeDayBlock('unblock')">
+                        <i class="fas fa-unlock"></i> Unblock Entire Day
+                    </button>
+                `;
+            } else {
+                btnPlacement.innerHTML = `
+                    <button class="btn-whole-day mode-block" onclick="toggleWholeDayBlock('block')">
+                        <i class="fas fa-calendar-minus"></i> Block Entire Day
+                    </button>
+                `;
+            }
+        }
+
+        // 🌟 HANDLES WHOLE DAY API TRIGGER (PASSES HOUR AS NULL)
+        async function toggleWholeDayBlock(mode) {
+            const endpoint = mode === "block" ? "block-slot" : "unblock-slot";
+            const methodType = mode === "block" ? "POST" : "DELETE";
+
+            // When blocking/unblocking a whole day, pass hour as empty/null string context parameter
+            try {
+                const response = await fetch(`/api/AdminCalendar/${endpoint}?date=${currentlySelectedDateStr}`, {
+                    method: methodType
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    alert(errorText || "Action rejected by validation rules matrix.");
+                    return;
+                }
+
+                isCurrentDayEntirelyBlocked = (mode === "block");
+                await fetchMonthlyStatusGrid();
+                await fetchDayTimeSlots(currentlySelectedDateStr);
+            } catch (err) {
+                console.error(err);
+                alert("Network communication exception error.");
+            }
+        }
+
+        async function fetchDayTimeSlots(dateString) {
+            const listWrapper = document.getElementById("daySlotsStackWrapper");
+            listWrapper.innerHTML = '<div class="empty-slot-placeholder">Loading slot maps...</div>';
+
+            try {
+                const response = await fetch(`/api/AdminCalendar/day-slots-admin-status?chosenDate=${dateString}`);
+                if (!response.ok) throw new Error("Faulty response payload frame maps context.");
+                const slots = await response.json();
+
+                renderSlotsSidebarList(dateString, slots);
+            } catch (err) {
+                console.error(err);
+                listWrapper.innerHTML = '<div class="empty-slot-placeholder">Error loading timeslots.</div>';
+            }
+        }
+
+        function renderSlotsSidebarList(dateString, slots) {
+            const listWrapper = document.getElementById("daySlotsStackWrapper");
+            listWrapper.innerHTML = "";
+
+            if (slots.length === 0) {
+                listWrapper.innerHTML = '<div class="empty-slot-placeholder">No operating business hours assigned to this day code context profile.</div>';
+                return;
+            }
+
+            // If the whole day is blocked by admin, provide visual helper feedback on individual rows
+            slots.forEach(slot => {
+                const row = document.createElement("div");
+                row.className = "slot-row-item";
+
+                let currentStatus = slot.status;
+                if (isCurrentDayEntirelyBlocked && currentStatus === "Available") {
+                    currentStatus = "Blocked";
+                }
+
+                let dotColor = "#b9c68c";
+                if (currentStatus === "Booked") dotColor = "#e57373";
+                if (currentStatus === "Blocked") dotColor = "#9e9e9e";
+
+                let actionElementControl = "";
+                if (currentStatus === "Available") {
+                    actionElementControl = `<button class="btn-toggle-slot btn-block-action" onclick="toggleBlockAPI('${dateString}', ${slot.slotHour}, 'block')"><i class="fas fa-ban"></i> Block</button>`;
+                } else if (currentStatus === "Blocked") {
+                    // If blocked because of whole day rule, let them know they should open the whole day up top
+                    if (isCurrentDayEntirelyBlocked) {
+                        actionElementControl = `<span style="font-size:0.75rem; color:#9c8a7c; font-style:italic;">Day Blocked</span>`;
+                    } else {
+                        actionElementControl = `<button class="btn-toggle-slot btn-unblock-action" onclick="toggleBlockAPI('${dateString}', ${slot.slotHour}, 'unblock')"><i class="fas fa-unlock"></i> Open</button>`;
+                    }
+                } else {
+                    actionElementControl = `<span class="badge-booked-text"><i class="fas fa-check"></i> Reserved</span>`;
+                }
+
+                row.innerHTML = `
+                    <div class="slot-time-meta">
+                        <span class="slot-indicator-dot" style="background-color: ${dotColor}"></span>
+                        <span>${slot.formattedTime}</span>
+                    </div>
+                    <div>${actionElementControl}</div>
+                `;
+
+                listWrapper.appendChild(row);
+            });
+        }
+
+        async function toggleBlockAPI(dateString, hour, transitionMode) {
+            const endpoint = transitionMode === "block" ? "block-slot" : "unblock-slot";
+            const methodType = transitionMode === "block" ? "POST" : "DELETE";
+
+            try {
+                const response = await fetch(`/api/AdminCalendar/${endpoint}?date=${dateString}&hour=${hour}`, {
+                    method: methodType
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    alert(errorText || "Action rejected by validation matrix rules.");
+                    return;
+                }
+
+                await fetchMonthlyStatusGrid();
+                await fetchDayTimeSlots(dateString);
+            } catch (err) {
+                console.error(err);
+                alert("Network communication timeout exception.");
+            }
+        }
+
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            } else if (currentMonth < 1) {
+                currentMonth = 12;
+                currentYear--;
+            }
+            fetchMonthlyStatusGrid();
+        }
+    </script>
+}
