@@ -97,6 +97,13 @@ namespace KlawQ.Controllers
             ViewData["FeaturedPressOns"] = pressOnProducts;
             ViewData["FeaturedOriginals"] = originalProducts;
 
+            return View();
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpGet("Home/OrderHistory")]
+        public async Task<IActionResult> OrderHistory()
+        {
             List<OrderItem> orderHistory = [];
             if (User.Identity?.IsAuthenticated is true)
             {
@@ -112,8 +119,13 @@ namespace KlawQ.Controllers
                         .ToListAsync();
                 }
             }
-            ViewData["OrderHistory"] = orderHistory;
+            return View(orderHistory);
+        }
 
+        [AllowAnonymous]
+        [HttpGet("Home/FAQ")]
+        public IActionResult FAQ()
+        {
             return View();
         }
 

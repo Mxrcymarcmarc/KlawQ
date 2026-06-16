@@ -1,0 +1,78 @@
+@model IEnumerable<KlawQ.Models.OrderItem>
+@{
+    ViewData["Title"] = "My Order History - Klaw By Krys";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/home-page.css" />
+    <style>
+        .home-wrapper {
+            min-height: 70vh;
+        }
+    </style>
+}
+
+<div class="home-wrapper">
+    <section class="home-section bookmarks-section">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-box title-icon-green"></i> My Order History <i class="fas fa-box title-icon-green"></i></h2>
+            <p class="section-subtitle">View your ordered press-ons here.</p>
+        </div>
+
+        <div class="bookmarks-board">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Picture</th>
+                                <th>Title</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var img = item.Product?.Product_Image;
+                                if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
+                                else if (img.StartsWith("~")) img = Url.Content(img);
+                                else if (!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
+                                else img = Url.Content(img);
+
+                                <tr>
+                                    <td style="width: 80px; vertical-align: middle;">
+                                        <img src="@img" alt="@(item.Product?.Product_Name)" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-pink);" />
+                                    </td>
+                                    <td style="vertical-align: middle; font-weight: 500;">@(item.Product?.Product_Name ?? "Press-On Set")</td>
+                                    <td style="vertical-align: middle;">@item.Quantity</td>
+                                    <td style="vertical-align: middle;">₱@((item.Product?.Product_Price ?? 0).ToString("N2"))</td>
+                                    <td style="vertical-align: middle; text-align: center;">
+                                        <div class="action-buttons" style="justify-content: center;">
+                                            <a href="/Order/OrderDetails/@item.OrderID" class="action-btn" style="text-decoration: none;" title="View Order Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div style="text-align: center; padding: 2rem 0; color: var(--text-light-brown);">
+                    <i class="fas fa-receipt" style="font-size: 3rem; margin-bottom: 1rem; color: var(--border-pink);"></i>
+                    <p style="font-family: var(--secondary-font); font-size: 1.1rem; margin: 0;">You haven't ordered any press-ons yet.</p>
+                </div>
+            }
+        </div>
+    </section>
+</div>

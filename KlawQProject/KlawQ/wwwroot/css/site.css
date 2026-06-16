@@ -166,3 +166,171 @@ nav {
         text-align: center;
     }
 }
+
+/* Navigation Brand Group wrapper */
+.nav-brand-group {
+    display: flex;
+    align-items: center;
+}
+
+/* Shift brand link right if gear button is present to prevent overlapping */
+.nav-brand-group:has(.nav-gear-btn) .nav-brand {
+    margin-left: 45px;
+}
+
+/* Navigation Gear Button (Fixed to match cart button's viewport positioning) */
+.nav-gear-btn {
+    position: fixed;
+    top: 14px;
+    left: 20px;
+    z-index: 1100;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #fff;
+    border: none;
+    color: #e2557a; /* Pink gear color */
+    font-size: 18px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nav-gear-btn:hover {
+    color: #b3526c;
+    transform: rotate(45deg);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+}
+
+/* Sliding Settings Drawer */
+.settings-drawer {
+    position: fixed;
+    top: 0;
+    left: -400px; /* Hidden offscreen on the left */
+    width: 400px;
+    max-width: 100%;
+    height: 100%;
+    background-color: #fbc5d4; /* Soft pink background matching the screenshot */
+    z-index: 1050;
+    transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-drawer.open {
+    left: 0;
+}
+
+/* Close button on top-left */
+.close-drawer-btn {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    background: none;
+    border: none;
+    font-size: 2.2rem;
+    color: #8e4b5c;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.2s;
+    line-height: 1;
+}
+
+.close-drawer-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Drawer Content - structured as a flex column to space items out */
+.drawer-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 120px 40px 80px 40px;
+    box-sizing: border-box;
+}
+
+.drawer-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Left aligned, but centered block */
+    max-width: 280px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.drawer-menu-top {
+    gap: 35px; /* Spacing between main menu items */
+}
+
+.drawer-menu-bottom {
+    margin-top: auto; /* Fallback spacer */
+}
+
+.drawer-item {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #8e4b5c; /* Dark berry-brown pink */
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 500;
+    gap: 20px;
+    transition: transform 0.2s ease, color 0.2s ease;
+    width: 100%;
+}
+
+.drawer-item:hover {
+    color: #6b2e3e;
+    transform: translateX(5px);
+}
+
+.menu-icon {
+    font-size: 1.9rem;
+    color: #b3526c; /* Medium pink matching the accent */
+    transition: color 0.2s ease, transform 0.2s ease;
+    width: 35px;
+    text-align: center;
+}
+
+.drawer-item:hover .menu-icon {
+    color: #8e4b5c;
+    transform: scale(1.1);
+}
+
+/* Backdrop Overlay */
+.drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(3px);
+    z-index: 1040;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.drawer-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Small screen optimization */
+@media (max-width: 480px) {
+    .settings-drawer {
+        width: 100%;
+        left: -100%;
+    }
+}

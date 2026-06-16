@@ -1,0 +1,169 @@
+@model KlawQ.Models.Users
+@{
+    ViewData["Title"] = "My Profile - Klaw By Krys";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .profile-container {
+            max-width: 600px;
+            margin: 60px auto;
+            padding: 0 20px;
+            min-height: 60vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .profile-card {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(240, 184, 204, 0.4);
+            border: 6px solid #fde6ea;
+            width: 100%;
+            padding: 40px 30px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(240, 184, 204, 0.6);
+        }
+
+        .avatar-circle {
+            width: 100px;
+            height: 100px;
+            background-color: #fbc5d4;
+            color: #8e4b5c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 0 auto 25px;
+            border: 4px solid #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .profile-title {
+            font-family: 'Shadows Into Light Two', cursive, sans-serif;
+            font-size: 2.2rem;
+            color: #8b4b3b;
+            margin: 0 0 10px;
+        }
+
+        .profile-role-badge {
+            display: inline-block;
+            background-color: #fde6ea;
+            color: #e2557a;
+            padding: 4px 16px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .info-grid {
+            text-align: left;
+            margin-bottom: 30px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .info-row {
+            display: flex;
+            border-bottom: 1px solid #fde6ea;
+            padding: 15px 0;
+            align-items: center;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            width: 120px;
+            font-weight: 600;
+            color: #8b4b3b;
+            font-size: 0.95rem;
+        }
+
+        .info-value {
+            color: #5d352b;
+            font-size: 1rem;
+            word-break: break-all;
+        }
+
+        .back-btn {
+            display: inline-block;
+            background-color: #e2557a;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+            transition: background-color 0.2s, transform 0.2s;
+            box-shadow: 0 4px 10px rgba(226, 85, 122, 0.3);
+        }
+
+        .back-btn:hover {
+            background-color: #b3526c;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(226, 85, 122, 0.4);
+        }
+    </style>
+}
+
+<div class="profile-container">
+    <div class="profile-card">
+        @{
+            string initials = "";
+            if (!string.IsNullOrWhiteSpace(Model.Full_Name))
+            {
+                var parts = Model.Full_Name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 0)
+                {
+                    initials += parts[0][0];
+                    if (parts.Length > 1)
+                    {
+                        initials += parts[parts.Length - 1][0];
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(initials))
+            {
+                initials = "U";
+            }
+        }
+        <div class="avatar-circle">
+            @initials
+        </div>
+
+        <h1 class="profile-title">@Model.Full_Name</h1>
+        <div class="profile-role-badge">@Model.Role</div>
+
+        <div class="info-grid">
+            <div class="info-row">
+                <div class="info-label"><i class="far fa-user" style="margin-right: 8px; color: #e2557a;"></i> Username</div>
+                <div class="info-value">@Model.Full_Name</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label"><i class="far fa-envelope" style="margin-right: 8px; color: #e2557a;"></i> Email</div>
+                <div class="info-value">@Model.Email</div>
+            </div>
+        </div>
+
+        <a href="/" class="back-btn">Go to Home</a>
+    </div>
+</div>

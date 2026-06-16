@@ -13,7 +13,7 @@
         <p>Join us and book your appointment!</p>
         <form asp-controller="Register" asp-action="Register" method="post">
             @Html.AntiForgeryToken()
-            <input asp-for="FullName" class="input-field" type="text" placeholder="Full Name" />
+            <input asp-for="FullName" class="input-field" type="text" placeholder="Username" />
             <span asp-validation-for="FullName" class="text-danger"></span>
 
             <input asp-for="Email" class="input-field" type="email" placeholder="Email" />
