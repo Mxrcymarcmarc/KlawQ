@@ -26,7 +26,7 @@ namespace KlawQ.Controllers
         [HttpGet("")]
         public async Task<IActionResult> Index()
         {
-            // 🌟 FIX: Eagerly load Items and their associated Products to safely access .Price
+            // 🌟 1. Eagerly load Items and their associated Products to safely access .Price
             decimal totalRevenue = await _context.Orders
                 .Where(o => o.Status == "Completed")
                 .SelectMany(o => o.Items)
@@ -37,11 +37,20 @@ namespace KlawQ.Controllers
             int pendingOrdersCount = await _context.Orders.CountAsync(o => o.Status == "Pending");
             int completedOrdersCount = await _context.Orders.CountAsync(o => o.Status == "Completed");
 
-            // 🌟 3. Pass values to the view using ViewData maps
+            // 🌟 3. NEW: Count bookings scheduled within the NEXT 7 days
+            var now = DateTime.UtcNow;
+            var sevenDaysFromNow = now.AddDays(7);
+
+            int thisWeekBookingsCount = await _context.Schedulers
+                .Where(o => o.Appointment_Date >= now && o.Appointment_Date <= sevenDaysFromNow)
+                .CountAsync();
+
+            // 🌟 4. Pass values to the view using ViewData maps
             ViewData["TotalRevenue"] = totalRevenue;
             ViewData["TotalOrdersCount"] = totalOrdersCount;
             ViewData["PendingOrdersCount"] = pendingOrdersCount;
             ViewData["CompletedOrdersCount"] = completedOrdersCount;
+            ViewData["ThisWeekBookingsCount"] = thisWeekBookingsCount; // 👈 Injected right here!
 
             return View();
         }
@@ -106,6 +115,20 @@ namespace KlawQ.Controllers
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
             return RedirectToAction("PortfolioManager");
+        }
+
+        [HttpGet("ConfigureSlots")]
+        public IActionResult ConfigureSlots()
+        {
+            // This looks for and loads your Views/Admin/ConfigureSlots.cshtml file
+            return View("ConfigureDateTimeSlot");
+        }
+
+        [HttpGet("ManageAppointments")]
+        public IActionResult ManageAppointments()
+        {
+            // Returns your appointment lists/schedules view
+            return View("ManageAppointments");
         }
     }
 }

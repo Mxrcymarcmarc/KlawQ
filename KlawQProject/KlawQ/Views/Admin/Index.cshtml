@@ -21,6 +21,7 @@
         <p class="page-subtitle">Manage your nail studio at a glance</p>
     </div>
 
+    <!-- 🛠️ TOP GRID: ADMINISTRATIVE ACTIONS -->
     <div class="cards-grid">
         <div class="card">
             <div class="card-icon"><i class="fas fa-box"></i></div>
@@ -32,6 +33,33 @@
                 <button type="button" class="btn" onclick="location.href='@Url.Action("PortfolioManager", "Admin")'">Manage Portfolio</button>
             </div>
         </div>
+        
+        <div class="card" style="cursor: pointer;" onclick="location.href='@Url.Action("ConfigureSlots", "Admin")'">
+            <div class="card-icon"><i class="far fa-clock"></i></div>
+            <div class="card-content">
+                <h3>Configure Time-Slots</h3>
+                <p>Block or open schedules</p>
+            </div>
+        </div>
+
+        <!-- 🌟 NEW CARD: MANAGE APPOINTMENTS -->
+        <div class="card" style="cursor: pointer;" onclick="location.href='@Url.Action("ManageAppointments", "Admin")'">
+            <div class="card-icon"><i class="far fa-calendar-check"></i></div>
+            <div class="card-content">
+                <h3>Manage Appointments</h3>
+                <p>Track studio bookings</p>
+            </div>
+        </div>
+
+        <!-- 🌟 NEW CARD: MANAGE ORDERS -->
+        <div class="card" style="cursor: pointer;" onclick="location.href='@Url.Action("Index", "AdminOrders", new { status = "All" })'">
+            <div class="card-icon"><i class="fas fa-receipt"></i></div>
+            <div class="card-content">
+                <h3>Manage Orders</h3>
+                <p>Review customer receipts</p>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-icon"><i class="far fa-calendar-times"></i></div>
             <div class="card-content">
@@ -39,6 +67,7 @@
                 <p>Check cancellations</p>
             </div>
         </div>
+        
         <div class="card">
             <div class="card-icon"><i class="far fa-eye"></i></div>
             <div class="card-content">
@@ -48,6 +77,7 @@
         </div>
     </div>
 
+    <!-- 📊 BOTTOM GRID: LIVE STUDIO METRICS -->
     <div class="cards-grid">
         <div class="card revenue-card">
             <div class="card-icon">₱</div>
@@ -80,12 +110,12 @@
         <div class="card stat-card">
             <div class="card-icon"><i class="far fa-calendar-alt"></i></div>
             <h3>This Week</h3>
-            <h2>6</h2>
+            <h2>@(ViewData["ThisWeekBookingsCount"] ?? 0)</h2>
             <p>New bookings</p>
         </div>
     </div>
 
-    <!-- 🌟 Top Services (Hardcoded UI elements, but cleaned up markup) -->
+    <!-- 🌟 Top Services Section -->
     <div class="section-box">
         <div class="section-header">
             <h2><i class="fas fa-star"></i> Top Services</h2>
@@ -171,8 +201,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Note: Once you want to populate this table block seamlessly, you can
-                         pass a list from the controller and use: @* @foreach (var order in Model) *@ -->
                     <tr>
                         <td>D-1</td>
                         <td class="customer-info">Juan Dela Cruz<p>User Contact Details</p></td>
