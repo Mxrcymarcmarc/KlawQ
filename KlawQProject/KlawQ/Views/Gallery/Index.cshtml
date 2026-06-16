@@ -54,7 +54,7 @@
 
         <div class="gallery-grid">
 
-            <a href="/Home/CustomOrder" class="gallery-card custom-request-card" data-type="presson original">
+            <a href="/Order/CheckoutCustom" class="gallery-card custom-request-card" data-type="presson original">
                 <div class="custom-request-content">
                     <i class="far fa-images custom-icon"></i>
                     <h3>Custom Request</h3>
@@ -126,14 +126,7 @@
         if(el) el.click();
     })();
 
-    // Favorite toggle (simple client-side toggle; server actions handled elsewhere)
-    document.addEventListener('click', function(e){
-        const btn = e.target.closest('.favorite-btn');
-        if(!btn) return;
-        e.preventDefault();
-        btn.classList.toggle('favorited');
-        // Optional: send AJAX to server to persist favorite (not implemented here)
-    });
+    // Favorite toggling is handled in ~/js/nail-works-favs.js to ensure server sync and single handler
     </script>
     <script src="~/js/nail-works.js"></script>
     <script src="~/js/nail-works-favs.js"></script>
