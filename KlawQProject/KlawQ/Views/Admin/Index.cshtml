@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin-dashboard.css" />
 }
@@ -21,164 +21,91 @@
         <p class="page-subtitle">Manage your nail studio at a glance</p>
     </div>
 
-    <!-- 🛠️ TOP GRID: ADMINISTRATIVE ACTIONS -->
-    <div class="cards-grid">
-        <div class="card">
-            <div class="card-icon"><i class="fas fa-box"></i></div>
-            <div class="card-content">
-                <h3>Manage Portfolio</h3>
-                <p>Add/edit nail works</p>
-            </div>
-            <div class="card-actions">
-                <button type="button" class="btn" onclick="location.href='@Url.Action("PortfolioManager", "Admin")'">Manage Portfolio</button>
-            </div>
-        </div>
-        
-        <div class="card" style="cursor: pointer;" onclick="location.href='@Url.Action("ConfigureSlots", "Admin")'">
-            <div class="card-icon"><i class="far fa-clock"></i></div>
-            <div class="card-content">
-                <h3>Configure Time-Slots</h3>
-                <p>Block or open schedules</p>
-            </div>
+    <div class="admin-control-bar">
+        <button class="action-bar-btn" onclick="location.href='@Url.Action("PortfolioManager", "Admin")'">
+            <i class="fas fa-box"></i> <span>Manage Portfolio</span>
+        </button>
+        <button class="action-bar-btn" onclick="location.href='@Url.Action("ConfigureSlots", "Admin")'">
+            <i class="far fa-clock"></i> <span>Configure Slots</span>
+        </button>
+        <button class="action-bar-btn" onclick="location.href='@Url.Action("ManageAppointments", "Admin")'">
+            <i class="far fa-calendar-check"></i> <span>Manage Appointments</span>
+        </button>
+        <button class="action-bar-btn" onclick="location.href='@Url.Action("Index", "AdminOrders", new { status = "All" })'">
+            <i class="fas fa-receipt"></i> <span>Manage Orders</span>
+        </button>
+        <button class="action-bar-btn" onclick="location.href='@Url.Action("Index", "AdminCancellations", "Admin")'">
+            <i class="far fa-calendar-times"></i> <span>Cancellations</span>
+        </button>
+        <button class="action-bar-btn" onclick="location.href='@Url.Action("ViewPortfolio", "Admin")'">
+            <i class="far fa-eye"></i> <span>Public Gallery</span>
+        </button>
+    </div>
+
+    <div class="metrics-strip">
+        <div class="metric-strip-card revenue-card">
+            <span class="card-label">TOTAL REVENUE</span>
+            <h2 class="metric-val">₱@(((decimal)(ViewData["TotalRevenue"] ?? 0m)).ToString("N2"))</h2>
+            <span class="card-subtext">Completed orders</span>
         </div>
 
-        <!-- 🌟 NEW CARD: MANAGE APPOINTMENTS -->
-        <div class="card" style="cursor: pointer;" onclick="location.href='@Url.Action("ManageAppointments", "Admin")'">
-            <div class="card-icon"><i class="far fa-calendar-check"></i></div>
-            <div class="card-content">
-                <h3>Manage Appointments</h3>
-                <p>Track studio bookings</p>
+        <div class="metric-strip-card clickable-metric" onclick="location.href='/AdminOrders?status=All'">
+            <div class="metric-strip-header">
+                <i class="fas fa-cube text-green"></i>
+                <span class="card-label">TOTAL ORDERS</span>
             </div>
+            <h2 class="metric-val">@(ViewData["TotalOrdersCount"] ?? 0)</h2>
         </div>
 
-        <!-- 🌟 NEW CARD: MANAGE ORDERS -->
-        <div class="card" style="cursor: pointer;" onclick="location.href='@Url.Action("Index", "AdminOrders", new { status = "All" })'">
-            <div class="card-icon"><i class="fas fa-receipt"></i></div>
-            <div class="card-content">
-                <h3>Manage Orders</h3>
-                <p>Review customer receipts</p>
+        <div class="metric-strip-card clickable-metric" onclick="location.href='/AdminOrders?status=Pending'">
+            <div class="metric-strip-header">
+                <i class="far fa-clock text-yellow"></i>
+                <span class="card-label">PENDING ORDERS</span>
             </div>
+            <h2 class="metric-val">@(ViewData["PendingOrdersCount"] ?? 0)</h2>
         </div>
 
-        <div class="card">
-            <div class="card-icon"><i class="far fa-calendar-times"></i></div>
-            <div class="card-content">
-                <h3>View Order Cancellations</h3>
-                <p>Check cancellations</p>
+        <div class="metric-strip-card clickable-metric" onclick="location.href='/AdminOrders?status=Completed'">
+            <div class="metric-strip-header">
+                <i class="far fa-check-circle text-green"></i>
+                <span class="card-label">COMPLETED</span>
             </div>
+            <h2 class="metric-val">@(ViewData["CompletedOrdersCount"] ?? 0)</h2>
         </div>
-        
-        <div class="card">
-            <div class="card-icon"><i class="far fa-eye"></i></div>
-            <div class="card-content">
-                <h3>View Portfolio</h3>
-                <p>Public gallery view</p>
+
+        <div class="metric-strip-card">
+            <div class="metric-strip-header">
+                <i class="far fa-calendar-alt text-muted"></i>
+                <span class="card-label">THIS WEEK</span>
             </div>
+            <h2 class="metric-val">@(ViewData["ThisWeekBookingsCount"] ?? 0)</h2>
         </div>
     </div>
 
-    <!-- 📊 BOTTOM GRID: LIVE STUDIO METRICS -->
-    <div class="cards-grid">
-        <div class="card revenue-card">
-            <div class="card-icon">₱</div>
-            <h3>Total Revenue</h3>
-            <h2>₱@(((decimal)(ViewData["TotalRevenue"] ?? 0m)).ToString("N2"))</h2>
-            <p>From completed orders</p>
-        </div>
-
-        <div class="card stat-card" style="cursor: pointer;" onclick="location.href='/AdminOrders?status=All'">
-            <div class="card-icon"><i class="fas fa-cube"></i></div>
-            <h3>Total Orders</h3>
-            <h2>@(ViewData["TotalOrdersCount"] ?? 0)</h2>
-            <p>All Time</p>
-        </div>
-
-        <div class="card stat-card" style="cursor: pointer;" onclick="location.href='/AdminOrders?status=Pending'">
-            <div class="card-icon"><i class="far fa-clock"></i></div>
-            <h3>Pending Orders</h3>
-            <h2>@(ViewData["PendingOrdersCount"] ?? 0)</h2>
-            <p>Awaiting confirmation</p>
-        </div>
-
-        <div class="card stat-card" style="cursor: pointer;" onclick="location.href='/AdminOrders?status=Completed'">
-            <div class="card-icon"><i class="far fa-check-circle"></i></div>
-            <h3>Completed Orders</h3>
-            <h2>@(ViewData["CompletedOrdersCount"] ?? 0)</h2>
-            <p>Successfully finished</p>
-        </div>
-
-        <div class="card stat-card">
-            <div class="card-icon"><i class="far fa-calendar-alt"></i></div>
-            <h3>This Week</h3>
-            <h2>@(ViewData["ThisWeekBookingsCount"] ?? 0)</h2>
-            <p>New bookings</p>
-        </div>
-    </div>
-
-    <!-- 🌟 Top Services Section -->
     <div class="section-box">
-        <div class="section-header">
-            <h2><i class="fas fa-star"></i> Top Services</h2>
+    <div class="section-header">
+        <h2><i class="fas fa-star"></i> Top Services</h2>
         </div>
 
-        <div class="service-item">
-            <div class="service-info">
+        <div class="services-grid">
+            <!-- Service Item 1 -->
+            <div class="service-row">
                 <div class="rank-badge">#1</div>
-                <div class="service-details">
-                    <h4>Custom Nail Art Design</h4>
-                    <p>2 bookings</p>
-                </div>
+                <h4 class="service-name">Custom Nail Art Design</h4>
+                <span class="service-bookings">2 bookings</span>
+                <p class="service-price">₱1,020.00</p>
             </div>
-            <div class="service-price">
-                <h4>₱1,020.00</h4>
-                <p>Total revenue</p>
-            </div>
-        </div>
 
-        <div class="service-item">
-            <div class="service-info">
+            <!-- Service Item 2 -->
+            <div class="service-row">
                 <div class="rank-badge">#2</div>
-                <div class="service-details">
-                    <h4>Gel Manicure</h4>
-                    <p>8 bookings</p>
-                </div>
-            </div>
-            <div class="service-price">
-                <h4>₱900.00</h4>
-                <p>Total revenue</p>
-            </div>
-        </div>
-
-        <div class="service-item">
-            <div class="service-info">
-                <div class="rank-badge">#3</div>
-                <div class="service-details">
-                    <h4>Full Set with Tips</h4>
-                    <p>5 bookings</p>
-                </div>
-            </div>
-            <div class="service-price">
-                <h4>₱975.00</h4>
-                <p>Total revenue</p>
-            </div>
-        </div>
-
-        <div class="service-item">
-            <div class="service-info">
-                <div class="rank-badge">#4</div>
-                <div class="service-details">
-                    <h4>Luxury Spa Package</h4>
-                    <p>8 bookings</p>
-                </div>
-            </div>
-            <div class="service-price">
-                <h4>₱960.00</h4>
-                <p>Total revenue</p>
+                <h4 class="service-name">Gel Manicure</h4>
+                <span class="service-bookings">8 bookings</span>
+                <p class="service-price">₱900.00</p>
             </div>
         </div>
     </div>
 
-    <!-- 🌟 Recent Orders Dashboard List View Block -->
     <div class="section-box">
         <div class="section-header">
             <h2><i class="fas fa-user-friends"></i> Recent Orders</h2>
