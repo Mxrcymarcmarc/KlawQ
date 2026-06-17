@@ -38,7 +38,26 @@
         .manage-orders-container {
             max-width: 1200px;
             margin: 0 auto;
+            position: relative;
         }
+
+        /* 🌟 BACK BUTTON STYLING: Exactly like Manage Appointments */
+        .back-dash-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-brown);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s;
+        }
+
+            .back-dash-link:hover {
+                color: var(--text-dark-brown);
+                transform: translateX(-3px);
+            }
 
         .page-header {
             text-align: center;
@@ -100,6 +119,10 @@
                 border-bottom: 2px solid var(--border-pink);
                 font-size: 0.9rem;
                 text-transform: uppercase;
+                position: sticky;
+                top: 0;
+                background: var(--card-bg);
+                z-index: 10;
             }
 
             .orders-table td {
@@ -107,7 +130,34 @@
                 color: var(--text-brown);
                 border-bottom: 1px solid #f7ecee;
                 font-size: 0.95rem;
+                vertical-align: middle;
             }
+
+        .table-responsive {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: auto;
+            padding-right: 5px;
+        }
+
+            .table-responsive::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+
+            .table-responsive::-webkit-scrollbar-track {
+                background: #fdf5f6;
+                border-radius: 10px;
+            }
+
+            .table-responsive::-webkit-scrollbar-thumb {
+                background: var(--border-pink);
+                border-radius: 10px;
+            }
+
+                .table-responsive::-webkit-scrollbar-thumb:hover {
+                    background: var(--text-brown);
+                }
 
         .badge-status {
             padding: 4px 10px;
@@ -170,8 +220,13 @@
 <div class="manage-orders-wrapper">
     <div class="manage-orders-container">
 
+        <!-- 🌟 BACK BUTTON INTERFACE LINK -->
+        <a href="/admin" class="back-dash-link">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+
         <div class="page-header">
-            <h1 class="page-title">📦 Studio Order Fulfillment</h1>
+            <h1 class="page-title">📦 Manage Orders</h1>
             <p class="page-subtitle">Track press-on queues, update production statuses, and manage completions.</p>
         </div>
 
@@ -285,7 +340,7 @@
 @section Scripts {
     <script>
         async function transitionOrderStatus(orderId, targetStatusStr) {
-            if (!confirm(`Transition Order #${orderId} state status definition to "${targetStatusStr}"?`)) return;
+            if (!confirm(`Transition Order #${orderId} status to "${targetStatusStr}"?`)) return;
 
             try {
                 const response = await fetch(`/AdminOrders/UpdateStatus?orderId=${orderId}&status=${encodeURIComponent(targetStatusStr)}`, {
@@ -294,7 +349,7 @@
 
                 if (response.ok) {
                     alert(`Order status updated to ${targetStatusStr}!`);
-                    location.reload(); // Instantly refilters and reorganizes the view tables layout rules context
+                    location.reload();
                 } else {
                     alert(await response.text() || "The server rejected this status adjustment transition step.");
                 }

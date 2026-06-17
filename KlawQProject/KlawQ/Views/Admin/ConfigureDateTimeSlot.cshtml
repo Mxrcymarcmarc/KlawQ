@@ -11,14 +11,26 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        :root {
+            --primary-font: 'Shadows Into Light Two', cursive;
+            --secondary-font: 'Montserrat', sans-serif;
+            --text-brown: #8d6e5d;
+            --text-dark-brown: #795548;
+            --card-bg: #ffffff;
+            --accent-green: #a7c47d;
+            --accent-green-hover: #92b068;
+            --border-pink: #f8bbd0;
+            --shadow-soft: 0 10px 30px rgba(121, 85, 72, 0.08);
+        }
+
         /* 🎨 THEMED COLOR SCHEME & CANVAS WRAPPER */
         .slot-config-wrapper {
             background-color: #fdfafb;
             min-height: 100vh;
-            padding: 30px;
-            font-family: 'Montserrat', sans-serif;
-            color: #644b39;
-            /* 🌟 FIX: Centers everything globally when zooming out */
+            /* 🌟 FIXED: Increased top padding from 1.2rem to 2.5rem to add breathing space below the navbar */
+            padding: 2.5rem 1rem 3rem 1rem;
+            font-family: var(--secondary-font);
+            color: var(--text-brown);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -26,25 +38,26 @@
 
         .config-inner-container {
             width: 100%;
-            max-width: 1300px; /* Expanded slightly for better visual breathing room */
+            max-width: 1200px; /* Locked at 1200px exactly like Manage Orders */
         }
 
-        .back-nav {
-            margin-bottom: 15px;
+        .back-dash-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-brown);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s;
         }
 
-            .back-nav a {
-                color: #b5835a;
+            .back-dash-link:hover {
+                color: var(--text-dark-brown);
+                transform: translateX(-3px);
                 text-decoration: none;
-                font-weight: 500;
-                font-size: 0.9rem;
-                transition: color 0.2s;
             }
-
-                .back-nav a:hover {
-                    color: #8b4b3b;
-                    text-decoration: underline;
-                }
 
         .page-title-area {
             text-align: center;
@@ -52,10 +65,11 @@
         }
 
         .main-title {
-            font-family: 'Shadows Into Light Two', cursive;
-            font-size: 3.2rem;
-            color: #8b4b3b;
+            font-family: var(--primary-font);
+            font-size: 3.5rem;
+            color: var(--text-dark-brown);
             margin: 0;
+            font-weight: normal;
         }
 
         .subtitle {
@@ -67,17 +81,18 @@
         /* 📐 TWO-COLUMN BOARD WORKSPACE INTERACTION GRID */
         .workspace-grid {
             display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
+            /* 🌟 FIXED: Changed from 1.2fr 0.8fr to 1.4fr 0.6fr to make the right slots table thinner */
+            grid-template-columns: 1.4fr 0.6fr;
             gap: 30px;
             width: 100%;
         }
 
         .board-panel-card {
             background: #ffffff;
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(139, 75, 59, 0.04);
-            border: 1px solid #fdf1f2;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow-soft);
+            border: 2px solid var(--border-pink);
             height: fit-content;
         }
 
@@ -93,7 +108,7 @@
             .panel-header h2 {
                 font-size: 1.3rem;
                 font-weight: 700;
-                color: #8b4b3b;
+                color: var(--text-dark-brown);
                 margin: 0;
             }
 
@@ -107,7 +122,7 @@
         .btn-nav-month {
             background: #fdf5f6;
             border: 1px solid #f4d0d4;
-            color: #8b4b3b;
+            color: var(--text-dark-brown);
             width: 36px;
             height: 36px;
             border-radius: 50%;
@@ -127,6 +142,7 @@
             font-size: 1.1rem;
             min-width: 160px;
             text-align: center;
+            color: var(--text-dark-brown);
         }
 
         /* 🗓️ MONTH GRID ARCHITECTURE OVERLAYS */
@@ -174,11 +190,10 @@
         .day-number {
             font-weight: 700;
             font-size: 1rem;
-            color: #644b39;
+            color: var(--text-dark-brown);
             text-align: left;
         }
 
-        /* 🏷️ STATE COLORS - MATCHES THE USER RULES SCHEMA */
         .day-status-badge {
             font-size: 0.72rem;
             font-weight: 600;
@@ -238,23 +253,22 @@
 
         .date-banner-info {
             background: #fdf5f6;
-            padding: 12px 20px;
+            padding: 12px 14px; /* Reduced side padding slightly to fit thinner frame nicely */
             border-radius: 14px;
             font-weight: 600;
-            font-size: 0.95rem;
-            color: #8b4b3b;
+            font-size: 0.9rem; /* Marginally scaled down to stay elegant inside narrower card widths */
+            color: var(--text-dark-brown);
             margin: 0;
             text-align: center;
         }
 
-        /* 🌟 WHOLE DAY LOCK BUTTON ACTION */
         .btn-whole-day {
             width: 100%;
             padding: 12px;
             border-radius: 14px;
-            font-family: 'Montserrat', sans-serif;
+            font-family: var(--secondary-font);
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
             border: none;
             display: flex;
@@ -265,12 +279,12 @@
         }
 
             .btn-whole-day.mode-block {
-                background-color: #8b4b3b;
+                background-color: var(--text-dark-brown);
                 color: white;
             }
 
                 .btn-whole-day.mode-block:hover {
-                    background-color: #723c2f;
+                    background-color: #614035;
                 }
 
             .btn-whole-day.mode-unblock {
@@ -292,7 +306,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 20px;
+            padding: 12px 14px; /* Trimmed row padding slightly to stay clean in narrower viewports */
             border-radius: 14px;
             border: 1px solid #f7ecee;
             background: #ffffff;
@@ -302,9 +316,9 @@
         .slot-time-meta {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .slot-indicator-dot {
@@ -313,12 +327,11 @@
             border-radius: 50%;
         }
 
-        /* 🔘 ACTION SWITCH BUTTON CONTROL SYSTEM */
         .btn-toggle-slot {
-            font-family: 'Montserrat', sans-serif;
+            font-family: var(--secondary-font);
             font-weight: 600;
-            font-size: 0.8rem;
-            padding: 6px 16px;
+            font-size: 0.75rem;
+            padding: 6px 12px;
             border-radius: 10px;
             cursor: pointer;
             border: none;
@@ -327,7 +340,7 @@
 
         .btn-block-action {
             background-color: #f4d0d4;
-            color: #8b4b3b;
+            color: var(--text-dark-brown);
         }
 
             .btn-block-action:hover {
@@ -346,9 +359,9 @@
         .badge-booked-text {
             color: #d32f2f;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             background: #ffebee;
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 8px;
         }
 
@@ -356,7 +369,8 @@
             text-align: center;
             color: #9c8a7c;
             font-style: italic;
-            padding: 40px 20px;
+            padding: 40px 10px;
+            font-size: 0.88rem;
         }
 
         @@media (max-width: 992px) {
@@ -369,9 +383,9 @@
 
 <div class="slot-config-wrapper">
     <div class="config-inner-container">
-        <div class="back-nav">
-            <a href="/admin">« Back to Dashboard</a>
-        </div>
+        <a href="/admin" class="back-dash-link">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
 
         <div class="page-title-area">
             <h1 class="main-title">🕒 Schedule Configuration</h1>
@@ -389,8 +403,7 @@
                     </div>
                 </div>
 
-                <div class="calendar-days-grid" id="calendarDaysGridBox">
-                </div>
+                <div class="calendar-days-grid" id="calendarDaysGridBox"></div>
             </div>
 
             <div class="board-panel-card slots-sidebar-container">
@@ -402,8 +415,7 @@
                     <div class="date-banner-info" id="activeDateBannerDisplay">
                         Select a day to audit time-slots
                     </div>
-                    <div id="wholeDayButtonPlacement" style="display: none;">
-                    </div>
+                    <div id="wholeDayButtonPlacement" style="display: none;"></div>
                 </div>
 
                 <div class="slots-list-stack" id="daySlotsStackWrapper">
@@ -442,7 +454,6 @@
 
                 renderCalendarMatrix(daysData);
 
-                // Keep layout sidebar state updated on refreshing data grids
                 if(currentlySelectedDateStr) {
                     const updatedDayInfo = daysData.find(d => d.dateString === currentlySelectedDateStr);
                     if(updatedDayInfo) {
@@ -514,14 +525,12 @@
             });
             document.getElementById("activeDateBannerDisplay").innerText = formattedDateDisplay;
 
-            // Make action button visible and mount it cleanly
             document.getElementById("wholeDayButtonPlacement").style.display = "block";
             renderWholeDayActionButton();
 
             fetchDayTimeSlots(chosenDateStr);
         }
 
-        // 🌟 GENERATE WHOLE DAY CONFIG BUTTON
         function renderWholeDayActionButton() {
             const btnPlacement = document.getElementById("wholeDayButtonPlacement");
             if (!currentlySelectedDateStr) return;
@@ -541,12 +550,10 @@
             }
         }
 
-        // 🌟 HANDLES WHOLE DAY API TRIGGER (PASSES HOUR AS NULL)
         async function toggleWholeDayBlock(mode) {
             const endpoint = mode === "block" ? "block-slot" : "unblock-slot";
             const methodType = mode === "block" ? "POST" : "DELETE";
 
-            // When blocking/unblocking a whole day, pass hour as empty/null string context parameter
             try {
                 const response = await fetch(`/api/AdminCalendar/${endpoint}?date=${currentlySelectedDateStr}`, {
                     method: methodType
@@ -592,7 +599,6 @@
                 return;
             }
 
-            // If the whole day is blocked by admin, provide visual helper feedback on individual rows
             slots.forEach(slot => {
                 const row = document.createElement("div");
                 row.className = "slot-row-item";
@@ -610,7 +616,6 @@
                 if (currentStatus === "Available") {
                     actionElementControl = `<button class="btn-toggle-slot btn-block-action" onclick="toggleBlockAPI('${dateString}', ${slot.slotHour}, 'block')"><i class="fas fa-ban"></i> Block</button>`;
                 } else if (currentStatus === "Blocked") {
-                    // If blocked because of whole day rule, let them know they should open the whole day up top
                     if (isCurrentDayEntirelyBlocked) {
                         actionElementControl = `<span style="font-size:0.75rem; color:#9c8a7c; font-style:italic;">Day Blocked</span>`;
                     } else {
@@ -637,7 +642,7 @@
             const methodType = transitionMode === "block" ? "POST" : "DELETE";
 
             try {
-                const response = await fetch(`/api/AdminCalendar/${endpoint}?date=${dateString}&hour=${hour}`, {
+                const response = await fetch(`/api/AdminCalendar/web-block?date=${dateString}&hour=${hour}`, {
                     method: methodType
                 });
 
