@@ -1,4 +1,5 @@
-﻿@{
+﻿@model IEnumerable<KlawQ.Models.Scheduler>
+@{
     ViewData["Title"] = "Configure Time-Slots";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -27,7 +28,6 @@
         .slot-config-wrapper {
             background-color: #fdfafb;
             min-height: 100vh;
-            /* 🌟 FIXED: Increased top padding from 1.2rem to 2.5rem to add breathing space below the navbar */
             padding: 2.5rem 1rem 3rem 1rem;
             font-family: var(--secondary-font);
             color: var(--text-brown);
@@ -38,7 +38,7 @@
 
         .config-inner-container {
             width: 100%;
-            max-width: 1200px; /* Locked at 1200px exactly like Manage Orders */
+            max-width: 1200px;
         }
 
         .back-dash-link {
@@ -81,10 +81,10 @@
         /* 📐 TWO-COLUMN BOARD WORKSPACE INTERACTION GRID */
         .workspace-grid {
             display: grid;
-            /* 🌟 FIXED: Changed from 1.2fr 0.8fr to 1.4fr 0.6fr to make the right slots table thinner */
             grid-template-columns: 1.4fr 0.6fr;
             gap: 30px;
             width: 100%;
+            align-items: start;
         }
 
         .board-panel-card {
@@ -93,16 +93,22 @@
             padding: 2rem;
             box-shadow: var(--shadow-soft);
             border: 2px solid var(--border-pink);
-            height: fit-content;
+            min-height: 700px;
+            height: 700px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
         }
 
         .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             border-bottom: 2px solid #fdf5f6;
             padding-bottom: 15px;
+            height: 40px;
+            box-sizing: border-box;
         }
 
             .panel-header h2 {
@@ -112,7 +118,6 @@
                 margin: 0;
             }
 
-        /* 📅 CALENDAR CONTROL ACTIONS BAR */
         .calendar-controls {
             display: flex;
             align-items: center;
@@ -145,12 +150,13 @@
             color: var(--text-dark-brown);
         }
 
-        /* 🗓️ MONTH GRID ARCHITECTURE OVERLAYS */
         .calendar-days-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            grid-template-rows: auto repeat(6, 85px);
             gap: 10px;
             text-align: center;
+            margin-bottom: 0;
         }
 
         .weekday-label {
@@ -158,34 +164,50 @@
             color: #b5835a;
             font-size: 0.85rem;
             text-transform: uppercase;
-            padding-bottom: 5px;
+            margin-bottom: 2px;
+            height: 20px;
+            box-sizing: border-box;
         }
 
         .day-tile {
             background: #ffffff;
             border: 2px solid #f7ecee;
             border-radius: 12px;
-            min-height: 85px;
-            padding: 8px;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             cursor: pointer;
             transition: all 0.2s;
             position: relative;
+            height: 85px;
+            min-height: 85px;
+            max-height: 85px;
+            padding: 6px;
+            overflow: hidden;
         }
 
-            .day-tile:hover {
-                transform: translateY(-2px);
-                border-color: #f4d0d4;
-                box-shadow: 0 5px 15px rgba(139, 75, 59, 0.05);
-            }
+        /* Empty layout placeholders that balance out short months */
+        .day-tile-empty {
+            background: #fdfbfa;
+            border: 2px dashed #f5ebe8;
+            border-radius: 12px;
+            height: 85px;
+            box-sizing: border-box;
+            opacity: 0.4;
+        }
 
-            .day-tile.selected {
-                border-color: #b9c68c !important;
-                background: #fbfcf8;
-                box-shadow: 0 0 0 1px #b9c68c;
-            }
+        .day-tile:hover {
+            transform: translateY(-2px);
+            border-color: #f4d0d4;
+            box-shadow: 0 5px 15px rgba(139, 75, 59, 0.05);
+        }
+
+        .day-tile.selected {
+            border-color: #b9c68c !important;
+            background: #fbfcf8;
+            box-shadow: 0 0 0 1px #b9c68c;
+        }
 
         .day-number {
             font-weight: 700;
@@ -197,11 +219,18 @@
         .day-status-badge {
             font-size: 0.72rem;
             font-weight: 600;
-            padding: 2px 6px;
+            padding: 2px 4px;
             border-radius: 6px;
             text-align: center;
-            display: block;
-            margin-top: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.2;
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 32px;
         }
 
         .status-available {
@@ -236,9 +265,10 @@
             color: #9c8a7c;
             text-align: right;
             font-weight: 500;
+            margin-top: 1px;
         }
 
-        /* 🕒 TIME SLOTS SLIDE SIDEBAR LIST CELLS */
+        /* 🕒 TIME SLOTS SIDEBAR LIST CELLS */
         .slots-sidebar-container {
             display: flex;
             flex-direction: column;
@@ -253,10 +283,10 @@
 
         .date-banner-info {
             background: #fdf5f6;
-            padding: 12px 14px; /* Reduced side padding slightly to fit thinner frame nicely */
+            padding: 12px 14px;
             border-radius: 14px;
             font-weight: 600;
-            font-size: 0.9rem; /* Marginally scaled down to stay elegant inside narrower card widths */
+            font-size: 0.9rem;
             color: var(--text-dark-brown);
             margin: 0;
             text-align: center;
@@ -296,17 +326,40 @@
                     background-color: #a8b874;
                 }
 
+        /* 🌟 RE-CALIBRATED SIDEBAR SCROLL WINDOW: Adjusted from 525px to 460px to scale proportionally with the shortened card container */
         .slots-list-stack {
             display: flex;
             flex-direction: column;
             gap: 12px;
+            height: 460px;
+            max-height: 460px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
+
+            .slots-list-stack::-webkit-scrollbar {
+                width: 5px;
+            }
+
+            .slots-list-stack::-webkit-scrollbar-track {
+                background: #fdf5f6;
+                border-radius: 10px;
+            }
+
+            .slots-list-stack::-webkit-scrollbar-thumb {
+                background: var(--border-pink);
+                border-radius: 10px;
+            }
+
+                .slots-list-stack::-webkit-scrollbar-thumb:hover {
+                    background: var(--text-brown);
+                }
 
         .slot-row-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 14px; /* Trimmed row padding slightly to stay clean in narrower viewports */
+            padding: 12px 14px;
             border-radius: 14px;
             border: 1px solid #f7ecee;
             background: #ffffff;
@@ -376,6 +429,15 @@
         @@media (max-width: 992px) {
             .workspace-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .board-panel-card {
+                height: auto;
+                min-height: auto;
+            }
+
+            .slots-list-stack {
+                height: 300px;
             }
         }
     </style>
@@ -471,6 +533,8 @@
             const gridContainer = document.getElementById("calendarDaysGridBox");
             gridContainer.innerHTML = "";
 
+            let totalCellsRendered = 0;
+
             dayLabels.forEach(label => {
                 const labelDiv = document.createElement("div");
                 labelDiv.className = "weekday-label";
@@ -484,7 +548,9 @@
 
                 for (let i = 0; i < firstDayOfWeekIndex; i++) {
                     const paddingDiv = document.createElement("div");
+                    paddingDiv.className = "day-tile-empty";
                     gridContainer.appendChild(paddingDiv);
+                    totalCellsRendered++;
                 }
             }
 
@@ -509,7 +575,16 @@
                 `;
 
                 gridContainer.appendChild(tile);
+                totalCellsRendered++;
             });
+
+            const targetedMatrixLimit = 42;
+            while (totalCellsRendered < targetedMatrixLimit) {
+                const trailPlaceholder = document.createElement("div");
+                trailPlaceholder.className = "day-tile-empty";
+                gridContainer.appendChild(trailPlaceholder);
+                totalCellsRendered++;
+            }
         }
 
         function selectDayTile(chosenDateStr, isBlocked) {
