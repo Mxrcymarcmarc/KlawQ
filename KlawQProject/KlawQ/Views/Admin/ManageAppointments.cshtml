@@ -1,89 +1,587 @@
-﻿@{
-    ViewData["Title"] = "Upcoming Appointment";
+﻿@model IEnumerable<KlawQ.Models.Scheduler>
+@{
+    ViewData["Title"] = "Manage Appointments";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 @section Styles {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="~/css/manage-appointment.css" />
+    <style>
+        :root {
+            --primary-font: 'Shadows Into Light Two', cursive;
+            --secondary-font: 'Montserrat', sans-serif;
+            --text-brown: #8d6e5d;
+            --text-dark-brown: #795548;
+            --card-bg: #ffffff;
+            --accent-green: #a7c47d;
+            --accent-green-hover: #92b068;
+            --accent-pink-light: #fce4ec;
+            --border-pink: #f8bbd0;
+            --shadow-soft: 0 10px 30px rgba(121, 85, 72, 0.08);
+            --color-approve: #b9c68c;
+            --color-reject: #e57373;
+            --color-complete: #81c784;
+            --color-cancel: #ba68c8;
+        }
+
+        .manage-appt-wrapper {
+            background-color: #fdfafb;
+            padding: 3rem 1rem;
+            min-height: 100vh;
+            font-family: var(--secondary-font);
+            color: var(--text-brown);
+        }
+
+        .manage-appt-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-family: var(--primary-font);
+            font-size: 3.5rem;
+            margin: 0;
+            color: var(--text-dark-brown);
+            font-weight: normal;
+        }
+
+        .section-heading {
+            font-size: 1.4rem;
+            color: var(--text-dark-brown);
+            margin: 2rem 0 1rem 0;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .appointment-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 2.5rem;
+            border: 2px solid var(--border-pink);
+        }
+
+        .appointment-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+            .appointment-table th {
+                color: var(--text-dark-brown);
+                font-weight: 600;
+                padding: 1rem;
+                border-bottom: 2px solid var(--border-pink);
+                font-size: 0.9rem;
+                text-transform: uppercase;
+            }
+
+            .appointment-table td {
+                padding: 1.2rem 1rem;
+                color: var(--text-brown);
+                border-bottom: 1px solid #f7ecee;
+                font-size: 0.95rem;
+                vertical-align: middle;
+            }
+
+        .customer-meta {
+            font-weight: 600;
+            color: var(--text-dark-brown);
+        }
+
+        .customer-subtext {
+            font-size: 0.8rem;
+            color: #9c8a7c;
+            margin: 2px 0 0 0;
+        }
+
+        .date-badge {
+            color: var(--text-dark-brown);
+            font-weight: 600;
+            background: #fdf5f6;
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-pink);
+            font-size: 0.88rem;
+        }
+
+        /* 🔘 SYSTEM INTERACTION BUTTONS */
+        .action-flex-box {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-panel-action {
+            font-family: var(--secondary-font);
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 6px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: none;
+            color: white;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .btn-panel-action:hover {
+                transform: translateY(-1px);
+                filter: brightness(0.95);
+            }
+
+        .btn-approve {
+            background-color: var(--color-approve);
+        }
+
+        .btn-reject {
+            background-color: var(--color-reject);
+        }
+
+        .btn-complete {
+            background-color: var(--color-complete);
+        }
+
+        .btn-reschedule {
+            background-color: var(--text-brown);
+        }
+
+        .btn-cancel {
+            background-color: var(--color-cancel);
+        }
+
+        .empty-table-msg {
+            text-align: center;
+            padding: 40px;
+            font-style: italic;
+            color: #9c8a7c;
+        }
+
+        /* 🕒 INTERACTIVE RESCHEDULING POP-UP MODAL OVERLAYS */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(121, 85, 72, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+            .modal-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+
+        .modal-wrapper-card {
+            background: white;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 850px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            border: 2px solid var(--border-pink);
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 25px;
+            position: relative;
+        }
+
+        .modal-close-trigger {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-brown);
+        }
+
+        .modal-calendar-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-dark-brown);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .mini-grid-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            text-align: center;
+        }
+
+        .mini-weekday {
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: var(--text-brown);
+        }
+
+        .mini-day-tile {
+            border: 1px solid #f7ecee;
+            border-radius: 8px;
+            padding: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            background: white;
+            font-weight: 600;
+        }
+
+            .mini-day-tile:hover:not(.disabled) {
+                border-color: var(--border-pink);
+                background: #fdf5f6;
+            }
+
+            .mini-day-tile.disabled {
+                opacity: 0.3;
+                cursor: not-allowed;
+                background: #fafafa;
+            }
+
+            .mini-day-tile.selected {
+                border-color: var(--color-approve) !important;
+                background: #fbfcf8;
+                box-shadow: 0 0 0 1px var(--color-approve);
+            }
+
+        .slots-modal-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .slot-modal-pill {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #f7ecee;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .btn-select-slot {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+            .btn-select-slot:hover {
+                background-color: var(--accent-green-hover);
+            }
+
+        .slot-pill-blocked {
+            color: #ffebee;
+            font-style: italic;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+
+        @@media (max-width: 768px) {
+            .modal-wrapper-card {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 }
 
 <div class="manage-appt-wrapper">
     <div class="manage-appt-container">
 
         <div class="page-header">
-            <h1 class="page-title">
-                <i class="fas fa-bookmark title-icon"></i>
-                Upcoming Appointment
-                <i class="fas fa-bookmark title-icon"></i>
-            </h1>
-            <p class="page-subtitle">View and Edit your appointments.</p>
+            <h1 class="page-title">💅 Studio Appointment Hub</h1>
+            <p class="page-subtitle">Track, confirm, reschedule, or complete dynamic client sessions.</p>
         </div>
 
+        <h2 class="section-heading"><i class="far fa-clock"></i> New Requests Awaiting Approval</h2>
         <div class="appointment-card">
-
-            <div class="card-actions">
-                <button type="button" class="btn-update">Update</button>
-            </div>
-
             <div class="table-responsive">
                 <table class="appointment-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Title</th>
-                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Contact Info</th>
+                            <th>Requested Session</th>
+                            <th>Scheduled Date & Time</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>#1</td>
-                            <td>Home Service</td>
-                            <td class="date-col">mm/dd/year/time</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button type="button" class="action-btn edit-btn" title="Edit"><i class="fas fa-pencil-alt"></i></button>
-                                    <button type="button" class="action-btn delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#2</td>
-                            <td>Home Service</td>
-                            <td class="date-col">mm/dd/year/time</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button type="button" class="action-btn edit-btn" title="Edit"><i class="fas fa-pencil-alt"></i></button>
-                                    <button type="button" class="action-btn delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#3</td>
-                            <td>Studio-based Service</td>
-                            <td class="date-col">mm/dd/year/time</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button type="button" class="action-btn edit-btn" title="Edit"><i class="fas fa-pencil-alt"></i></button>
-                                    <button type="button" class="action-btn delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
-                                </div>
-                            </td>
-                        </tr>
+                        @if (!Model.Any(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 0))
+                        {
+                            <tr><td colspan="5" class="empty-table-msg">No pending requests found.</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model.Where(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 0))
+                            {
+                                <tr id="row-scheduler-@item.SchedulerID">
+                                    <td class="customer-meta">@item.Appointment.Full_Name</td>
+                                    <td>
+                                        <p class="customer-subtext">📞 @item.Appointment.Phone</p>
+                                        <p class="customer-subtext">📱 @item.Appointment.Social_Account</p>
+                                    </td>
+                                    <td><span class="date-badge">@item.Appointment.Appointment_Type</span></td>
+                                    <td><span class="date-badge">@item.Appointment_Date.ToString("MMMM dd, yyyy") @item.Time_Slot.ToString("h:mm tt")</span></td>
+                                    <td>
+                                        <div class="action-flex-box">
+                                            <button class="btn-panel-action btn-approve" onclick="updateStatusAPI(@item.SchedulerID, 1)"><i class="fas fa-check"></i> Approve</button>
+                                            <button class="btn-panel-action btn-reject" onclick="updateStatusAPI(@item.SchedulerID, 3)"><i class="fas fa-times"></i> Reject</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <p class="reschedule-note">
-            Note: You Can Reschedule for one time . Rescheduling fee will take affect only after using the first one.
-        </p>
+        <h2 class="section-heading"><i class="far fa-calendar-check"></i> Active Schedules & Bookings</h2>
+        <div class="appointment-card">
+            <div class="table-responsive">
+                <table class="appointment-table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Contact Info</th>
+                            <th>Session Type</th>
+                            <th>Scheduled Date & Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 1))
+                        {
+                            <tr><td colspan="5" class="empty-table-msg">No active scheduled appointments recorded.</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model.Where(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 1))
+                            {
+                                <tr id="row-scheduler-@item.SchedulerID">
+                                    <td class="customer-meta">@item.Appointment.Full_Name</td>
+                                    <td>
+                                        <p class="customer-subtext">📞 @item.Appointment.Phone</p>
+                                        <p class="customer-subtext">📱 @item.Appointment.Social_Account</p>
+                                    </td>
+                                    <td><span class="date-badge">@item.Appointment.Appointment_Type</span></td>
+                                    <td id="time-cell-@item.SchedulerID"><span class="date-badge">@item.Appointment_Date.ToString("MMMM dd, yyyy") @item.Time_Slot.ToString("h:mm tt")</span></td>
+                                    <td>
+                                        <div class="action-flex-box">
+                                            <button class="btn-panel-action btn-complete" onclick="updateStatusAPI(@item.SchedulerID, 2)"><i class="fas fa-check-double"></i> Complete</button>
+                                            <button class="btn-panel-action btn-reschedule" onclick="openRescheduleModal(@item.SchedulerID)"><i class="far fa-calendar-alt"></i> Reschedule</button>
+                                            <button class="btn-panel-action btn-reject" onclick="updateStatusAPI(@item.SchedulerID, 4)"><i class="fas fa-ban"></i> Cancel</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
     </div>
 </div>
+
+<div class="modal-overlay" id="rescheduleModalOverlay">
+    <div class="modal-wrapper-card">
+        <span class="modal-close-trigger" onclick="closeRescheduleModal()">&times;</span>
+
+        <div>
+            <div class="modal-calendar-title" id="modalMonthHeader">June 2026</div>
+            <div class="mini-grid-calendar" id="modalCalendarDaysGrid">
+            </div>
+        </div>
+
+        <div>
+            <div class="modal-calendar-title"><i class="far fa-clock"></i> Available Hours</div>
+            <div class="slots-modal-stack" id="modalHourlySlotsWrapper">
+                <div class="empty-table-msg" style="padding:20px 0;">Select a date to audit free hours</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let targetSchedulerId = null;
+        let activeModalYear = 2026;
+        let activeModalMonth = 6;
+        let chosenDateStr = "";
+
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const weekdayLabels = ["S", "M", "T", "W", "T", "F", "S"];
+
+        // 🚀 ROUTE 1: UPDATE STATUS (APPROVE, REJECT, COMPLETE, CANCEL)
+        async function updateStatusAPI(schedulerId, targetStatusCode) {
+            let confirmationMessage = "Proceed with this status modification adjustment?";
+            if (targetStatusCode === 1) confirmationMessage = "Approve this appointment request?";
+            if (targetStatusCode === 2) confirmationMessage = "Mark this appointment session as completed?";
+            if (targetStatusCode === 3) confirmationMessage = "Reject this appointment booking?";
+            if (targetStatusCode === 4) confirmationMessage = "Cancel this active scheduled session?";
+
+            if (!confirm(confirmationMessage)) return;
+
+            try {
+                const response = await fetch(`/admin/UpdateAppointmentStatus?schedulerId=${schedulerId}&statusCode=${targetStatusCode}`, {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value }
+                });
+
+                if (response.ok) {
+                    // Smoothly remove the edited record row from the UI
+                    document.getElementById(`row-scheduler-${schedulerId}`).remove();
+                    location.reload(); // Refresh to properly sort row entries into their respective tables
+                } else {
+                    alert(await response.text() || "Action rejected by business logic parameters.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network communication exception error.");
+            }
+        }
+
+        // 🕒 POP-UP RESCHEDULING ENGINE MODAL MECHANICS
+        function openRescheduleModal(schedulerId) {
+            targetSchedulerId = schedulerId;
+            document.getElementById("rescheduleModalOverlay").classList.add("active");
+            fetchModalCalendarMonth();
+        }
+
+        function closeRescheduleModal() {
+            document.getElementById("rescheduleModalOverlay").classList.remove("active");
+            targetSchedulerId = null;
+        }
+
+        async function fetchModalCalendarMonth() {
+            document.getElementById("modalMonthHeader").innerText = `${monthNames[activeModalMonth - 1]} ${activeModalYear}`;
+            try {
+                // Queries your existing backend endpoint to pull calendar availability arrays
+                const response = await fetch(`/api/AdminCalendar/month-admin-status?year=${activeModalYear}&month=${activeModalMonth}`);
+                if (!response.ok) throw new Error("Faulty response context profiles.");
+                const days = await response.json();
+                renderModalCalendar(days);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderModalCalendar(daysData) {
+            const container = document.getElementById("modalCalendarDaysGrid");
+            container.innerHTML = "";
+
+            weekdayLabels.forEach(lbl => {
+                const item = document.createElement("div");
+                item.className = "mini-weekday";
+                item.innerText = lbl;
+                container.appendChild(item);
+            });
+
+            if (daysData.length > 0) {
+                const paddingCount = new Date(daysData[0].dateString).getDay();
+                for (let i = 0; i < paddingCount; i++) {
+                    container.appendChild(document.createElement("div"));
+                }
+            }
+
+            daysData.forEach(day => {
+                const tile = document.createElement("div");
+                tile.className = "mini-day-tile";
+                const dateNum = new Date(day.dateString).getDate();
+                tile.innerText = dateNum;
+
+                // Disable selecting past dates, shop closures, or full slots
+                if (!day.isAvailable && day.status !== "Available") {
+                    tile.className += " disabled";
+                } else {
+                    tile.onclick = () => {
+                        document.querySelectorAll(".mini-day-tile").forEach(t => t.classList.remove("selected"));
+                        tile.classList.add("selected");
+                        chosenDateStr = day.dateString;
+                        fetchModalHourlySlots(day.dateString);
+                    };
+                }
+                container.appendChild(tile);
+            });
+        }
+
+        async function fetchModalHourlySlots(dateStr) {
+            const wrapper = document.getElementById("modalHourlySlotsWrapper");
+            wrapper.innerHTML = '<div class="empty-table-msg">Loading slots...</div>';
+            try {
+                const response = await fetch(`/api/AdminCalendar/day-slots-admin-status?chosenDate=${dateStr}`);
+                const slots = await response.json();
+                wrapper.innerHTML = "";
+
+                slots.forEach(slot => {
+                    const row = document.createElement("div");
+                    row.className = "slot-modal-pill";
+
+                    if (slot.status === "Available") {
+                        row.innerHTML = `<span>${slot.formattedTime}</span>
+                            <button class="btn-select-slot" onclick="executeRescheduleAPI('${dateStr}', ${slot.slotHour})">Assign</button>`;
+                    } else {
+                        row.innerHTML = `<span>${slot.formattedTime}</span><span class="slot-pill-blocked">${slot.status}</span>`;
+                    }
+                    wrapper.appendChild(row);
+                });
+            } catch (err) {
+                wrapper.innerHTML = '<div class="empty-table-msg">Error parsing hours.</div>';
+            }
+        }
+
+        async function executeRescheduleAPI(dateStr, hour) {
+            if (!confirm(`Relocate this appointment session to ${dateStr} at hour slot ${hour}:00?`)) return;
+
+            try {
+                const response = await fetch(`/admin/RescheduleAppointment?schedulerId=${targetSchedulerId}&newDate=${dateStr}&newHour=${hour}`, {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value }
+                });
+
+                if (response.ok) {
+                    alert("Appointment rescheduled successfully!");
+                    closeRescheduleModal();
+                    location.reload();
+                } else {
+                    alert(await response.text() || "Reschedule action denied.");
+                }
+            } catch (err) {
+                alert("Communication error processing request.");
+            }
+        }
+    </script>
+}

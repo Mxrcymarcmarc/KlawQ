@@ -45,12 +45,20 @@ namespace KlawQ.Controllers
                 .Where(o => o.Appointment_Date >= now && o.Appointment_Date <= sevenDaysFromNow)
                 .CountAsync();
 
+            var pendingOrdersList = await _context.Orders
+                .Where(o => o.Status == "Pending")
+                .OrderByDescending(o => o.Order_Date)
+                .Take(5) // Restricts length to look clean on your main dashboard layout
+                .ToListAsync();
+
             // 🌟 4. Pass values to the view using ViewData maps
             ViewData["TotalRevenue"] = totalRevenue;
             ViewData["TotalOrdersCount"] = totalOrdersCount;
             ViewData["PendingOrdersCount"] = pendingOrdersCount;
             ViewData["CompletedOrdersCount"] = completedOrdersCount;
             ViewData["ThisWeekBookingsCount"] = thisWeekBookingsCount; // 👈 Injected right here!
+
+            ViewData["PendingOrdersList"] = pendingOrdersList;
 
             return View();
         }
@@ -117,18 +125,66 @@ namespace KlawQ.Controllers
             return RedirectToAction("PortfolioManager");
         }
 
+        // 🖥️ GET: /admin/ManageAppointments
+        [HttpGet("ManageAppointments")]
+        public async Task<IActionResult> ManageAppointments()
+        {
+            // Eagerly load downstream appointment data to extract customer profiles inside view tables
+            var schedulersList = await _context.Schedulers
+                .Include(s => s.Appointment)
+                .OrderBy(s => s.Appointment_Date)
+                .ToListAsync();
+
+            return View(schedulersList);
+        }
+
+        // 🚀 POST: /admin/UpdateAppointmentStatus
+        [HttpPost("UpdateAppointmentStatus")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateAppointmentStatus(int schedulerId, int statusCode)
+        {
+            var scheduler = await _context.Schedulers
+                .Include(s => s.Appointment)
+                .FirstOrDefaultAsync(s => s.SchedulerID == schedulerId);
+
+            if (scheduler == null || scheduler.Appointment == null)
+                return NotFound("Appointment structural records are missing.");
+
+            // Status Mapping Tree Rules: 
+            // 0 = Pending, 1 = Approved/Active, 2 = Completed, 3 = Rejected, 4 = Cancelled
+            scheduler.Appointment.Status = statusCode;
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        // 🚀 POST: /admin/RescheduleAppointment
+        [HttpPost("RescheduleAppointment")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RescheduleAppointment(int schedulerId, DateTime newDate, int newHour)
+        {
+            var scheduler = await _context.Schedulers
+                .Include(s => s.Appointment)
+                .FirstOrDefaultAsync(s => s.SchedulerID == schedulerId);
+
+            if (scheduler == null)
+                return NotFound("Target scheduling profile context missing.");
+
+            // Construct the updated datetime coordinates parameters natively
+            DateTime computedDateTime = newDate.Date.AddHours(newHour);
+
+            scheduler.Appointment_Date = newDate.Date;
+            scheduler.Time_Slot = computedDateTime;
+
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
         [HttpGet("ConfigureSlots")]
         public IActionResult ConfigureSlots()
         {
             // This looks for and loads your Views/Admin/ConfigureSlots.cshtml file
             return View("ConfigureDateTimeSlot");
-        }
-
-        [HttpGet("ManageAppointments")]
-        public IActionResult ManageAppointments()
-        {
-            // Returns your appointment lists/schedules view
-            return View("ManageAppointments");
         }
     }
 }
