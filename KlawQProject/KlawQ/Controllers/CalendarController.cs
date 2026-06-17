@@ -62,32 +62,32 @@ namespace KlawQ.Controllers
             return DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
         }
 
-        // Combines the current month and next month views, and conditionally includes the month after if availability is running low
+        // 🌟 FIXED: Accurately tracks Admin Blocks using TodayInPH to trigger the 3rd-month look-ahead seamlessly
         [HttpGet("current-view-status")]
         public async Task<IActionResult> GetCurrentCalendarView()
         {
-            DateTime today = TodayInPH();
+            DateTime todayPH = TodayInPH(); // Base look-ahead logic completely on PH localized time coordinates
 
-            var currentMonthDays = await GetDaysStatusForMonth(today.Year, today.Month);
+            var currentMonthDays = await GetDaysStatusForMonth(todayPH.Year, todayPH.Month);
             var finalResponse = new List<CalendarDayStatus>(currentMonthDays);
 
-            DateTime nextMonthDate = today.AddMonths(1);
+            DateTime nextMonthDate = todayPH.AddMonths(1);
             var nextMonthDays = await GetDaysStatusForMonth(nextMonthDate.Year, nextMonthDate.Month);
             finalResponse.AddRange(nextMonthDays);
 
-            int availableDaysLeft = finalResponse
-                .Count(d => d.IsAvailable && DateTime.Parse(d.DateString) >= today);
+            // 🌟 Evaluates IsAvailable (which already factors in Admin Blocks) using the exact same PH Date boundary line
+            int availableDaysLeft = currentMonthDays
+                .Count(d => d.IsAvailable && DateTime.ParseExact(d.DateString, "yyyy-MM-dd", CultureInfo.InvariantCulture) >= todayPH);
 
             if (availableDaysLeft <= ALMOST_FULL_THRESHOLD)
             {
-                DateTime nextNextMonthDate = today.AddMonths(2);
+                DateTime nextNextMonthDate = todayPH.AddMonths(2);
                 var nextNextMonthDays = await GetDaysStatusForMonth(nextNextMonthDate.Year, nextNextMonthDate.Month);
                 finalResponse.AddRange(nextNextMonthDays);
             }
 
             return Ok(finalResponse);
         }
-
 
         // Checks for both existing paid bookings and admin configuration blocks
         [HttpGet("day-slots-status")]
@@ -141,7 +141,6 @@ namespace KlawQ.Controllers
             return Ok(hourlySlots);
         }
 
-
         [HttpPost("booking")]
         public async Task<IActionResult> BookSlot([FromBody] BookingWithAppointmentRequest request)
         {
@@ -192,7 +191,6 @@ namespace KlawQ.Controllers
                 return BadRequest("Booking failed: This date has reached full operational capacity!");
             // --- End of Validation Guards ---
 
-
             // Create a PENDING appointment placeholder.
             var pendingAppointment = new Appointment
             {
@@ -242,7 +240,6 @@ namespace KlawQ.Controllers
                 return StatusCode(500, $"Payment gateway communication failed: {ex.Message}");
             }
         }
-
 
         // Payment confirmed by PayMongo : mark the appointment as paid and show success card
         [HttpGet("payment-success")]
@@ -345,7 +342,6 @@ namespace KlawQ.Controllers
             return Content(htmlContent, "text/html; charset=utf-8");
         }
 
-
         [HttpGet("payment-cancelled")]
         public async Task<IActionResult> HandlePaymentCancelled([FromQuery] int schedulerId)
         {
@@ -376,7 +372,6 @@ namespace KlawQ.Controllers
 
             return Content("<h3>Payment was cancelled. Your reservation attempt was not processed.</h3>", "text/html");
         }
-
 
         // Syncs month grid views with active table override rules
         private async Task<List<CalendarDayStatus>> GetDaysStatusForMonth(int year, int month)
@@ -413,7 +408,7 @@ namespace KlawQ.Controllers
                 else if (loopDate.Date == todayPH) isAvailable = false;
                 else if (loopDate.Date == todayPH.AddDays(1)) isAvailable = false;
                 else if (loopDate.DayOfWeek == DayOfWeek.Tuesday) isAvailable = false;
-                else if (isDayBlockedByAdmin) isAvailable = false; // Gray out if explicitly locked by an admin setting
+                else if (isDayBlockedByAdmin) isAvailable = false; // 🌟 Successfully sets availability false when blocked by an admin rule
                 else if (totalBookingsForDay >= maxSlotsForThisDay) isAvailable = false;
                 else isAvailable = true;
 
