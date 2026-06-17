@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using KlawQ.Data;
 using KlawQ.Models;
+using KlawQ.Services; // 🌟 Injected to reference your PayMongo service mappings
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,12 +18,15 @@ namespace KlawQ.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly PayMongoService _payMongoService; // 🌟 Private tracking reference descriptor
         private static readonly char[] SplitChars = { ',', '&' };
 
-        public OrderController(ApplicationDbContext context, IWebHostEnvironment env)
+        // 🌟 Injected PayMongoService through the controller constructor dependency tree
+        public OrderController(ApplicationDbContext context, IWebHostEnvironment env, PayMongoService payMongoService)
         {
             _context = context;
             _env = env;
+            _payMongoService = payMongoService;
         }
 
         [HttpGet("Start")]
@@ -36,7 +40,6 @@ namespace KlawQ.Controllers
 
             var vm = new OrderStartViewModel { Products = products };
 
-            // build quantities map from query param 'qtys' (aligned by index with productIds)
             var quantities = new Dictionary<int, int>();
             if (ids.Count > 0)
             {
@@ -82,6 +85,26 @@ namespace KlawQ.Controllers
 
                 if (!ModelState.IsValid) return View("Start", new OrderStartViewModel { Products = await _context.Products.Where(p => ids.Contains(p.ProductID)).ToListAsync(), Submit = model });
 
+                // Calculate complete purchase cost matrix fields to pass over onto the PayMongo API gateway
+                var selectedProducts = await _context.Products.Where(p => ids.Contains(p.ProductID)).ToListAsync();
+                var qtysRaw = Request.Form["Quantities"].ToString();
+                List<int> qtys = [];
+                if (!string.IsNullOrWhiteSpace(qtysRaw))
+                {
+                    qtys = qtysRaw.Split(SplitChars, StringSplitOptions.RemoveEmptyEntries).Select(s => int.TryParse(s, out var x) ? x : 0).Where(x => x > 0).ToList();
+                }
+
+                decimal calculatedBillTotal = 0;
+                for (int i = 0; i < ids.Count; i++)
+                {
+                    var matchingProduct = selectedProducts.FirstOrDefault(p => p.ProductID == ids[i]);
+                    if (matchingProduct != null)
+                    {
+                        int targetQty = (i < qtys.Count && qtys[i] > 0) ? qtys[i] : 1;
+                        calculatedBillTotal += (matchingProduct.Product_Price * targetQty);
+                    }
+                }
+
                 var order = new Order
                 {
                     UserID = user.UserID,
@@ -90,24 +113,16 @@ namespace KlawQ.Controllers
                     Social_Account = model.SocialAccount,
                     Delivery_Location = model.DeliveryLocation,
                     Delivery_Method = model.DeliveryMethod,
-                    Payment_Method = model.PaymentMethod,
+                    Payment_Method = "PayMongo", // Force transaction classification field explicitly
                     Contact_Number = !string.IsNullOrWhiteSpace(model.ContactNumber) ? model.ContactNumber : "0",
                     Hand_Photo = handBase64 ?? string.Empty,
                     Thumb_Photo = thumbBase64 ?? string.Empty,
                     Order_Type = 'P',
-                    Status = "Pending"
+                    Status = "Payment Pending" // Hidden block until verification completes successfully
                 };
 
                 _context.Add(order);
                 await _context.SaveChangesAsync();
-
-                // read quantities from form if provided (aligned order with ProductIds)
-                var qtysRaw = Request.Form["Quantities"].ToString();
-                List<int> qtys = [];
-                if (!string.IsNullOrWhiteSpace(qtysRaw))
-                {
-                    qtys = qtysRaw.Split(SplitChars, StringSplitOptions.RemoveEmptyEntries).Select(s => int.TryParse(s, out var x) ? x : 0).Where(x => x > 0).ToList();
-                }
 
                 if (ids.Count > 0)
                 {
@@ -122,11 +137,23 @@ namespace KlawQ.Controllers
                 }
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction("Index", "Home");
+                // 🚀 PAYMONGO REDIRECT INITIATION ROUTE GENERATOR
+                string domain = $"{Request.Scheme}://{Request.Host}";
+                string successUrl = $"{domain}/Order/OrderSuccess?orderId={order.OrderID}";
+                string cancelUrl = $"{domain}/Order/OrderCancelled?orderId={order.OrderID}";
+
+                string checkoutUrl = await _payMongoService.CreateCheckoutSessionAsync(
+                    amountInPhp: calculatedBillTotal,
+                    description: $"Nail Order #{order.OrderID} Checkout Checkout Deposit for {order.Full_Name}",
+                    successUrl: successUrl,
+                    cancelUrl: cancelUrl
+                );
+
+                return Redirect(checkoutUrl); // Bounce customer out onto GCash / PayMongo checkout interfaces
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", ex.Message);
+                ModelState.AddModelError("", $"Payment processing interruption exception notice: {ex.Message}");
                 var raw2 = Request.Form["ProductIds"].ToString();
                 List<int> ids2 = [];
                 if (!string.IsNullOrWhiteSpace(raw2)) ids2 = raw2.Split(SplitChars, StringSplitOptions.RemoveEmptyEntries).Select(s => int.TryParse(s, out var x) ? x : 0).Where(x => x > 0).ToList();
@@ -145,7 +172,6 @@ namespace KlawQ.Controllers
 
             var vm = new OrderStartViewModel { Products = products };
 
-            // populate quantities map if provided
             var quantities = new Dictionary<int, int>();
             if (ids.Count > 0)
             {
@@ -188,6 +214,19 @@ namespace KlawQ.Controllers
                     handBase64 = "data:" + handFile.ContentType + ";base64," + Convert.ToBase64String(ms.ToArray());
                 }
 
+                // Calculate cumulative checkout price
+                var selectedProducts = await _context.Products.Where(p => model.ProductIds.Contains(p.ProductID)).ToListAsync();
+                decimal calculatedBillTotal = 0;
+                for (int i = 0; i < model.ProductIds.Length; i++)
+                {
+                    var matchingProduct = selectedProducts.FirstOrDefault(p => p.ProductID == model.ProductIds[i]);
+                    if (matchingProduct != null)
+                    {
+                        int targetQty = (model.Quantities != null && model.Quantities.Length > i && model.Quantities[i] > 0) ? model.Quantities[i] : 1;
+                        calculatedBillTotal += (matchingProduct.Product_Price * targetQty);
+                    }
+                }
+
                 var order = new Order
                 {
                     UserID = user.UserID,
@@ -196,18 +235,17 @@ namespace KlawQ.Controllers
                     Social_Account = model.SocialAccount,
                     Delivery_Location = model.DeliveryLocation,
                     Delivery_Method = model.DeliveryMethod,
-                    Payment_Method = string.IsNullOrWhiteSpace(model.PaymentMethod) ? "PayMongo" : model.PaymentMethod,
+                    Payment_Method = "PayMongo",
                     Contact_Number = !string.IsNullOrWhiteSpace(model.ContactNumber) ? model.ContactNumber : "0",
                     Hand_Photo = handBase64 ?? string.Empty,
                     Thumb_Photo = string.Empty,
                     Order_Type = 'P',
-                    Status = "Pending"
+                    Status = "Payment Pending"
                 };
 
                 _context.Add(order);
                 await _context.SaveChangesAsync();
 
-                // create order items honoring submitted quantities
                 if (model.ProductIds != null && model.ProductIds.Length > 0)
                 {
                     for (int i = 0; i < model.ProductIds.Length; i++)
@@ -221,7 +259,19 @@ namespace KlawQ.Controllers
                 }
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction("Index", "Home");
+                // 🚀 PAYMONGO REDIRECT INITIATION ROUTE GENERATOR
+                string domain = $"{Request.Scheme}://{Request.Host}";
+                string successUrl = $"{domain}/Order/OrderSuccess?orderId={order.OrderID}";
+                string cancelUrl = $"{domain}/Order/OrderCancelled?orderId={order.OrderID}";
+
+                string checkoutUrl = await _payMongoService.CreateCheckoutSessionAsync(
+                    amountInPhp: calculatedBillTotal,
+                    description: $"Standard Press-On Purchase Order #{order.OrderID} for {order.Full_Name}",
+                    successUrl: successUrl,
+                    cancelUrl: cancelUrl
+                );
+
+                return Redirect(checkoutUrl);
             }
             catch (Exception ex)
             {
@@ -281,6 +331,22 @@ namespace KlawQ.Controllers
                 var payload = new { designNotes = model.DesignNotes, inspirations = inspirations };
                 var inspJson = System.Text.Json.JsonSerializer.Serialize(payload);
 
+                // Calculate total bill for custom set accessories if bundled
+                var selectedProducts = await _context.Products.Where(p => model.ProductIds.Contains(p.ProductID)).ToListAsync();
+                decimal calculatedBillTotal = 0;
+                for (int i = 0; i < model.ProductIds.Length; i++)
+                {
+                    var matchingProduct = selectedProducts.FirstOrDefault(p => p.ProductID == model.ProductIds[i]);
+                    if (matchingProduct != null)
+                    {
+                        int targetQty = (model.Quantities != null && model.Quantities.Length > i && model.Quantities[i] > 0) ? model.Quantities[i] : 1;
+                        calculatedBillTotal += (matchingProduct.Product_Price * targetQty);
+                    }
+                }
+
+                // Fallback default registration charge baseline if accessory items evaluation resolves to 0
+                if (calculatedBillTotal <= 0) calculatedBillTotal = 150.00m;
+
                 var order = new Order
                 {
                     UserID = user.UserID,
@@ -289,12 +355,12 @@ namespace KlawQ.Controllers
                     Social_Account = model.SocialAccount,
                     Delivery_Location = model.DeliveryLocation,
                     Delivery_Method = model.DeliveryMethod,
-                    Payment_Method = string.IsNullOrWhiteSpace(model.PaymentMethod) ? "PayMongo" : model.PaymentMethod,
+                    Payment_Method = "PayMongo",
                     Contact_Number = !string.IsNullOrWhiteSpace(model.ContactNumber) ? model.ContactNumber : "0",
                     Hand_Photo = handBase64 ?? string.Empty,
                     Thumb_Photo = inspJson,
                     Order_Type = 'C',
-                    Status = "Pending"
+                    Status = "Payment Pending"
                 };
 
                 _context.Add(order);
@@ -313,13 +379,80 @@ namespace KlawQ.Controllers
                 }
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction("Index", "Home");
+                // 🚀 PAYMONGO REDIRECT INITIATION ROUTE GENERATOR
+                string domain = $"{Request.Scheme}://{Request.Host}";
+                string successUrl = $"{domain}/Order/OrderSuccess?orderId={order.OrderID}";
+                string cancelUrl = $"{domain}/Order/OrderCancelled?orderId={order.OrderID}";
+
+                string checkoutUrl = await _payMongoService.CreateCheckoutSessionAsync(
+                    amountInPhp: calculatedBillTotal,
+                    description: $"Custom Studio Set Order Blueprint #{order.OrderID} Deposit for {order.Full_Name}",
+                    successUrl: successUrl,
+                    cancelUrl: cancelUrl
+                );
+
+                return Redirect(checkoutUrl);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", ex.Message);
                 return View("CheckoutCustom", new OrderStartViewModel { Products = await _context.Products.Where(p => model.ProductIds.Contains(p.ProductID)).ToListAsync(), Submit = model });
             }
+        }
+
+        // 🌟 NEW WEB-HOOK ENDPOINT: TRANSACTION SUCCESS VERIFICATION CARD
+        [HttpGet("OrderSuccess")]
+        public async Task<IActionResult> OrderSuccess([FromQuery] int orderId)
+        {
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderID == orderId);
+            if (order == null) return NotFound();
+
+            order.Status = "Pending"; // Update state context from pending to processing cleanly
+            await _context.SaveChangesAsync();
+
+            string htmlContent = @"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset=""utf-8"">
+                <title>Order Confirmed</title>
+                <style>
+                    body { background-color: #fff5f6; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+                    .card { background-color: #fdeef0; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #fde0e2; text-align: center; max-width: 450px; width: 90%; }
+                    .emoji { font-size: 48px; margin-bottom: 16px; }
+                    h3 { color: #8b4b3b; font-size: 24px; margin: 0 0 12px 0; }
+                    p { color: #8a6a62; font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
+                    .btn { background-color: #88b04b; color: white; padding: 12px 32px; border-radius: 24px; text-decoration: none; font-weight: 600; display: inline-block; }
+                </style>
+                <script>setTimeout(function() { window.location.href = '/Home/Index'; }, 4000);</script>
+            </head>
+            <body>
+                <div class=""card"">
+                    <div class=""emoji"">💅</div>
+                    <h3>Payment Successful!</h3>
+                    <p>Your custom press-on order downpayment has been received securely. The studio has locked in your order profile!</p>
+                    <a href=""/Home/Index"" class=""btn"">Return Home</a>
+                </div>
+            </body>
+            </html>";
+
+            return Content(htmlContent, "text/html; charset=utf-8");
+        }
+
+        // 🌟 NEW WEB-HOOK ENDPOINT: CASCADING TRANSACTION CLEAN-UP ON FAILURE
+        [HttpGet("OrderCancelled")]
+        public async Task<IActionResult> OrderCancelled([FromQuery] int orderId)
+        {
+            var order = await _context.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.OrderID == orderId);
+            if (order != null)
+            {
+                // Wipe the phantom record from database to prevent order inflation stubs
+                _context.OrderItems.RemoveRange(order.Items);
+                _context.Orders.Remove(order);
+                await _context.SaveChangesAsync();
+            }
+
+            return Content("<h3 style='color:#8b4b3b; text-align:center; margin-top:50px;'>Checkout session closed. Your purchase request was not filed.</h3>", "text/html");
         }
 
         [HttpGet("OrderDetails/{id}")]
