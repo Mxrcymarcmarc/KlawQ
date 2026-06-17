@@ -1,6 +1,9 @@
 @model KlawQ.Models.Order
 @{
     ViewData["Title"] = "Order Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["NavbarMode"] = "admin";
+    
     var statusClass = "status-confirmed";
     var statusText = "Pending";
     if (Model.Status.Equals("Confirmed", StringComparison.OrdinalIgnoreCase))
@@ -26,7 +29,8 @@
 
     string designNotes = "";
     List<string> inspirations = new List<string>();
-    if (Model.Order_Type == 'C' && !string.IsNullOrWhiteSpace(Model.Thumb_Photo))
+    bool isCustomApproved = Model.Order_Type == 'P' && !string.IsNullOrWhiteSpace(Model.Thumb_Photo) && Model.Thumb_Photo.TrimStart().StartsWith("{");
+    if ((Model.Order_Type == 'C' || isCustomApproved) && !string.IsNullOrWhiteSpace(Model.Thumb_Photo))
     {
         try
         {
@@ -130,11 +134,11 @@
         margin: 0;
     }
 
-        .card-title i {
-            font-size: 22px;
-            margin-right: 6px;
-            color: var(--cta-green);
-        }
+    .card-title i {
+        font-size: 22px;
+        margin-right: 6px;
+        color: var(--cta-green);
+    }
 
     .order-meta {
         font-size: 13px;
@@ -187,12 +191,12 @@
         margin-top: 6px;
     }
 
-        .timeline-steps span {
-            font-size: 11px;
-            color: #bbb;
-            background: transparent !important;
-            display: inline-block;
-        }
+    .timeline-steps span {
+        font-size: 11px;
+        color: #bbb;
+        background: transparent !important;
+        display: inline-block;
+    }
 
     /* Status Configs */
     .status-confirmed .seg-1 {
@@ -235,11 +239,9 @@
         margin-bottom: 0;
     }
 
-        .estimated strong {
-            color: var(--font-brown);
-        }
-
-    /* ── Layout grid columns ── */
+    .estimated strong {
+        color: var(--font-brown);
+    }
 
     /* ── Headers ── */
     .section-title {
@@ -252,12 +254,12 @@
         gap: 6px;
     }
 
-        .section-title i {
-            color: var(--cta-green);
-            font-size: 18px;
-        }
+    .section-title i {
+        color: var(--cta-green);
+        font-size: 18px;
+    }
 
-    /* ── 🛠️ UNIFORM INPUT FIELD LAYOUTS ── */
+    /* ── Uniform Input Field Layouts ── */
     .form-group {
         margin-bottom: 12px;
     }
@@ -277,39 +279,38 @@
         align-items: center;
     }
 
-        .input-icon-wrap i {
-            position: absolute;
-            left: 14px;
-            color: var(--accent-pink);
-            font-size: 14px;
-            width: 16px;
-            text-align: center;
-            pointer-events: none;
-        }
+    .input-icon-wrap i {
+        position: absolute;
+        left: 14px;
+        color: var(--accent-pink);
+        font-size: 14px;
+        width: 16px;
+        text-align: center;
+        pointer-events: none;
+    }
 
-    /* Styled inputs substituting raw divs */
     .form-input-display {
         width: 100%;
         background: #fff;
         border: 1px solid var(--accent-pink);
         border-radius: 10px;
-        padding: 10px 12px 10px 40px; /* Space on left for icons */
+        padding: 10px 12px 10px 40px;
         font-family: 'Montserrat', sans-serif;
         font-size: 13px;
         color: var(--font-brown);
         box-sizing: border-box;
     }
 
-        .form-input-display:disabled {
-            background: #fff; /* Keeps white clean display panel look */
-            color: var(--font-brown);
-            opacity: 1; /* Prevents default browser opacity washing */
-        }
+    .form-input-display:disabled {
+        background: #fff;
+        color: var(--font-brown);
+        opacity: 1;
+    }
 
-        .form-input-display.bold-text {
-            font-weight: 600;
-            font-size: 14px;
-        }
+    .form-input-display.bold-text {
+        font-weight: 600;
+        font-size: 14px;
+    }
 
     /* ── Order Summary ── */
     .order-item-row {
@@ -347,30 +348,6 @@
         font-weight: 600;
     }
 
-    .order-details-label {
-        font-size: 12px;
-        color: #ccc;
-        margin: 12px 0 6px;
-    }
-
-    .addon-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: 13px;
-        color: var(--font-brown);
-        margin-bottom: 4px;
-    }
-
-        .addon-row span:first-child {
-            color: #aaa;
-        }
-
-            .addon-row span:first-child::before {
-                content: '• ';
-                color: var(--accent-pink);
-                margin-right: 4px;
-            }
-
     .divider-line {
         border: none;
         border-top: 1px solid var(--accent-pink);
@@ -406,87 +383,54 @@
         box-sizing: border-box;
     }
 
-        .notes-textarea:disabled {
-            background: #fff;
-            opacity: 1;
-        }
-
-    /* ── Help + Cancel row ── */
-    .help-cancel-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
+    .notes-textarea:disabled {
+        background: #fff;
+        opacity: 1;
     }
 
-    .help-text {
-        font-size: 13px;
-        color: var(--font-brown);
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-        .help-text i {
-            color: var(--cta-green);
-            font-size: 20px;
-        }
-
-    .help-sub {
-        font-size: 12px;
-        color: #bbb;
-        font-weight: 400;
-        display: block;
-        margin-top: 2px;
-    }
-
-    .btn-cancel {
-        background: #ff3333;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        padding: 10px 24px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
+    /* ── Back button ── */
+    .back-dash-link {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        white-space: nowrap;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 12px rgba(255, 51, 51, 0.2);
+        gap: 8px;
+        color: var(--font-brown);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.2s;
     }
 
-        .btn-cancel:hover {
-            background: #dd2222;
-            transform: translateY(-1px);
-        }
-
+    .back-dash-link:hover {
+        color: var(--brand-brown);
+        transform: translateX(-3px);
+    }
 </style>
 
 <div class="order-view-body">
     <div class="order-wrap">
+        <a href="/AdminOrders?status=All" class="back-dash-link">
+            <i class="fas fa-arrow-left"></i> Back to Orders
+        </a>
+
         <div class="order-layout-grid">
-            
-            <!-- Left Column: Order timeline details, Customer details, and Sizing/Notes -->
+            <!-- Left Column -->
             <div class="order-layout-column main-col">
-                
-                <!-- Card 1: Order Timeline & Status Details -->
+                <!-- Card 1 -->
                 <div class="card @statusClass">
                     <div class="card-header-row">
                         <div>
                             <p class="card-title"><i class="fa-solid fa-box"></i> Order Details</p>
-                            <p class="order-meta">Order ORD-@Model.OrderID</p>
-                            <p class="order-meta">Placed on @Model.Order_Date.ToString("MM/dd/yyyy")</p>
+                            <p class="order-meta">Order No. ORD-@Model.OrderID</p>
+                            <p class="order-meta">Placed on @Model.Order_Date.ToString("MM/dd/yyyy h:mm tt")</p>
                         </div>
                         @if (Model.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
                         {
-                            <span class="badge-cancelled" style="background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">✕ Cancelled</span>
+                            <span class="badge-cancelled" style="background: #fce8e6; color: #dc3545; border: 1px solid #fcd2cd; border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;"><i class="fas fa-times"></i> Cancelled</span>
                         }
                         else
                         {
-                            <span class="badge-confirmed">✓ @statusText</span>
+                            <span class="badge-confirmed"><i class="fas fa-check"></i> @statusText</span>
                         }
                     </div>
 
@@ -515,7 +459,7 @@
                     }
                 </div>
 
-                <!-- Card 2: Customer Contact Information -->
+                <!-- Card 2 -->
                 <div class="card">
                     <p class="section-title"><i class="fa-regular fa-user"></i> Customer Information</p>
 
@@ -575,48 +519,46 @@
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            <!-- Right Column: Order items listing summary, support block & special notes -->
+            <!-- Right Column -->
             <div class="order-layout-column side-col">
-                
-                <!-- Card 3: Items Summary Sum List -->
+                <!-- Card 3 -->
                 <div class="card">
                     <p class="section-title"><i class="fa-solid fa-receipt"></i> Order Summary</p>
-                    @foreach (var item in Model.Items)
+                    @if (Model.Items != null && Model.Items.Any())
+                    {
+                        foreach (var item in Model.Items)
+                        {
+                            <div class="order-item-row">
+                                <span class="order-item-name">@(item.Product?.Product_Name ?? "Press-On Set")</span>
+                                <span class="order-item-price">₱@((item.Product?.Product_Price ?? 0).ToString("N2"))</span>
+                            </div>
+                            <div class="order-item-meta">Qty: @item.Quantity &nbsp;|&nbsp; <span class="badge-size">Size: @(Model.Order_Type == 'C' ? "Custom" : "Standard")</span></div>
+                        }
+                    }
+                    else
                     {
                         <div class="order-item-row">
-                            <span class="order-item-name">@(item.Product?.Product_Name ?? "Press-On Set")</span>
-                            <span class="order-item-price">₱@((item.Product?.Product_Price ?? 0).ToString("N2"))</span>
+                            <span class="order-item-name">Custom Press-On Set Request</span>
+                            <span class="order-item-price">₱150.00</span>
                         </div>
-                        <div class="order-item-meta">Qty: @item.Quantity &nbsp;|&nbsp; <span class="badge-size">Size: @(Model.Order_Type == 'C' ? "Custom" : "Standard")</span></div>
+                        <div class="order-item-meta">Qty: 1 &nbsp;|&nbsp; <span class="badge-size">Size: Custom</span></div>
                     }
                     <hr class="divider-line" />
                     <div class="total-row">
                         <span>Total</span>
                         @{
-                            var totalAmount = Model.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity);
+                            var totalAmount = Model.Items != null && Model.Items.Any()
+                                ? Model.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity)
+                                : 150.00m;
                         }
                         <span class="total-amount">₱@totalAmount.ToString("N2")</span>
                     </div>
                 </div>
 
-                <!-- Card 5: Need Help Support Info Box -->
-                <div class="card">
-                    <div class="help-cancel-row">
-                        <div class="help-text">
-                            <i class="fa-solid fa-circle-plus"></i>
-                            <div>
-                                Need help with your order?
-                                <span class="help-sub">Contact us via Instagram or email.</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 4: Sizing Photo & Notes Details -->
-                @if (Model.Order_Type == 'C')
+                <!-- Card 4 -->
+                @if (Model.Order_Type == 'C' || isCustomApproved)
                 {
                     <div class="card">
                         <p class="section-title"><i class="fa-regular fa-star"></i> Special Notes & Design Details</p>
@@ -666,7 +608,6 @@
                     </div>
                 }
             </div>
-            
         </div>
     </div>
 </div>

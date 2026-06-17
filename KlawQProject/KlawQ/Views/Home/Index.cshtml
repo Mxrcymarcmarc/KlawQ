@@ -1,70 +1,70 @@
 @{
-    ViewData["Title"] = "Home - Klaw By Krys";
+ViewData["Title"] = "Home - Klaw By Krys";
 }
 
 @section Styles {
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="~/css/home-page.css" />
-    <style>
-        .featured-subheading {
-            font-family: var(--primary-font);
-            font-size: 2.2rem;
-            color: var(--text-dark-brown);
-            text-align: center;
-            margin: 32px 0 16px;
-            font-weight: normal;
-        }
-        .featured-card {
-            position: relative;
-            aspect-ratio: 1;
-            border-radius: 16px;
-            overflow: hidden;
-            background-size: cover;
-            background-position: center;
-            border: 6px solid #fde6ea;
-            box-shadow: 0 8px 18px rgba(0,0,0,.06);
-            display: flex;
-            align-items: flex-end;
-            text-decoration: none;
-            transition: transform 0.3s ease, border-color 0.3s, box-shadow 0.3s;
-        }
-        .featured-card:hover {
-            transform: translateY(-5px);
-            border-color: #f0b8cc;
-            box-shadow: 0 12px 24px rgba(240, 184, 204, 0.35);
-        }
-        .card-overlay {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(4px);
-            padding: 12px 8px;
-            text-align: center;
-            border-top: 1px solid #fde6ea;
-            transition: background 0.3s ease;
-            box-sizing: border-box;
-        }
-        .featured-card:hover .card-overlay {
-            background: rgba(255, 255, 255, 0.95);
-        }
-        .card-title {
-            font-family: var(--secondary-font);
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--text-dark-brown);
-            display: block;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin: 0;
-        }
-    </style>
+<link rel="stylesheet" href="~/css/home-page.css" asp-append-version="true" />
+<style>
+    .featured-subheading {
+    font-family: var(--primary-font);
+    font-size: 2.2rem;
+    color: var(--text-dark-brown);
+    text-align: center;
+    margin: 32px 0 16px;
+    font-weight: normal;
+}
+.featured-card {
+position: relative;
+aspect-ratio: 1;
+border-radius: 16px;
+overflow: hidden;
+background-size: cover;
+background-position: center;
+border: 6px solid #fde6ea;
+box-shadow: 0 8px 18px rgba(0,0,0,.06);
+display: flex;
+align-items: flex-end;
+text-decoration: none;
+transition: transform 0.3s ease, border-color 0.3s, box-shadow 0.3s;
+}
+.featured-card:hover {
+transform: translateY(-5px);
+border-color: #f0b8cc;
+box-shadow: 0 12px 24px rgba(240, 184, 204, 0.35);
+}
+.card-overlay {
+width: 100%;
+background: rgba(255, 255, 255, 0.85);
+backdrop-filter: blur(4px);
+padding: 12px 8px;
+text-align: center;
+border-top: 1px solid #fde6ea;
+transition: background 0.3s ease;
+box-sizing: border-box;
+}
+.featured-card:hover .card-overlay {
+background: rgba(255, 255, 255, 0.95);
+}
+.card-title {
+font-family: var(--secondary-font);
+font-weight: 600;
+font-size: 0.95rem;
+color: var(--text-dark-brown);
+display: block;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+margin: 0;
+}
+</style>
 }
 
 <div class="home-wrapper">
@@ -91,7 +91,7 @@
 
         <h3 class="featured-subheading">Original Sets</h3>
         <div class="featured-grid">
-            @foreach(var p in ViewData["FeaturedOriginals"] as IEnumerable<KlawQ.Models.Products> ?? Enumerable.Empty<KlawQ.Models.Products>())
+            @foreach (var p in ViewData["FeaturedOriginals"] as IEnumerable<KlawQ.Models.Products> ?? Enumerable.Empty<KlawQ.Models.Products>())
             {
                 var img = p.Product_Image;
                 if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
@@ -109,7 +109,7 @@
 
         <h3 class="featured-subheading">Press-On Sets</h3>
         <div class="featured-grid">
-            @foreach(var p in ViewData["FeaturedPressOns"] as IEnumerable<KlawQ.Models.Products> ?? Enumerable.Empty<KlawQ.Models.Products>())
+            @foreach (var p in ViewData["FeaturedPressOns"] as IEnumerable<KlawQ.Models.Products> ?? Enumerable.Empty<KlawQ.Models.Products>())
             {
                 var img = p.Product_Image;
                 if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
@@ -123,6 +123,58 @@
                     </div>
                 </a>
             }
+        </div>
+    </section>
+
+    <!-- Meet the Artist (Backstory) Section -->
+    <section class="home-section about-section">
+        <div class="about-image-wrap">
+            <img src="~/images/gallery/meet_the_creator.jpg" alt="Meet the Creator - Klaw By Krys" class="about-image" />
+        </div>
+        <div class="about-content">
+            <div style="color: var(--accent-green); font-size: 1.1rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;">Meet the Creator</div>
+            <h2 class="about-quote">"Nails are small canvases of joy, and each set is a miniature work of art built just for you."</h2>
+            <p style="line-height: 1.7; font-size: 1.05rem; margin: 0.5rem 0 0 0;">
+                Hi, I'm <strong>Kryssa</strong>! My journey started with a deep love for custom fashion and self-expression. I realized that traditional salon visits take hours, and store-bought nails lack that customized fit and high-end artist touch.
+            </p>
+            <p style="line-height: 1.7; font-size: 1.05rem; margin: 0;">
+                Thus, <strong>Klaw By Krys</strong> was born. Every single press-on set is handcrafted, custom-sized, and meticulously hand-painted using premium-quality salon gels. It is my passion to bring salon-quality, reusable nail art right to your fingertips, saving you time while making your hands look absolutely stunning.
+            </p>
+            <div style="font-family: var(--primary-font); font-size: 1.8rem; color: var(--text-dark-brown); margin-top: 0.5rem;">— Kryssa, Founder & Nail Artist</div>
+        </div>
+    </section>
+
+    <!-- Why Choose Us Features Grid -->
+    <section class="home-section features-section">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-magic title-icon-pink"></i> The Klaw Difference <i class="fas fa-magic title-icon-pink"></i></h2>
+            <p class="section-subtitle">What makes our press-on sets special</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-paint-brush feature-icon"></i>
+                <h4 class="feature-title">Hand-Painted</h4>
+                <p class="feature-desc">Meticulously painted using professional, salon-grade gel polishes for ultimate vibrancy.</p>
+            </div>
+
+            <div class="feature-card">
+                <i class="fas fa-rotate-left feature-icon"></i>
+                <h4 class="feature-title">Reusable</h4>
+                <p class="feature-desc">Apply and remove with care to enjoy your gorgeous sets multiple times.</p>
+            </div>
+
+            <div class="feature-card">
+                <i class="fas fa-ruler-horizontal feature-icon"></i>
+                <h4 class="feature-title">Custom Sized</h4>
+                <p class="feature-desc">Made to order using your precise nail measurements for a perfect, comfortable fit.</p>
+            </div>
+
+            <div class="feature-card">
+                <i class="fas fa-shipping-fast feature-icon"></i>
+                <h4 class="feature-title">Convenient</h4>
+                <p class="feature-desc">Get premium boutique nails delivered to your door. Skip the long salon chair visits.</p>
+            </div>
         </div>
     </section>
 
@@ -141,7 +193,7 @@
 
             <div class="testimonial-card">
                 <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                <p class="quote">"Such an amazing experience! Krys is so talented and the quality of the press-ons is top-tier. They lasted me a whole month. Absolutely love them!"</p>
+                <p class="quote">"Such an amazing experience! Kryssa is so talented and the quality of the press-ons is top-tier. They lasted me a whole month. Absolutely love them!"</p>
                 <p class="author">— Jessica R.</p>
             </div>
 

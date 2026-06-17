@@ -19,150 +19,1005 @@
     <link rel="stylesheet" href="/css/portfolio-manager.css" />
 
     <style>
+        :root {
+            --border-pink: #f8bbd0;
+            --text-brown: #795548;
+            --text-light-brown: #a1887f;
+            --text-dark-brown: #5d4037;
+            --shadow-soft: 0 10px 30px rgba(121, 85, 72, 0.08);
+            --bg-soft-pink: #fff5f6;
+            --accent-pink: #fce4ec;
+        }
+
         /* limit description to two lines */
         .item-details p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* grid layout: 3 cards per row */
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap:24px; align-items:stretch; }
-        .gallery-grid .gallery-item { display:flex; flex-direction:column; gap:12px; padding:16px; border-radius:12px; background:#fff; box-shadow:0 6px 18px rgba(0,0,0,0.04); height:100%; }
+        /* layout grid wrapper - spaced and wide */
+        .portfolio-grid-layout {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 4rem;
+            align-items: start;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        /* adjust portfolio-container max-width for spacious layout */
+        body .portfolio-container {
+            max-width: 1600px !important;
+            width: 96% !important;
+            margin: 0 auto;
+            padding: 2rem 2rem;
+        }
+
+        /* Uniform styling for textareas, inputs and selects */
+        .portfolio-form textarea,
+        .modal-content-box textarea,
+        .portfolio-form select,
+        .modal-content-box select,
+        .modal-content-box input {
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #faf8f9;
+            font-family: var(--secondary-font);
+            color: var(--text-dark);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .portfolio-form textarea:focus,
+        .modal-content-box textarea:focus,
+        .portfolio-form select:focus,
+        .modal-content-box select:focus,
+        .modal-content-box input:focus {
+            border-color: var(--accent-pink);
+            background: #ffffff;
+        }
+
+        .portfolio-form textarea,
+        .modal-content-box textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Remove number input spin buttons (arrows) */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* type toggle buttons container */
+        .type-toggle-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 0.25rem;
+            width: 100%;
+        }
+
+        .btn-toggle-type {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border-pink);
+            background: #ffffff;
+            color: var(--text-brown);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-family: var(--secondary-font);
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .btn-toggle-type:hover {
+            background-color: var(--bg-soft-pink);
+        }
+
+        .btn-toggle-type.active {
+            background-color: var(--text-brown);
+            color: #ffffff;
+            border-color: var(--text-brown);
+        }
+
+        /* Upload image design matches user side checkout */
+        .upload-area {
+            border: 2px dashed var(--text-brown);
+            border-radius: 12px;
+            padding: 2.5rem 1rem;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #fffafb;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .upload-area:hover {
+            background-color: var(--accent-pink);
+        }
+
+        .upload-area input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .retro-camera {
+            font-size: 2.5rem;
+            color: var(--text-brown);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .upload-area h4 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-brown);
+            font-family: var(--secondary-font);
+        }
+
+        /* gallery grid: force 3 columns layout on desktop */
+        .portfolio-container .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            align-items: stretch;
+            grid-auto-rows: 1fr;
+        }
+
+        .portfolio-container .gallery-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 18px;
+            border-radius: 16px;
+            background: #fff;
+            border: 1px solid var(--border-pink);
+            box-shadow: var(--shadow-soft);
+            height: 100%;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .portfolio-container .gallery-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(121, 85, 72, 0.12);
+        }
 
         /* image box */
-        .gallery-item .work-image { width:100%; height:220px; border-radius:12px; overflow:hidden; background-color:#f8eef2; background-size:cover; background-position:center; flex-shrink:0; }
-        .item-details { flex:1; }
+        .portfolio-container .gallery-item .work-image {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #f8eef2;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+            border: 1px solid #f8eef2;
+        }
 
-        /* ensure actions stick to bottom */
-        .item-actions { margin-top:auto; display:flex; gap:8px; align-items:center; }
+        /* overlay badges */
+        .type-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: var(--secondary-font);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
 
-        /* title truncation to two lines */
-        .work-title { font-size:18px; margin:0 0 8px 0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word }
+        .type-badge.original {
+            background-color: #e6f2d9;
+            color: #557a2b;
+        }
 
-        /* responsive: 2 columns on smaller screens, 1 on very small */
-        @@media (max-width: 900px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
-        @@media (max-width: 560px) { .gallery-grid { grid-template-columns: 1fr; } }
-    </style>
-    <style>
-        /* overrides to align content and add padding */
-        .gallery-grid { align-items:stretch; grid-auto-rows: 1fr; }
-        .gallery-grid .gallery-item { padding:18px; box-sizing:border-box; height:100%; }
-        .gallery-item .work-image { height:220px; }
-        .item-details { display:flex; flex-direction:column; align-items:flex-start; padding-top:8px; }
-        .work-title { margin:8px 0 6px; }
-        .meta-row { display:flex; gap:12px; margin-top:8px; color:#7a5b52; }
-        .item-actions { margin-top:12px; }
+        .type-badge.presson {
+            background-color: #fff0f3;
+            color: #d85c74;
+        }
+
+        .item-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            flex: 1;
+        }
+
+        .work-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark-brown);
+            margin: 8px 0 4px 0;
+            font-family: var(--secondary-font);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+        }
+
+        .meta-row {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+            align-items: center;
+            width: 100%;
+            border-top: 1px dashed #f0e6e8;
+            padding-top: 12px;
+            margin-bottom: 12px;
+        }
+
+        .price-badge {
+            font-weight: 700;
+            color: var(--text-dark-brown);
+            font-size: 1rem;
+            font-family: var(--secondary-font);
+        }
+
+        .stock-badge {
+            margin-left: auto;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-family: var(--secondary-font);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stock-badge.in-stock {
+            background-color: #f5f0ee;
+            color: var(--text-light-brown);
+        }
+
+        .stock-badge.out-of-stock {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+
+        /* actions buttons styling */
+        .item-actions {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            margin-top: 0;
+            align-items: center;
+        }
+
+        .btn-action {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--secondary-font);
+            height: 34px;
+            box-sizing: border-box;
+            background: transparent;
+            text-decoration: none;
+        }
+
+        .btn-edit {
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green-hover);
+        }
+
+        .btn-edit:hover {
+            background: var(--accent-green);
+            color: #ffffff;
+            border-color: transparent;
+        }
+
+        .btn-delete {
+            border: 1px solid #dc3545;
+            color: #dc3545;
+            width: 100%;
+        }
+
+        .btn-delete:hover {
+            background: #dc3545;
+            color: #ffffff;
+            border-color: transparent;
+        }
+
+        /* tabs styling */
+        .history-tabs-container {
+            display: flex;
+            justify-content: flex-start;
+            gap: 1.5rem;
+            border-bottom: 2px solid var(--border-pink);
+            padding-bottom: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .history-tab {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 0.75rem;
+            font-family: var(--secondary-font);
+        }
+
+        .history-tab:hover {
+            color: var(--text-dark);
+        }
+
+        .history-tab.active {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .history-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -0.9rem;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--text-dark);
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* edit form modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content-box {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid var(--border-pink);
+            box-shadow: 0 10px 40px rgba(121, 85, 72, 0.15);
+            width: 500px;
+            max-width: 90%;
+            padding: 2rem;
+            box-sizing: border-box;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @@keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #f0e6e8;
+            padding-bottom: 0.8rem;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: var(--text-dark-brown);
+        }
+
+        .modal-header h2 i {
+            color: var(--accent-green);
+        }
+
+        .close-modal-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-light-brown);
+            line-height: 1;
+        }
+
+        .close-modal-btn:hover {
+            color: var(--text-dark-brown);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 2rem;
+        }
+
+        .btn-modal {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            font-family: var(--secondary-font);
+            transition: all 0.2s ease;
+        }
+
+        .btn-modal-cancel {
+            background-color: #faf8f9;
+            border: 1px solid var(--border-pink);
+            color: var(--text-brown);
+        }
+
+        .btn-modal-cancel:hover {
+            background-color: #f8eef2;
+        }
+
+        .btn-modal-save {
+            background-color: var(--accent-green);
+            color: white;
+        }
+
+        .btn-modal-save:hover {
+            background-color: var(--accent-green-hover);
+        }
+
+        @@media (max-width: 1300px) {
+            .portfolio-container .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @@media (max-width: 991px) {
+            .portfolio-grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 767px) {
+            .portfolio-container .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .title-icon-green {
+            color: var(--accent-green);
+            font-size: 2rem;
+            vertical-align: middle;
+            margin: 0 10px;
+        }
     </style>
 }
 
 <div class="portfolio-container">
 
     <div class="page-header">
-        <h1 class="page-title">Admin Portfolio Manager</h1>
+        <h1 class="page-title"><i class="fas fa-palette title-icon-green"></i> Admin Portfolio Manager <i class="fas fa-palette title-icon-green"></i></h1>
         <p class="page-subtitle">Add, edit, and organize your nail work gallery</p>
     </div>
 
-    <div class="section-box form-section">
-        <div class="section-header">
-            <h2><i class="far fa-image"></i> Add New Work</h2>
-        </div>
+    <div class="portfolio-grid-layout">
 
-        <form class="portfolio-form" action="/admin/PortfolioManager/create" method="post" enctype="multipart/form-data">
-            @Html.AntiForgeryToken()
-
-            <div class="form-group">
-                <label for="Product_Name">Title <span class="required">*</span></label>
-                <input type="text" id="Product_Name" name="Product_Name" placeholder="Work title" required />
+        <div class="section-box form-section">
+            <div class="section-header">
+                <h2><i class="far fa-image"></i> Add New Work</h2>
             </div>
 
-            <div class="form-group">
-                <label for="Product_Description">Description <span class="required">*</span></label>
-                <textarea id="Product_Description" name="Product_Description" placeholder="Enter a short description" required></textarea>
-            </div>
+            <form class="portfolio-form" action="/admin/PortfolioManager/create" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
 
-            <div class="form-group">
-                <label for="Product_Type">Type</label>
-                <select id="Product_Type" name="Product_Type">
-                    <option value="Original">Original Sets (Appointment)</option>
-                    <option value="PressOn">Press-On Sets (Order)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="Product_Price">Price</label>
-                <input type="number" step="0.01" id="Product_Price" name="Product_Price" placeholder="0.00" value="0.00" required />
-            </div>
-
-            <div class="form-group">
-                <label for="Product_Stock">Stock</label>
-                <input type="number" id="Product_Stock" name="Product_Stock" placeholder="0" value="1" required />
-            </div>
-
-            <div class="form-group">
-                <label for="imageFile">Upload Image <span class="required">*</span></label>
-                <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
-            </div>
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-save"><i class="fas fa-save"></i> Save</button>
-            </div>
-        </form>
-
-    </div>
-
-    <div class="section-box gallery-section">
-        <div class="section-header flex-between">
-            <h2>Uploaded Work</h2>
-            <span class="badge-total">@($"{Model?.Count() ?? 0} items")</span>
-        </div>
-
-        <div class="gallery-grid">
-            @if (Model == null || !Model.Any())
-            {
-                <div class="gallery-item empty-state">
-                    <div class="image-placeholder">
-                        <i class="far fa-image"></i>
+                <div class="form-group">
+                    <label>Work Type</label>
+                    <div class="type-toggle-container">
+                        <button type="button" class="btn-toggle-type active" id="btn-type-original" onclick="setFormType('Original')">Original Sets</button>
+                        <button type="button" class="btn-toggle-type" id="btn-type-presson" onclick="setFormType('PressOn')">Press-Ons</button>
                     </div>
-                    <p>No portfolio items yet. Upload a work to show it on the public gallery.</p>
+                    <input type="hidden" id="form_Product_Type" name="Product_Type" value="Original" />
                 </div>
-            }
-            else
-            {
-                foreach (var item in Model)
+
+                <div class="form-group">
+                    <label for="Product_Name">Title <span class="required">*</span></label>
+                    <input type="text" id="Product_Name" name="Product_Name" placeholder="Work title" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="Product_Description">Description <span class="required">*</span></label>
+                    <textarea id="Product_Description" name="Product_Description" placeholder="Enter a short description" required></textarea>
+                </div>
+
+                <div class="form-group" id="form-group-price">
+                    <label for="Product_Price">Price <span class="required">*</span></label>
+                    <input type="number" step="0.01" id="Product_Price" name="Product_Price" placeholder="0.00" required />
+                </div>
+
+                <div class="form-group" id="form-group-stock" style="display: none;">
+                    <label for="Product_Stock">Stock</label>
+                    <input type="number" id="Product_Stock" name="Product_Stock" placeholder="1" value="1" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Upload Image <span class="required">*</span></label>
+                    <div class="upload-area sizing-upload" id="upload-area-create">
+                        <i class="fas fa-upload retro-camera" id="upload-icon-create"></i>
+                        <h4 id="upload-status-text-create">Click to upload image</h4>
+                        <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-save"><i class="fas fa-save"></i> Save</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="section-box gallery-section">
+            <div class="section-header flex-between">
+                <h2><i class="fas fa-images" style="color: var(--accent-green); margin-right: 8px; font-size: 1.8rem; vertical-align: middle;"></i> Uploaded Work</h2>
+                <span class="badge-total" id="visible-count-badge">@($"{Model?.Count() ?? 0} items")</span>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="history-tabs-container">
+                <div class="history-tab active" data-tab="All">All Works</div>
+                <div class="history-tab" data-tab="Original">Original Sets</div>
+                <div class="history-tab" data-tab="PressOn">Press-On Sets</div>
+            </div>
+
+            <div class="gallery-grid">
+                <!-- JS Controlled Empty State -->
+                <div id="gallery-empty-state" class="empty-state-container" style="display: none; grid-column: 1 / -1; text-align: center; padding: 4rem 0; color: var(--text-light-brown); width: 100%;">
+                    <i class="far fa-image" style="font-size: 3.5rem; margin-bottom: 1.2rem; color: var(--border-pink); display: block;"></i>
+                    <p style="font-family: var(--secondary-font); font-size: 1.15rem; margin: 0; font-weight: 500;">No works found matching this category.</p>
+                </div>
+
+                @if (Model == null || !Model.Any())
                 {
-                    <div class="gallery-item">
-                        @{
-                            var imgPath = item.Product_Image;
-                            if (string.IsNullOrWhiteSpace(imgPath))
-                            {
-                                imgPath = Url.Content("~/images/placeholder.png");
-                            }
-                            else if (imgPath.StartsWith("~"))
-                            {
-                                imgPath = Url.Content(imgPath);
-                            }
-                            else if (!imgPath.StartsWith("/"))
-                            {
-                                imgPath = Url.Content("~/" + imgPath.TrimStart('/'));
-                            }
-                        }
-                        <div class="work-image" style="background-image:url('@imgPath');"></div>
-                        <div class="item-details">
-                            <h3 class="work-title">@item.Product_Name</h3>
-                            <p>@item.Product_Description</p>
-                            <div class="meta-row">
-                                <small>Price: @item.Product_Price.ToString("C")</small>
-                                <small>Stock: @item.Product_Stock</small>
-                            </div>
+                    <div class="gallery-item empty-state" style="grid-column: 1 / -1; text-align: center; padding: 4rem 0; color: var(--text-light-brown); border: 2px dashed var(--border-pink); border-radius: 16px;">
+                        <div class="image-placeholder" style="border: none; background: transparent; font-size: 3.5rem; margin-bottom: 1.2rem; color: var(--border-pink);">
+                            <i class="far fa-image"></i>
                         </div>
-                        <div class="item-actions">
-                            <a class="action-btn edit-btn" href="/admin/AdminProducts/edit/@item.ProductID" title="Edit"><i class="fas fa-pencil-alt"></i></a>
-                            <form method="post" action="/admin/PortfolioManager/delete/@item.ProductID" onsubmit="return confirm('Delete this work?');">
-                                @Html.AntiForgeryToken()
-                                <button class="action-btn delete-btn" type="submit" title="Delete"><i class="fas fa-trash-alt"></i></button>
-                            </form>
-                        </div>
+                        <p style="font-family: var(--secondary-font); font-size: 1.15rem; margin: 0; font-weight: 500;">No portfolio items yet. Upload a work to show it on the public gallery.</p>
                     </div>
                 }
-            }
+                else
+                {
+                    foreach (var item in Model)
+                    {
+                        var imgPath = item.Product_Image;
+                        if (string.IsNullOrWhiteSpace(imgPath))
+                        {
+                            imgPath = Url.Content("~/images/placeholder.png");
+                        }
+                        else if (imgPath.StartsWith("~"))
+                        {
+                            imgPath = Url.Content(imgPath);
+                        }
+                        else if (!imgPath.StartsWith("/"))
+                        {
+                            imgPath = Url.Content("~/" + imgPath.TrimStart('/'));
+                        }
+
+                        <div class="gallery-item" data-type="@item.Product_Type">
+                            <div class="work-image" style="background-image:url('@imgPath');">
+                                <span class="type-badge @item.Product_Type.ToLower()">
+                                    @if (item.Product_Type == "Original")
+                                    {
+                                        @:Original Set
+                                    }
+                                    else
+                                    {
+                                        @:Press-On Set
+                                    }
+                                </span>
+                            </div>
+                            <div class="item-details">
+                                <h3 class="work-title">@item.Product_Name</h3>
+                                <p>@item.Product_Description</p>
+                                <div class="meta-row">
+                                     @if (item.Product_Type == "PressOn")
+                                     {
+                                         <span class="price-badge">₱@item.Product_Price.ToString("N2")</span>
+                                         <span class="stock-badge in-stock">
+                                             <i class="fas fa-box"></i> @item.Product_Stock
+                                         </span>
+                                     }
+                                     else
+                                     {
+                                         <span class="price-badge">₱@item.Product_Price.ToString("N2")</span>
+                                         <span class="stock-badge in-stock" style="background-color: #e6f2d9; color: #557a2b;">
+                                             <i class="fa-regular fa-calendar-check"></i> Appointment Set
+                                         </span>
+                                     }
+                                 </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-action btn-edit" 
+                                        data-id="@item.ProductID"
+                                        data-name="@item.Product_Name"
+                                        data-description="@item.Product_Description"
+                                        data-type="@item.Product_Type"
+                                        data-price="@item.Product_Price"
+                                        data-stock="@item.Product_Stock"
+                                        data-image="@imgPath"
+                                        onclick="initiateEdit(this)"
+                                        title="Edit Work">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                </button>
+                                <form method="post" action="/admin/PortfolioManager/delete/@item.ProductID" onsubmit="return confirm('Delete this work?');" style="margin: 0; flex: 1;">
+                                    @Html.AntiForgeryToken()
+                                    <button class="btn-action btn-delete" type="submit" title="Delete Work">
+                                        <i class="fa-solid fa-trash-can"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
         </div>
+
     </div>
 
 </div>
+
+<!-- Edit Product Modal -->
+<div id="editWorkModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content-box">
+        <div class="modal-header">
+            <h2><i class="fa-solid fa-pen-to-square"></i> Edit Portfolio Item</h2>
+            <button type="button" class="close-modal-btn" onclick="closeEditModal()">&times;</button>
+        </div>
+        
+        <form id="editWorkForm" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="edit_ProductID" name="ProductID" />
+
+            <div class="form-group">
+                <label>Work Type</label>
+                <div class="type-toggle-container">
+                    <button type="button" class="btn-toggle-type" id="edit-btn-type-original" onclick="setEditFormType('Original')">Original Sets</button>
+                    <button type="button" class="btn-toggle-type" id="edit-btn-type-presson" onclick="setEditFormType('PressOn')">Press-Ons</button>
+                </div>
+                <input type="hidden" id="edit_Product_Type" name="Product_Type" />
+            </div>
+
+            <div class="form-group">
+                <label for="edit_Product_Name">Title <span class="required">*</span></label>
+                <input type="text" id="edit_Product_Name" name="Product_Name" placeholder="Work title" required />
+            </div>
+
+            <div class="form-group">
+                <label for="edit_Product_Description">Description <span class="required">*</span></label>
+                <textarea id="edit_Product_Description" name="Product_Description" placeholder="Enter a short description" required></textarea>
+            </div>
+
+            <div class="form-group" id="edit-form-group-price">
+                <label for="edit_Product_Price">Price <span class="required">*</span></label>
+                <input type="number" step="0.01" id="edit_Product_Price" name="Product_Price" placeholder="0.00" required />
+            </div>
+
+            <div class="form-group" id="edit-form-group-stock">
+                <label for="edit_Product_Stock">Stock</label>
+                <input type="number" id="edit_Product_Stock" name="Product_Stock" placeholder="1" required />
+            </div>
+
+            <div class="form-group">
+                <label>Upload New Image (Optional)</label>
+                <div class="upload-area sizing-upload" id="upload-area-edit">
+                    <i class="fas fa-upload retro-camera" id="upload-icon-edit"></i>
+                    <h4 id="upload-status-text-edit">Click to upload new image</h4>
+                    <input type="file" id="edit_imageFile" name="imageFile" accept="image/*">
+                </div>
+                <div id="edit_current_image_container" style="margin-top: 12px; display: flex; align-items: center; gap: 10px;">
+                    <img id="edit_current_image_preview" src="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-pink);" />
+                    <span style="font-size: 0.8rem; color: var(--text-light-brown);">Current image will be kept if no new image is selected.</span>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-modal btn-modal-cancel" onclick="closeEditModal()">Cancel</button>
+                <button type="submit" class="btn-modal btn-modal-save"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // State
+        let currentTab = "All"; // "All", "Original", "PressOn"
+
+        document.addEventListener("DOMContentLoaded", () => {
+            setupTabListeners();
+            filterAndDisplayGallery();
+            setupFileUploadHandlers();
+        });
+
+        function setupTabListeners() {
+            const tabs = document.querySelectorAll(".history-tab");
+            tabs.forEach(tab => {
+                tab.addEventListener("click", function () {
+                    tabs.forEach(t => t.classList.remove("active"));
+                    this.classList.add("active");
+                    currentTab = this.getAttribute("data-tab");
+                    filterAndDisplayGallery();
+                });
+            });
+        }
+
+        function filterAndDisplayGallery() {
+            const items = document.querySelectorAll(".gallery-item:not(.empty-state-container):not(.empty-state)");
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const itemType = item.getAttribute("data-type"); // "Original" or "PressOn"
+
+                let matchesTab = false;
+                if (currentTab === "All") {
+                    matchesTab = true;
+                } else if (currentTab === "Original" && itemType === "Original") {
+                    matchesTab = true;
+                } else if (currentTab === "PressOn" && itemType === "PressOn") {
+                    matchesTab = true;
+                }
+
+                if (matchesTab) {
+                    item.style.display = "flex";
+                    visibleCount++;
+                } else {
+                    item.style.display = "none";
+                }
+            });
+
+            // Update badge count
+            const countBadge = document.getElementById("visible-count-badge");
+            if (countBadge) {
+                countBadge.textContent = `${visibleCount} item${visibleCount !== 1 ? 's' : ''}`;
+            }
+
+            // Toggle empty state
+            const emptyState = document.getElementById("gallery-empty-state");
+            if (emptyState) {
+                if (visibleCount === 0) {
+                    emptyState.style.display = "block";
+                } else {
+                    emptyState.style.display = "none";
+                }
+            }
+        }
+
+        // Add form type buttons toggler
+        function setFormType(type) {
+            document.getElementById('form_Product_Type').value = type;
+            
+            const btnOriginal = document.getElementById('btn-type-original');
+            const btnPressOn = document.getElementById('btn-type-presson');
+            const priceGroup = document.getElementById('form-group-price');
+            const stockGroup = document.getElementById('form-group-stock');
+            
+            if (type === 'Original') {
+                btnOriginal.classList.add('active');
+                btnPressOn.classList.remove('active');
+                priceGroup.style.display = 'block';
+                stockGroup.style.display = 'none';
+                
+                // Defaults for Original type to bypass backend model state checks
+                document.getElementById('Product_Stock').value = '1';
+            } else {
+                btnOriginal.classList.remove('active');
+                btnPressOn.classList.add('active');
+                priceGroup.style.display = 'block';
+                stockGroup.style.display = 'block';
+            }
+        }
+
+        // Edit form type buttons toggler
+        function setEditFormType(type) {
+            document.getElementById('edit_Product_Type').value = type;
+            
+            const btnOriginal = document.getElementById('edit-btn-type-original');
+            const btnPressOn = document.getElementById('edit-btn-type-presson');
+            const priceGroup = document.getElementById('edit-form-group-price');
+            const stockGroup = document.getElementById('edit-form-group-stock');
+            
+            if (type === 'Original') {
+                btnOriginal.classList.add('active');
+                btnPressOn.classList.remove('active');
+                priceGroup.style.display = 'block';
+                stockGroup.style.display = 'none';
+                
+                document.getElementById('edit_Product_Stock').value = '1';
+            } else {
+                btnOriginal.classList.remove('active');
+                btnPressOn.classList.add('active');
+                priceGroup.style.display = 'block';
+                stockGroup.style.display = 'block';
+            }
+        }
+
+        // File upload custom handlers matching user checkout standard form styling and clear action
+        function setupFileUploadHandlers() {
+            // Sizing Upload JS for create
+            const fileInputCreate = document.getElementById('imageFile');
+            const statusTextCreate = document.getElementById('upload-status-text-create');
+            const uploadIconCreate = document.getElementById('upload-icon-create');
+            const uploadAreaCreate = document.getElementById('upload-area-create');
+
+            fileInputCreate.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                statusTextCreate.innerHTML = `Attached: <strong>${file.name}</strong> <span id="clear-create-btn" style="color: #d32f2f; cursor: pointer; margin-left: 8px; font-weight: bold; font-size: 16px;">✕</span>`;
+                uploadIconCreate.className = 'fas fa-image retro-camera';
+            });
+
+            statusTextCreate.addEventListener('click', (e) => {
+                if (e.target.id === 'clear-create-btn') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fileInputCreate.value = '';
+                    statusTextCreate.innerHTML = "Click to upload image";
+                    uploadIconCreate.className = 'fas fa-upload retro-camera';
+                }
+            });
+
+            uploadAreaCreate.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadAreaCreate.style.backgroundColor = 'var(--accent-pink)';
+            });
+            uploadAreaCreate.addEventListener('dragleave', () => {
+                uploadAreaCreate.style.backgroundColor = '';
+            });
+            uploadAreaCreate.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadAreaCreate.style.backgroundColor = '';
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    fileInputCreate.files = files;
+                    fileInputCreate.dispatchEvent(new Event('change'));
+                }
+            });
+
+            // Sizing Upload JS for edit
+            const fileInputEdit = document.getElementById('edit_imageFile');
+            const statusTextEdit = document.getElementById('upload-status-text-edit');
+            const uploadIconEdit = document.getElementById('upload-icon-edit');
+            const uploadAreaEdit = document.getElementById('upload-area-edit');
+
+            fileInputEdit.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                statusTextEdit.innerHTML = `Attached: <strong>${file.name}</strong> <span id="clear-edit-btn" style="color: #d32f2f; cursor: pointer; margin-left: 8px; font-weight: bold; font-size: 16px;">✕</span>`;
+                uploadIconEdit.className = 'fas fa-image retro-camera';
+            });
+
+            statusTextEdit.addEventListener('click', (e) => {
+                if (e.target.id === 'clear-edit-btn') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fileInputEdit.value = '';
+                    statusTextEdit.innerHTML = "Click to upload new image";
+                    uploadIconEdit.className = 'fas fa-upload retro-camera';
+                }
+            });
+
+            uploadAreaEdit.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadAreaEdit.style.backgroundColor = 'var(--accent-pink)';
+            });
+            uploadAreaEdit.addEventListener('dragleave', () => {
+                uploadAreaEdit.style.backgroundColor = '';
+            });
+            uploadAreaEdit.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadAreaEdit.style.backgroundColor = '';
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    fileInputEdit.files = files;
+                    fileInputEdit.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+
+        // Modal triggers
+        function initiateEdit(button) {
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            const desc = button.getAttribute('data-description');
+            const type = button.getAttribute('data-type');
+            const price = button.getAttribute('data-price');
+            const stock = button.getAttribute('data-stock');
+            const image = button.getAttribute('data-image');
+            
+            openEditModal(id, name, desc, type, price, stock, image);
+        }
+
+        function openEditModal(id, name, description, type, price, stock, imageUrl) {
+            document.getElementById("edit_ProductID").value = id;
+            document.getElementById("edit_Product_Name").value = name;
+            document.getElementById("edit_Product_Description").value = description;
+            
+            // Toggle form type elements dynamically
+            setEditFormType(type);
+            
+            document.getElementById("edit_Product_Price").value = parseFloat(price).toFixed(2);
+            if (type === 'PressOn') {
+                document.getElementById("edit_Product_Stock").value = parseInt(stock);
+            } else {
+                document.getElementById("edit_Product_Stock").value = '1';
+            }
+            
+            // Set image preview
+            const previewImg = document.getElementById("edit_current_image_preview");
+            if (previewImg && imageUrl) {
+                previewImg.src = imageUrl;
+                document.getElementById("edit_current_image_container").style.display = "flex";
+            } else {
+                document.getElementById("edit_current_image_container").style.display = "none";
+            }
+
+            // Set Form action endpoint
+            const form = document.getElementById("editWorkForm");
+            if (form) {
+                form.action = `/admin/PortfolioManager/edit/${id}`;
+            }
+
+            // Display overlay
+            document.getElementById("editWorkModal").style.display = "flex";
+            document.body.style.overflow = "hidden"; // Prevent scrolling behind modal
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById("editWorkModal");
+            if (modal) {
+                modal.style.display = "none";
+            }
+            document.body.style.overflow = ""; // Re-enable scrolling
+            
+            // Reset image file input and status
+            const fileInput = document.getElementById("edit_imageFile");
+            if (fileInput) fileInput.value = "";
+            
+            const statusText = document.getElementById('upload-status-text-edit');
+            if (statusText) statusText.innerHTML = "Click to upload new image";
+            
+            const uploadIcon = document.getElementById('upload-icon-edit');
+            if (uploadIcon) uploadIcon.className = 'fas fa-upload retro-camera';
+        }
+
+        // Close modal if clicking outside the modal box
+        window.addEventListener("click", function(event) {
+            const modal = document.getElementById("editWorkModal");
+            if (event.target === modal) {
+                closeEditModal();
+            }
+        });
+    </script>
+}

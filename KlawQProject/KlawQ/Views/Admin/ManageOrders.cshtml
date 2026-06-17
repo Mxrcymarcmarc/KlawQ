@@ -1,47 +1,24 @@
-﻿@model KlawQ.Models.AdminOrdersViewModel
+@model KlawQ.Models.AdminOrdersViewModel
 @{
     ViewData["Title"] = "Manage Orders";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["NavbarMode"] = "admin";
 }
 
 @section Styles {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/home-page.css" asp-append-version="true" />
 
     <style>
-        :root {
-            --primary-font: 'Shadows Into Light Two', cursive;
-            --secondary-font: 'Montserrat', sans-serif;
-            --text-brown: #8d6e5d;
-            --text-dark-brown: #795548;
-            --card-bg: #ffffff;
-            --accent-green: #a7c47d;
-            --accent-green-hover: #92b068;
-            --border-pink: #f8bbd0;
-            --shadow-soft: 0 10px 30px rgba(121, 85, 72, 0.08);
-            --status-pending: #ffb74d;
-            --status-progress: #64b5f6;
-            --status-completed: #81c784;
+        .home-wrapper {
+            min-height: 80vh;
+            background-color: var(--bg-soft-pink);
+            padding: 2rem 0;
         }
 
-        .manage-orders-wrapper {
-            background-color: #fdfafb;
-            padding: 3rem 1rem;
-            min-height: 100vh;
-            font-family: var(--secondary-font);
-            color: var(--text-brown);
-        }
-
-        .manage-orders-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        /* 🌟 BACK BUTTON STYLING: Exactly like Manage Appointments */
         .back-dash-link {
             display: inline-flex;
             align-items: center;
@@ -54,293 +31,598 @@
             transition: all 0.2s;
         }
 
-            .back-dash-link:hover {
-                color: var(--text-dark-brown);
-                transform: translateX(-3px);
-            }
-
-        .page-header {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-
-        .page-title {
-            font-family: var(--primary-font);
-            font-size: 3.5rem;
-            margin: 0;
+        .back-dash-link:hover {
             color: var(--text-dark-brown);
-            font-weight: normal;
+            transform: translateX(-3px);
+            text-decoration: none;
         }
 
-        .filter-control-box {
+        /* Status Sub-Filters */
+        .status-filters-row {
             display: flex;
-            gap: 15px;
-            margin-bottom: 2rem;
             justify-content: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
         }
 
-        .filter-btn {
-            padding: 8px 20px;
+        .status-filter-btn {
+            padding: 8px 18px;
             border-radius: 20px;
             border: 1px solid var(--border-pink);
             background: white;
             color: var(--text-brown);
             font-weight: 600;
+            font-size: 0.85rem;
             cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
 
-            .filter-btn.active, .filter-btn:hover {
-                background: var(--text-brown);
-                color: white;
-                border-color: var(--text-brown);
-            }
+        .status-filter-btn:hover,
+        .status-filter-btn.active {
+            background: var(--text-brown);
+            color: white;
+            border-color: var(--text-brown);
+        }
 
+        /* Card Layout Tweaks */
         .order-card {
-            background: var(--card-bg);
+            border: 1.5px solid var(--border-pink);
+        }
+
+        .order-card-body {
+            align-items: stretch !important;
+        }
+
+        .order-items-list {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .order-customer-details {
+            font-size: 0.88rem;
+            color: var(--text-brown);
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            min-width: 200px;
+        }
+
+        .order-customer-details span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .order-customer-details i {
+            color: var(--text-light-brown);
+            width: 16px;
+            text-align: center;
+        }
+
+        /* Buttons & Controls */
+        .btn-admin-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 0.5rem 1.2rem;
+            border: 1px solid transparent;
             border-radius: 20px;
-            padding: 2rem;
-            box-shadow: var(--shadow-soft);
-            margin-bottom: 2rem;
-            border: 2px solid var(--border-pink);
-        }
-
-        .orders-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-            .orders-table th {
-                color: var(--text-dark-brown);
-                font-weight: 600;
-                padding: 1rem;
-                border-bottom: 2px solid var(--border-pink);
-                font-size: 0.9rem;
-                text-transform: uppercase;
-                position: sticky;
-                top: 0;
-                background: var(--card-bg);
-                z-index: 10;
-            }
-
-            .orders-table td {
-                padding: 1.2rem 1rem;
-                color: var(--text-brown);
-                border-bottom: 1px solid #f7ecee;
-                font-size: 0.95rem;
-                vertical-align: middle;
-            }
-
-        .table-responsive {
-            max-height: 400px;
-            overflow-y: auto;
-            overflow-x: auto;
-            padding-right: 5px;
-        }
-
-            .table-responsive::-webkit-scrollbar {
-                width: 6px;
-                height: 6px;
-            }
-
-            .table-responsive::-webkit-scrollbar-track {
-                background: #fdf5f6;
-                border-radius: 10px;
-            }
-
-            .table-responsive::-webkit-scrollbar-thumb {
-                background: var(--border-pink);
-                border-radius: 10px;
-            }
-
-                .table-responsive::-webkit-scrollbar-thumb:hover {
-                    background: var(--text-brown);
-                }
-
-        .badge-status {
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 0.82rem;
             font-weight: 600;
-            color: white;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .badge-pending {
-            background-color: var(--status-pending);
-        }
-
-        .badge-progress {
-            background-color: var(--status-progress);
-        }
-
-        .badge-completed {
-            background-color: var(--status-completed);
-        }
-
-        .btn-order-action {
-            padding: 6px 14px;
-            border-radius: 10px;
-            border: none;
-            color: white;
-            font-weight: 600;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            transition: all 0.2s ease;
+            font-family: var(--secondary-font);
+            text-decoration: none;
+            min-width: 110px;
+            height: 38px;
+            box-sizing: border-box;
         }
 
-            .btn-order-action:hover {
-                transform: translateY(-1px);
-                filter: brightness(0.95);
-            }
-
-        .btn-to-progress {
-            background-color: var(--status-progress);
+        .btn-admin-approve {
+            border-color: var(--accent-green);
+            color: var(--accent-green-hover);
+            background: transparent;
         }
 
-        .btn-to-complete {
-            background-color: var(--status-completed);
+        .btn-admin-approve:hover {
+            background: var(--accent-green);
+            color: #ffffff;
+            border-color: transparent;
         }
 
-        .item-summary-text {
-            font-size: 0.82rem;
-            color: #9c8a7c;
-            margin: 2px 0;
+        .btn-admin-reject {
+            border-color: #dc3545;
+            color: #dc3545;
+            background: transparent;
+        }
+
+        .btn-admin-reject:hover {
+            background: #dc3545;
+            color: #ffffff;
+            border-color: transparent;
+        }
+
+        .btn-admin-view {
+            border-color: #9c27b0;
+            color: #9c27b0;
+            background: transparent;
+            min-width: 38px !important;
+            width: 38px;
+            padding: 0;
+        }
+
+        .btn-admin-view:hover {
+            background: #9c27b0;
+            color: #ffffff;
+            border-color: transparent;
+        }
+
+        .admin-status-dropdown {
+            padding: 6px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-pink);
+            font-weight: 600;
+            color: var(--text-brown);
+            background: white;
+            outline: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            height: 34px;
+        }
+
+        .admin-status-dropdown:focus {
+            border-color: var(--text-brown);
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: var(--text-light-brown);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Lightbox Image Modal */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            padding-top: 50px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+        }
+
+        .image-modal-content {
+            margin: auto;
+            display: block;
+            max-width: 80%;
+            max-height: 80%;
+            border-radius: 12px;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .image-modal-close:hover,
+        .image-modal-close:focus {
+            color: #bbb;
+            text-decoration: none;
         }
     </style>
 }
 
-<div class="manage-orders-wrapper">
-    <div class="manage-orders-container">
+<div class="home-wrapper">
+    <section class="home-section bookmarks-section" style="padding: 1rem 1rem 3rem 1rem;">
+        <div class="container" style="max-width: 1100px; margin: 0 auto;">
+            <a href="/admin" class="back-dash-link">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
 
-        <!-- 🌟 BACK BUTTON INTERFACE LINK -->
-        <a href="/admin" class="back-dash-link">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-box title-icon-green"></i> Manage Orders <i class="fas fa-box title-icon-green"></i></h2>
+                <p class="section-subtitle">Process client transactions, custom requests, and order queues.</p>
+            </div>
 
-        <div class="page-header">
-            <h1 class="page-title">📦 Manage Orders</h1>
-            <p class="page-subtitle">Track press-on queues, update production statuses, and manage completions.</p>
-        </div>
+            <div class="bookmarks-board" style="padding: 2.5rem 2rem;">
+                <!-- Tabs Navigation -->
+                <div class="history-tabs-container">
+                    <div class="history-tab active" data-tab="PressOns">Press-On Orders</div>
+                    <div class="history-tab" data-tab="Custom">Custom Requests</div>
+                </div>
 
-        <!-- 🧭 Live State Filter Controls Bar -->
-        <div class="filter-control-box">
-            <a href="?status=All" class="filter-btn @(Model.SelectedStatus == "All" ? "active" : "")">All Orders</a>
-            <a href="?status=Pending" class="filter-btn @(Model.SelectedStatus == "Pending" ? "active" : "")">Pending</a>
-            <a href="?status=In Progress" class="filter-btn @(Model.SelectedStatus == "In Progress" ? "active" : "")">In Progress</a>
-            <a href="?status=Completed" class="filter-btn @(Model.SelectedStatus == "Completed" ? "active" : "")">Completed</a>
-        </div>
+                <!-- Sub-filters for Status -->
+                <div class="status-filters-row">
+                    <button class="status-filter-btn active" data-status="All">All</button>
+                    <button class="status-filter-btn" data-status="Pending">Pending</button>
+                    <button class="status-filter-btn" data-status="In Progress">In Progress</button>
+                    <button class="status-filter-btn" data-status="Completed">Completed</button>
+                    <button class="status-filter-btn" data-status="Cancelled">Cancelled</button>
+                </div>
 
-        <div class="order-card">
-            <div class="table-responsive">
-                <table class="orders-table">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Customer Info</th>
-                            <th>Items Purchased</th>
-                            <th>Fulfillment Info</th>
-                            <th>Current Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model?.Orders == null || !Model.Orders.Any())
+                <!-- Orders Container -->
+                <div id="orders-container">
+                    @if (Model?.Orders != null && Model.Orders.Any())
+                    {
+                        foreach (var order in Model.Orders)
                         {
-                            <tr>
-                                <td colspan="6" style="text-align:center; padding: 40px; font-style:italic; color:#9c8a7c;">
-                                    No records match this status selection criteria filter.
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            foreach (var order in Model.Orders)
-                            {
-                                <tr id="order-row-@order.OrderID">
-                                    <td style="font-weight:700; color:var(--text-dark-brown);">#D-@order.OrderID</td>
-                                    <td>
-                                        <strong>@order.Full_Name</strong>
-                                        <p class="item-summary-text">📱 @order.Social_Account</p>
-                                        <p class="item-summary-text">📞 @order.Contact_Number</p>
-                                    </td>
-                                    <td>
-                                        @if (order.Items != null && order.Items.Any())
+                            var status = order.Status ?? "Pending";
+                            var badgeClass = status.Replace(" ", "-").ToLower();
+                            var type = order.Order_Type;
+
+                            <div class="order-card" data-status="@status" data-type="@type" style="display: none;">
+                                <div class="order-card-header">
+                                    <div class="order-meta-info">
+                                        <i class="far fa-calendar-alt"></i> @order.Order_Date.ToString("MM/dd/yyyy h:mm tt") <span style="margin: 0 10px; color: #ddd;">|</span> <i class="fas fa-hashtag"></i> Order No. ORD-@order.OrderID
+                                    </div>
+                                    <div class="status-badge @badgeClass">
+                                        @status
+                                    </div>
+                                </div>
+                                <div class="order-card-body">
+                                    
+                                    <!-- LEFT PORTION: Items or Custom Design details -->
+                                    <div class="order-items-list" style="flex: 1.3; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+                                        @if (type == 'P')
                                         {
-                                            foreach (var item in order.Items)
-                                            {
-                                                <p class="item-summary-text">🔹 @(item.Product?.Product_Name ?? "Unknown Item") <strong>(x@item.Quantity)</strong></p>
-                                            }
+                                            <!-- Standard Press-On Items -->
+                                            <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; flex-grow: 1; gap: 1rem;">
+                                                @{
+                                                    var pressOnInspirations = new List<string>();
+                                                    if (!string.IsNullOrWhiteSpace(order.Thumb_Photo) && order.Thumb_Photo.TrimStart().StartsWith("{"))
+                                                    {
+                                                        try
+                                                        {
+                                                            var doc = System.Text.Json.JsonDocument.Parse(order.Thumb_Photo);
+                                                            if (doc.RootElement.TryGetProperty("inspirations", out var inspProp) && inspProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                                                            {
+                                                                foreach (var el in inspProp.EnumerateArray())
+                                                                {
+                                                                    var b64 = el.GetString();
+                                                                    if (!string.IsNullOrWhiteSpace(b64)) pressOnInspirations.Add(b64);
+                                                                }
+                                                            }
+                                                        }
+                                                        catch {}
+                                                    }
+                                                }
+
+                                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                                    @if (pressOnInspirations.Any())
+                                                    {
+                                                        <div class="order-item-row" style="margin-bottom: 0;">
+                                                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                                                <img src="@pressOnInspirations.First()" alt="Custom Press-On Set" class="order-item-image" style="width: 70px; height: 70px; cursor: pointer;" onclick="openImageModal('@pressOnInspirations.First()')" />
+                                                                <div class="order-item-details">
+                                                                    <h3 class="order-item-title" style="font-size: 1.05rem;">Custom Press-On Set</h3>
+                                                                    <div class="order-item-price-qty">
+                                                                        Custom Design &nbsp;|&nbsp; <span class="badge-size" style="font-size: 11px;">Custom</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+
+                                                    @foreach (var item in order.Items ?? Enumerable.Empty<KlawQ.Models.OrderItem>())
+                                                    {
+                                                        var img = item.Product?.Product_Image;
+                                                        if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
+                                                        else if (img.StartsWith("~")) img = Url.Content(img);
+                                                        else if (!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
+                                                        else img = Url.Content(img);
+
+                                                        var price = item.Product?.Product_Price ?? 0;
+
+                                                        <div class="order-item-row" style="margin-bottom: 0;">
+                                                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                                                <img src="@img" alt="@(item.Product?.Product_Name)" class="order-item-image" style="width: 70px; height: 70px;" />
+                                                                <div class="order-item-details">
+                                                                    <h3 class="order-item-title" style="font-size: 1.05rem;">@(item.Product?.Product_Name ?? "Press-On Set")</h3>
+                                                                    <div class="order-item-price-qty">
+                                                                        ₱@(price.ToString("N2")) × @item.Quantity &nbsp;|&nbsp; <span class="badge-size" style="font-size: 11px;">Standard</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+
+                                                @if (!string.IsNullOrWhiteSpace(order.Hand_Photo))
+                                                {
+                                                    <div style="margin-top: auto; border-top: 1px dashed #f0e6e8; padding-top: 10px; display: flex; align-items: center; gap: 12px;">
+                                                        <div>
+                                                            <span class="info-label" style="display:block; font-size:10px; margin-bottom:4px;">Hand Sizing Photo</span>
+                                                            <img src="@order.Hand_Photo" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-pink); cursor: pointer;" onclick="openImageModal('@order.Hand_Photo')" />
+                                                        </div>
+                                                        <div style="font-size: 0.85rem; color: var(--text-light-brown);">
+                                                            Click thumbnail to inspect the sizing photo.
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
                                         }
                                         else
                                         {
-                                            <span style="font-style:italic; font-size:0.8rem; color:#b09b8e;">Custom Set Specification Blueprint</span>
+                                            <!-- Custom Request Details & Designs -->
+                                            <div style="display: flex; flex-direction: column; height: 100%; flex-grow: 1; gap: 1.2rem; justify-content: flex-start;">
+                                                @{
+                                                    var designNotes = "";
+                                                    var inspirations = new List<string>();
+                                                    if (!string.IsNullOrWhiteSpace(order.Thumb_Photo))
+                                                    {
+                                                        try
+                                                        {
+                                                            var doc = System.Text.Json.JsonDocument.Parse(order.Thumb_Photo);
+                                                            if (doc.RootElement.TryGetProperty("designNotes", out var noteProp)) { designNotes = noteProp.GetString() ?? ""; }
+                                                            if (doc.RootElement.TryGetProperty("inspirations", out var inspProp) && inspProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                                                            {
+                                                                foreach (var el in inspProp.EnumerateArray())
+                                                                {
+                                                                    var b64 = el.GetString();
+                                                                    if (!string.IsNullOrWhiteSpace(b64)) inspirations.Add(b64);
+                                                                }
+                                                            }
+                                                        }
+                                                        catch {}
+                                                    }
+                                                }
+
+                                                @if (order.Items != null && order.Items.Any())
+                                                {
+                                                    <div style="border-bottom: 1px dashed #f0e6e8; padding-bottom: 10px;">
+                                                        <span class="info-label" style="display:block; font-size:10px; margin-bottom:6px;">Bundled Accessory Kits</span>
+                                                        @foreach (var item in order.Items ?? Enumerable.Empty<KlawQ.Models.OrderItem>())
+                                                        {
+                                                            <p style="font-size: 13px; color: var(--text-brown); margin: 2px 0;">
+                                                                <i class="fas fa-chevron-right" style="font-size: 10px; color: var(--border-pink);"></i> @(item.Product?.Product_Name) <strong>(x@item.Quantity)</strong>
+                                                            </p>
+                                                        }
+                                                    </div>
+                                                }
+
+                                                <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; width: 100%;">
+                                                    @if (!string.IsNullOrWhiteSpace(order.Hand_Photo))
+                                                    {
+                                                        <div>
+                                                            <span class="info-label" style="display:block; font-size:10px; margin-bottom:6px;">Hand Photo</span>
+                                                            <img src="@order.Hand_Photo" style="width: 130px; height: 130px; object-fit: cover; border-radius: 10px; border: 1.5px solid var(--border-pink); cursor: pointer;" onclick="openImageModal('@order.Hand_Photo')" />
+                                                        </div>
+                                                    }
+                                                    @if (inspirations.Any())
+                                                    {
+                                                        <div>
+                                                            <span class="info-label" style="display:block; font-size:10px; margin-bottom:6px;">Inspirations (@inspirations.Count)</span>
+                                                            <div style="display:flex; gap:8px;">
+                                                                @foreach (var inspImg in inspirations.Take(2))
+                                                                {
+                                                                    <img src="@inspImg" style="width: 130px; height: 130px; object-fit: cover; border-radius: 10px; border: 1.5px solid var(--border-pink); cursor: pointer;" onclick="openImageModal('@inspImg')" />
+                                                                }
+                                                                @if (inspirations.Count > 2)
+                                                                {
+                                                                    <div style="width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; background: #fff5f6; border-radius: 10px; border: 1.5px solid var(--border-pink); color: var(--text-light-brown); font-size: 16px; font-weight: 600;">
+                                                                        +@(inspirations.Count - 2)
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    @if (!string.IsNullOrWhiteSpace(designNotes))
+                                                    {
+                                                        <div style="flex: 1; min-width: 220px;">
+                                                            <span class="info-label" style="display:block; font-size:10px; margin-bottom:6px;">Design Notes</span>
+                                                            <p style="font-size: 13px; line-height: 1.5; color: var(--text-brown); margin: 0; padding: 12px 16px; background-color: #fff5f6; border-radius: 10px; border: 1px solid var(--border-pink); min-height: 100px; box-sizing: border-box;">
+                                                                @designNotes
+                                                            </p>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
                                         }
-                                    </td>
-                                    <td>
-                                        <p class="item-summary-text">🚚 @order.Delivery_Method</p>
-                                        <p class="item-summary-text">📍 @order.Delivery_Location</p>
-                                    </td>
-                                    <td>
-                                        @if (order.Status == "Pending")
-                                        {
-                                            <span class="badge-status badge-pending"><i class="far fa-clock"></i> Pending</span>
-                                        }
-                                        else if (order.Status == "In Progress")
-                                        {
-                                            <span class="badge-status badge-progress"><i class="fas fa-hammer"></i> In Progress</span>
-                                        }
-                                        else if (order.Status == "Completed")
-                                        {
-                                            <span class="badge-status badge-completed"><i class="far fa-check-circle"></i> Completed</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge-status" style="background:#b0bec5;">@order.Status</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <div style="display:flex; gap:6px;">
-                                            @if (order.Status == "Pending")
-                                            {
-                                                <button class="btn-order-action btn-to-progress" onclick="transitionOrderStatus(@order.OrderID, 'In Progress')">
-                                                    <i class="fas fa-play"></i> Start Work
-                                                </button>
-                                            }
-                                            else if (order.Status == "In Progress")
-                                            {
-                                                <button class="btn-order-action btn-to-complete" onclick="transitionOrderStatus(@order.OrderID, 'Completed')">
-                                                    <i class="fas fa-check"></i> Complete
-                                                </button>
-                                            }
-                                            else
-                                            {
-                                                <span style="font-size:0.82rem; font-style:italic; color:#b0bec5;">No actions left</span>
-                                            }
+                                    </div>
+
+                                    <!-- RIGHT PORTION: Customer metadata, cost and operations actions -->
+                                    <div class="order-card-summary" style="flex: 0.9; text-align: left; align-items: flex-start; align-self: flex-start;">
+                                        <div class="order-customer-details" style="margin-bottom: 0.5rem; width: 100%;">
+                                            <span class="info-label" style="margin-bottom: 2px;">Customer Details</span>
+                                            <strong>@order.Full_Name</strong>
+                                            <span><i class="fas fa-phone"></i> @order.Contact_Number</span>
+                                            <span><i class="fas fa-hashtag"></i> @order.Social_Account</span>
+                                            <span><i class="fas fa-map-marker-alt"></i> @order.Delivery_Location (@order.Delivery_Method)</span>
+                                            <span><i class="fas fa-credit-card"></i> @order.Payment_Method</span>
                                         </div>
-                                    </td>
-                                </tr>
-                            }
+
+                                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 16px; flex-wrap: wrap; margin-top: 0.5rem; border-top: 1px dashed #f0e6e8; padding-top: 12px;">
+                                            <div class="order-total-line" style="margin: 0;">
+                                                @{
+                                                    var totalAmount = order.Items != null && order.Items.Any()
+                                                        ? order.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity)
+                                                        : 150.00m;
+                                                }
+                                                Total: <span class="order-total-price">₱@totalAmount.ToString("N2")</span>
+                                            </div>
+
+                                            <div class="order-card-actions" style="margin-top: 0; justify-content: flex-end;">
+                                                @if (type == 'P')
+                                                {
+                                                    <!-- Status drop-down selector for Press-ons -->
+                                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                                        <span class="info-label" style="margin: 0; white-space: nowrap;">Update Status</span>
+                                                        <select class="admin-status-dropdown" onchange="transitionOrderStatus(@order.OrderID, this.value)" style="width: auto; min-width: 140px;">
+                                                            <!option value="Pending" @(status == "Pending" ? "selected" : "")>Pending</!option>
+                                                            <!option value="In Progress" @(status == "In Progress" ? "selected" : "")>In Progress</!option>
+                                                            <!option value="Completed" @(status == "Completed" ? "selected" : "")>Completed</!option>
+                                                            <!option value="Cancelled" @(status == "Cancelled" ? "selected" : "")>Cancelled</!option>
+                                                        </select>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <!-- Approve / Reject controls for Custom Requests -->
+                                                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                                        @if (status == "Pending")
+                                                        {
+                                                            <button class="btn-admin-action btn-admin-approve" onclick="approveCustomRequest(@order.OrderID)" title="Approve Request">
+                                                                <i class="fas fa-check"></i> Approve
+                                                            </button>
+                                                            <button class="btn-admin-action btn-admin-reject" onclick="rejectCustomRequest(@order.OrderID)" title="Reject Request">
+                                                                <i class="fas fa-times"></i> Reject
+                                                            </button>
+                                                        }
+                                                        <a href="/AdminOrders/Details/@order.OrderID" class="btn-admin-action btn-admin-view" title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
                         }
-                    </tbody>
-                </table>
+                    }
+
+                    <!-- Empty State Placeholder -->
+                    <div id="empty-state" style="display: none; text-align: center; padding: 4rem 0; color: var(--text-light-brown);">
+                        <i class="fas fa-receipt" style="font-size: 3.5rem; margin-bottom: 1.2rem; color: var(--border-pink);"></i>
+                        <p style="font-family: var(--secondary-font); font-size: 1.2rem; margin: 0; font-weight: 500;">No orders found matching this criteria.</p>
+                    </div>
+                </div>
             </div>
         </div>
+    </section>
+</div>
 
-    </div>
+<!-- Dynamic Image Lightbox Modal -->
+<div id="imageLightboxModal" class="image-modal" onclick="closeImageModal()">
+    <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+    <img class="image-modal-content" id="lightboxTargetImage">
 </div>
 
 @section Scripts {
     <script>
+        // Tab routing variables
+        let currentTab = "PressOns"; // "PressOns" vs "Custom"
+        let currentStatusFilter = "All"; // "All", "Pending", "In Progress", "Completed", "Cancelled"
+
+        document.addEventListener("DOMContentLoaded", () => {
+            setupTabListeners();
+            setupStatusFilterListeners();
+            filterAndDisplayOrders();
+        });
+
+        function setupTabListeners() {
+            const tabs = document.querySelectorAll(".history-tab");
+            tabs.forEach(tab => {
+                tab.addEventListener("click", function () {
+                    tabs.forEach(t => t.classList.remove("active"));
+                    this.classList.add("active");
+                    currentTab = this.getAttribute("data-tab");
+
+                    // Hide status filters on Custom Requests tab, reset filter to All
+                    const statusRow = document.querySelector(".status-filters-row");
+                    if (currentTab === "Custom") {
+                        if (statusRow) statusRow.style.display = "none";
+                        currentStatusFilter = "All";
+                        const btns = document.querySelectorAll(".status-filter-btn");
+                        btns.forEach(b => {
+                            if (b.getAttribute("data-status") === "All") b.classList.add("active");
+                            else b.classList.remove("active");
+                        });
+                    } else {
+                        if (statusRow) statusRow.style.display = "flex";
+                    }
+
+                    filterAndDisplayOrders();
+                });
+            });
+        }
+
+        function setupStatusFilterListeners() {
+            const btns = document.querySelectorAll(".status-filter-btn");
+            btns.forEach(btn => {
+                btn.addEventListener("click", function () {
+                    btns.forEach(b => b.classList.remove("active"));
+                    this.classList.add("active");
+                    currentStatusFilter = this.getAttribute("data-status");
+                    filterAndDisplayOrders();
+                });
+            });
+        }
+
+        function filterAndDisplayOrders() {
+            const cards = document.querySelectorAll(".order-card");
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const cardType = card.getAttribute("data-type"); // 'P' or 'C'
+                const cardStatus = card.getAttribute("data-status"); // "Pending", "In Progress", etc.
+
+                let matchesTab = false;
+                if (currentTab === "PressOns" && cardType === "P") {
+                    matchesTab = true;
+                } else if (currentTab === "Custom" && cardType === "C") {
+                    matchesTab = true;
+                }
+
+                let matchesStatus = false;
+                if (currentStatusFilter === "All") {
+                    matchesStatus = true;
+                } else {
+                    matchesStatus = (cardStatus.trim().toLowerCase() === currentStatusFilter.trim().toLowerCase());
+                }
+
+                if (matchesTab && matchesStatus) {
+                    card.style.display = "flex";
+                    visibleCount++;
+                } else {
+                    card.style.display = "none";
+                }
+            });
+
+            const emptyState = document.getElementById("empty-state");
+            if (visibleCount === 0) {
+                emptyState.style.display = "block";
+            } else {
+                emptyState.style.display = "none";
+            }
+        }
+
+        // Image lightbox mechanics
+        function openImageModal(imgSrc) {
+            event.stopPropagation();
+            const modal = document.getElementById("imageLightboxModal");
+            const target = document.getElementById("lightboxTargetImage");
+            target.src = imgSrc;
+            modal.style.display = "block";
+        }
+
+        function closeImageModal() {
+            document.getElementById("imageLightboxModal").style.display = "none";
+        }
+
+        // API interaction handlers
         async function transitionOrderStatus(orderId, targetStatusStr) {
-            if (!confirm(`Transition Order #${orderId} status to "${targetStatusStr}"?`)) return;
+            if (!confirm(`Update status of Order #${orderId} to "${targetStatusStr}"?`)) {
+                location.reload();
+                return;
+            }
 
             try {
                 const response = await fetch(`/AdminOrders/UpdateStatus?orderId=${orderId}&status=${encodeURIComponent(targetStatusStr)}`, {
@@ -348,14 +630,54 @@
                 });
 
                 if (response.ok) {
-                    alert(`Order status updated to ${targetStatusStr}!`);
+                    alert(`Order status updated successfully!`);
                     location.reload();
                 } else {
-                    alert(await response.text() || "The server rejected this status adjustment transition step.");
+                    alert(await response.text() || "Error transitioning order status.");
                 }
             } catch (err) {
                 console.error(err);
-                alert("Network communication failure exception trace error.");
+                alert("Network communication error occurred.");
+            }
+        }
+
+        async function approveCustomRequest(orderId) {
+            if (!confirm(`Approve custom request #${orderId}? This will automatically create an active order for the client.`)) return;
+
+            try {
+                const response = await fetch(`/AdminOrders/ApproveCustomRequest?orderId=${orderId}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    alert("Custom request approved successfully! An active order has been created.");
+                    location.reload();
+                } else {
+                    alert(await response.text() || "Error approving custom request.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network communication error occurred.");
+            }
+        }
+
+        async function rejectCustomRequest(orderId) {
+            if (!confirm(`Reject custom request #${orderId}? This will mark it as Cancelled.`)) return;
+
+            try {
+                const response = await fetch(`/AdminOrders/RejectCustomRequest?orderId=${orderId}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    alert("Custom request has been rejected (status set to Cancelled).");
+                    location.reload();
+                } else {
+                    alert(await response.text() || "Error rejecting custom request.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network communication error occurred.");
             }
         }
     </script>

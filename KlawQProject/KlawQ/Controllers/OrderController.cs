@@ -302,13 +302,9 @@ namespace KlawQ.Controllers
                 var user = await _context.UserProfiles.FirstOrDefaultAsync(u => u.Email == email);
                 if (user == null) return Unauthorized();
 
-                if (model.ProductIds == null || model.ProductIds.Length == 0)
-                {
-                    ModelState.AddModelError("", "No products selected.");
-                    return View("CheckoutCustom", new OrderStartViewModel { Products = [], Submit = model });
-                }
+                var selectedProductIds = model.ProductIds ?? Array.Empty<int>();
 
-                if (!ModelState.IsValid) return View("CheckoutCustom", new OrderStartViewModel { Products = await _context.Products.Where(p => model.ProductIds.Contains(p.ProductID)).ToListAsync(), Submit = model });
+                if (!ModelState.IsValid) return View("CheckoutCustom", new OrderStartViewModel { Products = await _context.Products.Where(p => selectedProductIds.Contains(p.ProductID)).ToListAsync(), Submit = model });
 
                 string? handBase64 = null;
                 var handFile = Request.Form.Files.GetFile("HandPhoto") ?? (Request.Form.Files.Count > 0 ? Request.Form.Files[0] : null);
@@ -331,22 +327,6 @@ namespace KlawQ.Controllers
                 var payload = new { designNotes = model.DesignNotes, inspirations = inspirations };
                 var inspJson = System.Text.Json.JsonSerializer.Serialize(payload);
 
-                // Calculate total bill for custom set accessories if bundled
-                var selectedProducts = await _context.Products.Where(p => model.ProductIds.Contains(p.ProductID)).ToListAsync();
-                decimal calculatedBillTotal = 0;
-                for (int i = 0; i < model.ProductIds.Length; i++)
-                {
-                    var matchingProduct = selectedProducts.FirstOrDefault(p => p.ProductID == model.ProductIds[i]);
-                    if (matchingProduct != null)
-                    {
-                        int targetQty = (model.Quantities != null && model.Quantities.Length > i && model.Quantities[i] > 0) ? model.Quantities[i] : 1;
-                        calculatedBillTotal += (matchingProduct.Product_Price * targetQty);
-                    }
-                }
-
-                // Fallback default registration charge baseline if accessory items evaluation resolves to 0
-                if (calculatedBillTotal <= 0) calculatedBillTotal = 150.00m;
-
                 var order = new Order
                 {
                     UserID = user.UserID,
@@ -355,12 +335,12 @@ namespace KlawQ.Controllers
                     Social_Account = model.SocialAccount,
                     Delivery_Location = model.DeliveryLocation,
                     Delivery_Method = model.DeliveryMethod,
-                    Payment_Method = "PayMongo",
+                    Payment_Method = "Custom Request",
                     Contact_Number = !string.IsNullOrWhiteSpace(model.ContactNumber) ? model.ContactNumber : "0",
                     Hand_Photo = handBase64 ?? string.Empty,
                     Thumb_Photo = inspJson,
                     Order_Type = 'C',
-                    Status = "Payment Pending"
+                    Status = "Pending"
                 };
 
                 _context.Add(order);
@@ -379,19 +359,22 @@ namespace KlawQ.Controllers
                 }
                 await _context.SaveChangesAsync();
 
-                // 🚀 PAYMONGO REDIRECT INITIATION ROUTE GENERATOR
-                string domain = $"{Request.Scheme}://{Request.Host}";
-                string successUrl = $"{domain}/Order/OrderSuccess?orderId={order.OrderID}";
-                string cancelUrl = $"{domain}/Order/OrderCancelled?orderId={order.OrderID}";
+                // Clean up cart items that were submitted in the custom request
+                var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserID == order.UserID);
+                if (cart != null && model.ProductIds != null && model.ProductIds.Length > 0)
+                {
+                    var cartItemsToRemove = await _context.CartItems
+                        .Where(ci => ci.CartId == cart.CartId && model.ProductIds.Contains(ci.ProductID))
+                        .ToListAsync();
 
-                string checkoutUrl = await _payMongoService.CreateCheckoutSessionAsync(
-                    amountInPhp: calculatedBillTotal,
-                    description: $"Custom Studio Set Order Blueprint #{order.OrderID} Deposit for {order.Full_Name}",
-                    successUrl: successUrl,
-                    cancelUrl: cancelUrl
-                );
+                    if (cartItemsToRemove.Count > 0)
+                    {
+                        _context.CartItems.RemoveRange(cartItemsToRemove);
+                        await _context.SaveChangesAsync();
+                    }
+                }
 
-                return Redirect(checkoutUrl);
+                return RedirectToAction("OrderSuccessCustom", new { orderId = order.OrderID });
             }
             catch (Exception ex)
             {
@@ -400,14 +383,68 @@ namespace KlawQ.Controllers
             }
         }
 
-        // 🌟 NEW WEB-HOOK ENDPOINT: TRANSACTION SUCCESS VERIFICATION CARD
-        [HttpGet("OrderSuccess")]
-        public async Task<IActionResult> OrderSuccess([FromQuery] int orderId)
+        [HttpGet("OrderSuccessCustom")]
+        public async Task<IActionResult> OrderSuccessCustom([FromQuery] int orderId)
         {
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderID == orderId);
             if (order == null) return NotFound();
 
+            string htmlContent = @"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset=""utf-8"">
+                <title>Custom Request Submitted</title>
+                <style>
+                    body { background-color: #fffafb; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+                    .card { background-color: #fcd8dd; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #fbc0c7; text-align: center; max-width: 450px; width: 90%; }
+                    .emoji { font-size: 48px; margin-bottom: 16px; }
+                    h3 { color: #8b4b3b; font-size: 24px; margin: 0 0 12px 0; }
+                    p { color: #8a6a62; font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
+                    .btn { background-color: #88b04b; color: white; padding: 12px 32px; border-radius: 24px; text-decoration: none; font-weight: 600; display: inline-block; transition: background-color 0.2s; }
+                    .btn:hover { background-color: #7ba240; }
+                </style>
+                <script>setTimeout(function() { window.location.href = '/Gallery'; }, 4000);</script>
+            </head>
+            <body>
+                <div class=""card"">
+                    <div class=""emoji"">💅</div>
+                    <h3>Request Submitted!</h3>
+                    <p>Your custom press-on design request has been successfully recorded. The studio will review your request details shortly!</p>
+                    <a href=""/Gallery"" class=""btn"">Return to Gallery</a>
+                </div>
+            </body>
+            </html>";
+
+            return Content(htmlContent, "text/html; charset=utf-8");
+        }
+
+        // 🌟 NEW WEB-HOOK ENDPOINT: TRANSACTION SUCCESS VERIFICATION CARD
+        [HttpGet("OrderSuccess")]
+        public async Task<IActionResult> OrderSuccess([FromQuery] int orderId)
+        {
+            var order = await _context.Orders
+                .Include(o => o.Items)
+                .FirstOrDefaultAsync(o => o.OrderID == orderId);
+            if (order == null) return NotFound();
+
             order.Status = "Pending"; // Update state context from pending to processing cleanly
+
+            // Clean up cart items that were paid for
+            var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserID == order.UserID);
+            if (cart != null)
+            {
+                var productIds = order.Items.Select(oi => oi.ProductID).ToList();
+                var cartItemsToRemove = await _context.CartItems
+                    .Where(ci => ci.CartId == cart.CartId && productIds.Contains(ci.ProductID))
+                    .ToListAsync();
+
+                if (cartItemsToRemove.Count > 0)
+                {
+                    _context.CartItems.RemoveRange(cartItemsToRemove);
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             string htmlContent = @"
@@ -417,8 +454,8 @@ namespace KlawQ.Controllers
                 <meta charset=""utf-8"">
                 <title>Order Confirmed</title>
                 <style>
-                    body { background-color: #fff5f6; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-                    .card { background-color: #fdeef0; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #fde0e2; text-align: center; max-width: 450px; width: 90%; }
+                    body { background-color: #fffafb; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+                    .card { background-color: #fcd8dd; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #fbc0c7; text-align: center; max-width: 450px; width: 90%; }
                     .emoji { font-size: 48px; margin-bottom: 16px; }
                     h3 { color: #8b4b3b; font-size: 24px; margin: 0 0 12px 0; }
                     p { color: #8a6a62; font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
@@ -471,6 +508,33 @@ namespace KlawQ.Controllers
 
             ViewBag.UserEmail = user.Email;
             return View(order);
+        }
+
+        [HttpPost("ConfirmReceived")]
+        public async Task<IActionResult> ConfirmReceived([FromForm] int orderId)
+        {
+            if (User.Identity?.IsAuthenticated is not true)
+            {
+                return Unauthorized();
+            }
+
+            var email = User.Identity.Name;
+            var user = await _context.UserProfiles.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderID == orderId && o.UserID == user.UserID);
+            if (order == null)
+            {
+                return NotFound("Order not found.");
+            }
+
+            order.Status = "Completed";
+            await _context.SaveChangesAsync();
+
+            return Ok();
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using KlawQ.Data;
+using KlawQ.Data;
 using KlawQ.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -48,7 +48,7 @@ namespace KlawQ.Controllers
             }
 
             // Allowed state validation check block
-            string[] validStates = { "Pending", "In Progress", "Completed" };
+            string[] validStates = { "Pending", "In Progress", "Completed", "Cancelled" };
             if (!validStates.Contains(status))
             {
                 return BadRequest("Invalid target status conversion parameter string submitted.");
@@ -61,6 +61,56 @@ namespace KlawQ.Controllers
             return Ok();
         }
 
+        [HttpPost("ApproveCustomRequest")]
+        public async Task<IActionResult> ApproveCustomRequest([FromQuery] int orderId)
+        {
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderID == orderId);
+            if (order == null)
+            {
+                return NotFound("Target order record missing.");
+            }
+
+            order.Order_Type = 'P'; // Convert custom request to active press-on order
+            order.Status = "Pending"; // Initialize active order status
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpPost("RejectCustomRequest")]
+        public async Task<IActionResult> RejectCustomRequest([FromQuery] int orderId)
+        {
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderID == orderId);
+            if (order == null)
+            {
+                return NotFound("Target order record missing.");
+            }
+
+            order.Status = "Cancelled"; // Set status to Cancelled/Rejected
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpGet("Details/{id}")]
+        public async Task<IActionResult> Details(int id)
+        {
+            var order = await _context.Orders
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync(o => o.OrderID == id);
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            var userProfile = await _context.UserProfiles.FirstOrDefaultAsync(u => u.UserID == order.UserID);
+            ViewBag.UserEmail = userProfile?.Email ?? string.Empty;
+
+            return View("~/Views/Admin/OrderDetails.cshtml", order);
+        }
+
         // 🧠 Reusable helper method to handle database queries
         private async Task<AdminOrdersViewModel> GetFilteredOrdersDataAsync(string status, int months)
         {
@@ -68,21 +118,8 @@ namespace KlawQ.Controllers
             var query = _context.Orders
                 .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
+                .Where(o => o.Status != "Payment Pending")
                 .AsQueryable();
-
-            // 🌟 LOGIC TWEAK: If looking for backlog status types ("Pending"/"In Progress"), 
-            // skip chronological date limits so old unfulfilled items don't hide from admins.
-            if (string.Equals(status, "All", StringComparison.OrdinalIgnoreCase) || string.Equals(status, "Completed", StringComparison.OrdinalIgnoreCase))
-            {
-                DateTime cutoffDate = DateTime.Now.AddMonths(-months);
-                query = query.Where(o => o.Order_Date >= cutoffDate);
-            }
-
-            // Apply status filter strings
-            if (!string.Equals(status, "All", StringComparison.OrdinalIgnoreCase))
-            {
-                query = query.Where(o => o.Status == status);
-            }
 
             var filteredOrders = await query.OrderByDescending(o => o.Order_Date).ToListAsync();
 

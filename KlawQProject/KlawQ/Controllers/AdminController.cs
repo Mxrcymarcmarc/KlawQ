@@ -125,6 +125,62 @@ namespace KlawQ.Controllers
             return RedirectToAction("PortfolioManager");
         }
 
+        [HttpPost("PortfolioManager/edit/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditPortfolioItem(int id, Products product, IFormFile imageFile)
+        {
+            if (id != product.ProductID)
+            {
+                return BadRequest();
+            }
+
+            var existing = await _context.Products.FindAsync(id);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            if (string.IsNullOrWhiteSpace(product.Product_Name) || string.IsNullOrWhiteSpace(product.Product_Description))
+            {
+                ModelState.AddModelError("", "Title and Description are required.");
+                var currentProducts = await _context.Products.OrderBy(p => p.ProductID).ToListAsync();
+                return View("PortfolioManager", currentProducts);
+            }
+
+            existing.Product_Name = product.Product_Name;
+            existing.Product_Description = product.Product_Description;
+            existing.Product_Type = product.Product_Type;
+            existing.Product_Price = product.Product_Price;
+            existing.Product_Stock = product.Product_Stock;
+
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "gallery");
+                Directory.CreateDirectory(uploads);
+                var fileName = System.Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                var filePath = Path.Combine(uploads, fileName);
+                await using (var fs = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(fs);
+                }
+
+                if (!string.IsNullOrEmpty(existing.Product_Image) && existing.Product_Image.StartsWith("/images/gallery/"))
+                {
+                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existing.Product_Image.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                    if (System.IO.File.Exists(oldPath))
+                    {
+                        System.IO.File.Delete(oldPath);
+                    }
+                }
+                existing.Product_Image = "/images/gallery/" + fileName;
+            }
+
+            _context.Products.Update(existing);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("PortfolioManager");
+        }
+
+
         // 🖥️ GET: /admin/ManageAppointments
         [HttpGet("ManageAppointments")]
         public async Task<IActionResult> ManageAppointments()

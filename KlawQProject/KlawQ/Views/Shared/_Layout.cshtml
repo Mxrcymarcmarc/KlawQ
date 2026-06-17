@@ -13,7 +13,20 @@
 </head>
 <body>
     @{
-    var navbarMode = ViewData["NavbarMode"]?.ToString() ?? "full";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+    var navbarMode = ViewData["NavbarMode"]?.ToString();
+    if (string.IsNullOrEmpty(navbarMode))
+    {
+        if (currentController.StartsWith("Admin", StringComparison.OrdinalIgnoreCase))
+        {
+            navbarMode = "admin";
+        }
+        else
+        {
+            navbarMode = "full";
+        }
+    }
     }
 
     <nav class="sticky-nav">
@@ -25,15 +38,33 @@
                         <i class="fas fa-cog"></i>
                     </button>
                 }
-                <a class="nav-brand" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/gallery/logoklawqicon.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
-                    Klaw By Krys
-                </a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (navbarMode == "admin")
+                    {
+                        <a class="nav-brand" href="/admin">
+                            <img src="~/images/gallery/logoklawqicon.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
+                            Klaw By Krys
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="nav-brand" asp-controller="Home" asp-action="Index">
+                            <img src="~/images/gallery/logoklawqicon.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
+                            Klaw By Krys
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span class="nav-brand" style="cursor: default;">
+                        <img src="~/images/gallery/logoklawqicon.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
+                        Klaw By Krys
+                    </span>
+                }
             </div>
             @if (navbarMode == "full")
             {
-                var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
-                var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
                 <ul class="nav-links">
                     <li><a class="@(currentController == "Home" && currentAction == "Index" ? "active" : "")" asp-controller="Home" asp-action="Index">Home</a></li>
                     <li><a class="@(currentController == "Gallery" || currentController == "GalleryDetails" ? "active" : "")" asp-controller="Gallery" asp-action="Index">Gallery</a></li>

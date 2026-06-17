@@ -14,7 +14,7 @@ body {
     display: flex;
     flex-direction: column;
     font-family: "Segoe UI", Roboto, Arial;
-    background: #fff5f6;
+    background: #fffafb;
     color: #8b4b3b;
     padding-top: 70px; /* Offset for fixed navbar */
 }

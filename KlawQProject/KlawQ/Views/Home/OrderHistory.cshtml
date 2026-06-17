@@ -1,4 +1,4 @@
-@model IEnumerable<KlawQ.Models.OrderItem>
+@model IEnumerable<KlawQ.Models.Order>
 @{
     ViewData["Title"] = "My Order History - Klaw By Krys";
 }
@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="~/css/home-page.css" />
+    <link rel="stylesheet" href="~/css/home-page.css" asp-append-version="true" />
     <style>
         .home-wrapper {
             min-height: 70vh;
@@ -23,56 +23,263 @@
             <p class="section-subtitle">View your ordered press-ons here.</p>
         </div>
 
-        <div class="bookmarks-board">
-            @if (Model.Any())
-            {
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Picture</th>
-                                <th>Title</th>
-                                <th>Quantity</th>
-                                <th>Price</th>
-                                <th style="text-align: center;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Model)
-                            {
-                                var img = item.Product?.Product_Image;
-                                if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
-                                else if (img.StartsWith("~")) img = Url.Content(img);
-                                else if (!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
-                                else img = Url.Content(img);
+        <div class="bookmarks-board" style="padding: 2.5rem 2rem;">
+            <!-- Tabs Navigation -->
+            <div class="history-tabs-container">
+                <div class="history-tab active" data-tab="All">All</div>
+                <div class="history-tab" data-tab="Completed">Completed</div>
+                <div class="history-tab" data-tab="Pending">Pending</div>
+            </div>
 
-                                <tr>
-                                    <td style="width: 80px; vertical-align: middle;">
-                                        <img src="@img" alt="@(item.Product?.Product_Name)" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-pink);" />
-                                    </td>
-                                    <td style="vertical-align: middle; font-weight: 500;">@(item.Product?.Product_Name ?? "Press-On Set")</td>
-                                    <td style="vertical-align: middle;">@item.Quantity</td>
-                                    <td style="vertical-align: middle;">₱@((item.Product?.Product_Price ?? 0).ToString("N2"))</td>
-                                    <td style="vertical-align: middle; text-align: center;">
-                                        <div class="action-buttons" style="justify-content: center;">
-                                            <a href="/Order/OrderDetails/@item.OrderID" class="action-btn" style="text-decoration: none;" title="View Order Details">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+            <!-- Orders Container -->
+            <div id="orders-container">
+                @if (Model.Any())
+                {
+                    foreach (var order in Model)
+                    {
+                        var status = order.Status ?? "Pending";
+                        var badgeClass = status.Replace(" ", "-").ToLower();
+                        var totalQty = order.Items.Sum(item => item.Quantity);
+                        var totalAmount = order.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity);
+                        var itemsList = order.Items.ToList();
+
+                        <div class="order-card" data-status="@status">
+                            <div class="order-card-header">
+                                <div class="order-meta-info">
+                                    @order.Order_Date.ToString("MM/dd/yyyy h:mm tt") <span style="margin: 0 10px; color: #ddd;">|</span> Order No. ORD-@order.OrderID
+                                </div>
+                                <div class="status-badge @badgeClass">
+                                    @status
+                                </div>
+                            </div>
+                            <div class="order-card-body">
+                                <div class="order-items-list">
+                                    @foreach (var item in order.Items)
+                                    {
+                                        var img = item.Product?.Product_Image;
+                                        if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
+                                        else if (img.StartsWith("~")) img = Url.Content(img);
+                                        else if (!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
+                                        else img = Url.Content(img);
+
+                                        var price = item.Product?.Product_Price ?? 0;
+
+                                        <div class="order-item-row">
+                                            <img src="@img" alt="@(item.Product?.Product_Name)" class="order-item-image" />
+                                            <div class="order-item-details">
+                                                <h3 class="order-item-title">@(item.Product?.Product_Name ?? "Press-On Set")</h3>
+                                                <div class="order-item-price-qty">
+                                                    ₱@(price % 1 == 0 ? price.ToString("N0") : price.ToString("N2")) × @item.Quantity
+                                                </div>
+                                            </div>
                                         </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                                    }
+                                </div>
+                                <div class="order-card-summary">
+                                    @if (itemsList.Count > 1)
+                                    {
+                                        <div class="order-price-breakdown">
+                                            @for (int i = 0; i < itemsList.Count; i++)
+                                            {
+                                                var item = itemsList[i];
+                                                var price = item.Product?.Product_Price ?? 0;
+                                                var itemTotal = price * item.Quantity;
+                                                var formattedItemTotal = itemTotal % 1 == 0 ? itemTotal.ToString("N0") : itemTotal.ToString("N2");
+                                                if (i == 0)
+                                                {
+                                                    <div>₱@formattedItemTotal</div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="@(i == itemsList.Count - 1 ? "plus-item" : "")">+ ₱@formattedItemTotal</div>
+                                                }
+                                            }
+                                        </div>
+                                    }
+                                    <div class="order-total-line">
+                                        Total of @totalQty @(totalQty == 1 ? "item" : "items"): <span class="order-total-price">₱@(totalAmount % 1 == 0 ? totalAmount.ToString("N0") : totalAmount.ToString("N2"))</span>
+                                    </div>
+                                    <div class="order-card-actions">
+                                        @if (status != "Completed" && status != "Cancelled")
+                                        {
+                                            <button class="btn-confirm-received" onclick="confirmReceipt(@order.OrderID)">Confirm Received</button>
+                                        }
+                                        <a href="/Order/OrderDetails/@order.OrderID" class="btn-order-details">Order Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                
+                <!-- Dynamic Empty State (will be toggled by JS if tab contains no elements, or if initial is empty) -->
+                <div id="empty-state" style="display: @(Model.Any() ? "none" : "block"); text-align: center; padding: 3rem 0; color: var(--text-light-brown);">
+                    <i class="fas fa-receipt" style="font-size: 3.5rem; margin-bottom: 1.2rem; color: var(--border-pink);"></i>
+                    <p style="font-family: var(--secondary-font); font-size: 1.2rem; margin: 0; font-weight: 500;">No orders found.</p>
                 </div>
-            }
-            else
-            {
-                <div style="text-align: center; padding: 2rem 0; color: var(--text-light-brown);">
-                    <i class="fas fa-receipt" style="font-size: 3rem; margin-bottom: 1rem; color: var(--border-pink);"></i>
-                    <p style="font-family: var(--secondary-font); font-size: 1.1rem; margin: 0;">You haven't ordered any press-ons yet.</p>
-                </div>
-            }
+            </div>
+
+            <!-- Pagination block -->
+            <div class="pagination-container" style="display: none;">
+                <!-- Filled dynamically by JS -->
+            </div>
         </div>
     </section>
 </div>
+
+@section Scripts {
+    <script>
+        function confirmReceipt(orderId) {
+            if (confirm("Are you sure you have received this order? This will mark it as Completed.")) {
+                const formData = new FormData();
+                formData.append("orderId", orderId);
+
+                fetch("/Order/ConfirmReceived", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert("Failed to update order status. Please try again.");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("An error occurred. Please try again.");
+                });
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const tabs = document.querySelectorAll(".history-tab");
+            const cards = document.querySelectorAll(".order-card");
+            const paginationContainer = document.querySelector(".pagination-container");
+            const emptyState = document.getElementById("empty-state");
+            const ordersPerPage = 10;
+            let currentPage = 1;
+            let currentTab = "All";
+
+            function filterAndPaginate() {
+                let filteredCards = [];
+                
+                cards.forEach(card => {
+                    const status = card.getAttribute("data-status").trim().toLowerCase();
+                    let matches = false;
+
+                    if (currentTab === "All") {
+                        matches = true;
+                    } else if (currentTab === "Completed") {
+                        matches = (status === "completed");
+                    } else if (currentTab === "Pending") {
+                        matches = (status === "pending" || status === "payment pending" || status === "in progress" || status === "confirmed");
+                    }
+
+                    if (matches) {
+                        filteredCards.push(card);
+                    } else {
+                        card.style.display = "none";
+                    }
+                });
+
+                const totalItems = filteredCards.length;
+                const totalPages = Math.ceil(totalItems / ordersPerPage);
+
+                if (totalItems === 0) {
+                    emptyState.style.display = "block";
+                    paginationContainer.style.display = "none";
+                } else {
+                    emptyState.style.display = "none";
+                    paginationContainer.style.display = "flex";
+                }
+
+                // Adjust currentPage if out of bounds
+                if (currentPage > totalPages && totalPages > 0) {
+                    currentPage = totalPages;
+                }
+
+                // Show/hide based on current page
+                const startIndex = (currentPage - 1) * ordersPerPage;
+                const endIndex = startIndex + ordersPerPage;
+
+                filteredCards.forEach((card, index) => {
+                    if (index >= startIndex && index < endIndex) {
+                        card.style.display = "flex"; // Show card as flex
+                    } else {
+                        card.style.display = "none";
+                    }
+                });
+
+                renderPagination(totalPages);
+            }
+
+            function renderPagination(totalPages) {
+                paginationContainer.innerHTML = "";
+                if (totalPages <= 1) {
+                    paginationContainer.style.display = "none";
+                    return;
+                }
+
+                paginationContainer.style.display = "flex";
+
+                // Left Arrow
+                const prevBtn = document.createElement("button");
+                prevBtn.className = "pagination-btn prev-btn";
+                prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                if (currentPage === 1) prevBtn.disabled = true;
+                prevBtn.addEventListener("click", () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        filterAndPaginate();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                });
+                paginationContainer.appendChild(prevBtn);
+
+                // Page Numbers
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageBtn = document.createElement("button");
+                    pageBtn.className = `pagination-btn page-number-btn ${i === currentPage ? 'active' : ''}`;
+                    pageBtn.innerText = i;
+                    if (i === currentPage) {
+                        pageBtn.disabled = true;
+                    }
+                    pageBtn.addEventListener("click", () => {
+                        currentPage = i;
+                        filterAndPaginate();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                    paginationContainer.appendChild(pageBtn);
+                }
+
+                // Right Arrow
+                const nextBtn = document.createElement("button");
+                nextBtn.className = "pagination-btn next-btn";
+                nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                if (currentPage === totalPages) nextBtn.disabled = true;
+                nextBtn.addEventListener("click", () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        filterAndPaginate();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                });
+                paginationContainer.appendChild(nextBtn);
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener("click", function () {
+                    tabs.forEach(t => t.classList.remove("active"));
+                    this.classList.add("active");
+                    currentTab = this.getAttribute("data-tab");
+                    currentPage = 1;
+                    filterAndPaginate();
+                });
+            });
+
+            // Initial load
+            filterAndPaginate();
+        });
+    </script>
+}

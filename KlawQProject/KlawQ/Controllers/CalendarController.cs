@@ -1,4 +1,4 @@
-﻿using KlawQ.Data;
+using KlawQ.Data;
 using KlawQ.Models;
 using KlawQ.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -266,7 +266,7 @@ namespace KlawQ.Controllers
                 <title>Payment Successful</title>
                 <style>
                     body {
-                        background-color: #fff5f6;
+                        background-color: #fffafb;
                         font-family: 'Segoe UI', Roboto, Arial, sans-serif;
                         display: flex;
                         justify-content: center;
@@ -275,11 +275,11 @@ namespace KlawQ.Controllers
                         margin: 0;
                     }
                     .card {
-                        background-color: #fdeef0;
+                        background-color: #fcd8dd;
                         padding: 40px;
                         border-radius: 16px;
                         box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-                        border: 1px solid #fde0e2;
+                        border: 1px solid #fbc0c7;
                         text-align: center;
                         max-width: 450px;
                         width: 90%;

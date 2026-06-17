@@ -1,7 +1,7 @@
-﻿:root {
-    --bg-pink: #fff5f6; /* page background */
-    --panel-pink: #fdeef0; /* input and panel accents */
-    --accent-pink: #fde0e2; /* circle placeholder */
+:root {
+    --bg-pink: #fffafb; /* page background */
+    --panel-pink: #fcd8dd; /* input and panel accents */
+    --accent-pink: #fbc0c7; /* circle placeholder */
     --brand-brown: #8b4b3b; /* headings */
     --footer-brown: #6b4228; /* footer background */
     --cta-green: #88b04b; /* login button */

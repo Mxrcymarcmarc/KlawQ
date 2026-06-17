@@ -11,7 +11,6 @@ namespace KlawQ.Controllers
     {
         private readonly KlawQ.Data.ApplicationDbContext _context = context;
 
-        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
             var since = DateTime.UtcNow.AddDays(-7);
@@ -104,22 +103,22 @@ namespace KlawQ.Controllers
         [HttpGet("Home/OrderHistory")]
         public async Task<IActionResult> OrderHistory()
         {
-            List<OrderItem> orderHistory = [];
+            List<Order> orders = [];
             if (User.Identity?.IsAuthenticated is true)
             {
                 var email = User.Identity.Name;
                 var user = await _context.UserProfiles.FirstOrDefaultAsync(u => u.Email == email);
                 if (user != null)
                 {
-                    orderHistory = await _context.OrderItems
-                        .Include(oi => oi.Order)
-                        .Include(oi => oi.Product)
-                        .Where(oi => oi.Order != null && oi.Order.UserID == user.UserID && oi.Order.Order_Type == 'P')
-                        .OrderByDescending(oi => oi.Order!.Order_Date)
+                    orders = await _context.Orders
+                        .Include(o => o.Items)
+                        .ThenInclude(oi => oi.Product)
+                        .Where(o => o.UserID == user.UserID && o.Order_Type == 'P')
+                        .OrderByDescending(o => o.Order_Date)
                         .ToListAsync();
                 }
             }
-            return View(orderHistory);
+            return View(orders);
         }
 
         [AllowAnonymous]
