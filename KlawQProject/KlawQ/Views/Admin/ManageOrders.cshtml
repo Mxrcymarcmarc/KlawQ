@@ -1,0 +1,362 @@
+﻿@model KlawQ.Models.AdminOrdersViewModel
+@{
+    ViewData["Title"] = "Manage Orders";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-font: 'Shadows Into Light Two', cursive;
+            --secondary-font: 'Montserrat', sans-serif;
+            --text-brown: #8d6e5d;
+            --text-dark-brown: #795548;
+            --card-bg: #ffffff;
+            --accent-green: #a7c47d;
+            --accent-green-hover: #92b068;
+            --border-pink: #f8bbd0;
+            --shadow-soft: 0 10px 30px rgba(121, 85, 72, 0.08);
+            --status-pending: #ffb74d;
+            --status-progress: #64b5f6;
+            --status-completed: #81c784;
+        }
+
+        .manage-orders-wrapper {
+            background-color: #fdfafb;
+            padding: 3rem 1rem;
+            min-height: 100vh;
+            font-family: var(--secondary-font);
+            color: var(--text-brown);
+        }
+
+        .manage-orders-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* 🌟 BACK BUTTON STYLING: Exactly like Manage Appointments */
+        .back-dash-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-brown);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s;
+        }
+
+            .back-dash-link:hover {
+                color: var(--text-dark-brown);
+                transform: translateX(-3px);
+            }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .page-title {
+            font-family: var(--primary-font);
+            font-size: 3.5rem;
+            margin: 0;
+            color: var(--text-dark-brown);
+            font-weight: normal;
+        }
+
+        .filter-control-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border-pink);
+            background: white;
+            color: var(--text-brown);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+            .filter-btn.active, .filter-btn:hover {
+                background: var(--text-brown);
+                color: white;
+                border-color: var(--text-brown);
+            }
+
+        .order-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 2rem;
+            border: 2px solid var(--border-pink);
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+            .orders-table th {
+                color: var(--text-dark-brown);
+                font-weight: 600;
+                padding: 1rem;
+                border-bottom: 2px solid var(--border-pink);
+                font-size: 0.9rem;
+                text-transform: uppercase;
+                position: sticky;
+                top: 0;
+                background: var(--card-bg);
+                z-index: 10;
+            }
+
+            .orders-table td {
+                padding: 1.2rem 1rem;
+                color: var(--text-brown);
+                border-bottom: 1px solid #f7ecee;
+                font-size: 0.95rem;
+                vertical-align: middle;
+            }
+
+        .table-responsive {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: auto;
+            padding-right: 5px;
+        }
+
+            .table-responsive::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+
+            .table-responsive::-webkit-scrollbar-track {
+                background: #fdf5f6;
+                border-radius: 10px;
+            }
+
+            .table-responsive::-webkit-scrollbar-thumb {
+                background: var(--border-pink);
+                border-radius: 10px;
+            }
+
+                .table-responsive::-webkit-scrollbar-thumb:hover {
+                    background: var(--text-brown);
+                }
+
+        .badge-status {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-pending {
+            background-color: var(--status-pending);
+        }
+
+        .badge-progress {
+            background-color: var(--status-progress);
+        }
+
+        .badge-completed {
+            background-color: var(--status-completed);
+        }
+
+        .btn-order-action {
+            padding: 6px 14px;
+            border-radius: 10px;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+            .btn-order-action:hover {
+                transform: translateY(-1px);
+                filter: brightness(0.95);
+            }
+
+        .btn-to-progress {
+            background-color: var(--status-progress);
+        }
+
+        .btn-to-complete {
+            background-color: var(--status-completed);
+        }
+
+        .item-summary-text {
+            font-size: 0.82rem;
+            color: #9c8a7c;
+            margin: 2px 0;
+        }
+    </style>
+}
+
+<div class="manage-orders-wrapper">
+    <div class="manage-orders-container">
+
+        <!-- 🌟 BACK BUTTON INTERFACE LINK -->
+        <a href="/admin" class="back-dash-link">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+
+        <div class="page-header">
+            <h1 class="page-title">📦 Manage Orders</h1>
+            <p class="page-subtitle">Track press-on queues, update production statuses, and manage completions.</p>
+        </div>
+
+        <!-- 🧭 Live State Filter Controls Bar -->
+        <div class="filter-control-box">
+            <a href="?status=All" class="filter-btn @(Model.SelectedStatus == "All" ? "active" : "")">All Orders</a>
+            <a href="?status=Pending" class="filter-btn @(Model.SelectedStatus == "Pending" ? "active" : "")">Pending</a>
+            <a href="?status=In Progress" class="filter-btn @(Model.SelectedStatus == "In Progress" ? "active" : "")">In Progress</a>
+            <a href="?status=Completed" class="filter-btn @(Model.SelectedStatus == "Completed" ? "active" : "")">Completed</a>
+        </div>
+
+        <div class="order-card">
+            <div class="table-responsive">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer Info</th>
+                            <th>Items Purchased</th>
+                            <th>Fulfillment Info</th>
+                            <th>Current Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model?.Orders == null || !Model.Orders.Any())
+                        {
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding: 40px; font-style:italic; color:#9c8a7c;">
+                                    No records match this status selection criteria filter.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var order in Model.Orders)
+                            {
+                                <tr id="order-row-@order.OrderID">
+                                    <td style="font-weight:700; color:var(--text-dark-brown);">#D-@order.OrderID</td>
+                                    <td>
+                                        <strong>@order.Full_Name</strong>
+                                        <p class="item-summary-text">📱 @order.Social_Account</p>
+                                        <p class="item-summary-text">📞 @order.Contact_Number</p>
+                                    </td>
+                                    <td>
+                                        @if (order.Items != null && order.Items.Any())
+                                        {
+                                            foreach (var item in order.Items)
+                                            {
+                                                <p class="item-summary-text">🔹 @(item.Product?.Product_Name ?? "Unknown Item") <strong>(x@item.Quantity)</strong></p>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span style="font-style:italic; font-size:0.8rem; color:#b09b8e;">Custom Set Specification Blueprint</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <p class="item-summary-text">🚚 @order.Delivery_Method</p>
+                                        <p class="item-summary-text">📍 @order.Delivery_Location</p>
+                                    </td>
+                                    <td>
+                                        @if (order.Status == "Pending")
+                                        {
+                                            <span class="badge-status badge-pending"><i class="far fa-clock"></i> Pending</span>
+                                        }
+                                        else if (order.Status == "In Progress")
+                                        {
+                                            <span class="badge-status badge-progress"><i class="fas fa-hammer"></i> In Progress</span>
+                                        }
+                                        else if (order.Status == "Completed")
+                                        {
+                                            <span class="badge-status badge-completed"><i class="far fa-check-circle"></i> Completed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-status" style="background:#b0bec5;">@order.Status</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div style="display:flex; gap:6px;">
+                                            @if (order.Status == "Pending")
+                                            {
+                                                <button class="btn-order-action btn-to-progress" onclick="transitionOrderStatus(@order.OrderID, 'In Progress')">
+                                                    <i class="fas fa-play"></i> Start Work
+                                                </button>
+                                            }
+                                            else if (order.Status == "In Progress")
+                                            {
+                                                <button class="btn-order-action btn-to-complete" onclick="transitionOrderStatus(@order.OrderID, 'Completed')">
+                                                    <i class="fas fa-check"></i> Complete
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span style="font-size:0.82rem; font-style:italic; color:#b0bec5;">No actions left</span>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function transitionOrderStatus(orderId, targetStatusStr) {
+            if (!confirm(`Transition Order #${orderId} status to "${targetStatusStr}"?`)) return;
+
+            try {
+                const response = await fetch(`/AdminOrders/UpdateStatus?orderId=${orderId}&status=${encodeURIComponent(targetStatusStr)}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    alert(`Order status updated to ${targetStatusStr}!`);
+                    location.reload();
+                } else {
+                    alert(await response.text() || "The server rejected this status adjustment transition step.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network communication failure exception trace error.");
+            }
+        }
+    </script>
+}

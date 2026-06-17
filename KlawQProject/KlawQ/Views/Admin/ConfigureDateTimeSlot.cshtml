@@ -1,4 +1,5 @@
-﻿@{
+﻿@model IEnumerable<KlawQ.Models.Scheduler>
+@{
     ViewData["Title"] = "Configure Time-Slots";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -11,14 +12,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        :root {
+            --primary-font: 'Shadows Into Light Two', cursive;
+            --secondary-font: 'Montserrat', sans-serif;
+            --text-brown: #8d6e5d;
+            --text-dark-brown: #795548;
+            --card-bg: #ffffff;
+            --accent-green: #a7c47d;
+            --accent-green-hover: #92b068;
+            --border-pink: #f8bbd0;
+            --shadow-soft: 0 10px 30px rgba(121, 85, 72, 0.08);
+        }
+
         /* 🎨 THEMED COLOR SCHEME & CANVAS WRAPPER */
         .slot-config-wrapper {
             background-color: #fdfafb;
             min-height: 100vh;
-            padding: 30px;
-            font-family: 'Montserrat', sans-serif;
-            color: #644b39;
-            /* 🌟 FIX: Centers everything globally when zooming out */
+            padding: 2.5rem 1rem 3rem 1rem;
+            font-family: var(--secondary-font);
+            color: var(--text-brown);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -26,25 +38,26 @@
 
         .config-inner-container {
             width: 100%;
-            max-width: 1300px; /* Expanded slightly for better visual breathing room */
+            max-width: 1200px;
         }
 
-        .back-nav {
-            margin-bottom: 15px;
+        .back-dash-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-brown);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s;
         }
 
-            .back-nav a {
-                color: #b5835a;
+            .back-dash-link:hover {
+                color: var(--text-dark-brown);
+                transform: translateX(-3px);
                 text-decoration: none;
-                font-weight: 500;
-                font-size: 0.9rem;
-                transition: color 0.2s;
             }
-
-                .back-nav a:hover {
-                    color: #8b4b3b;
-                    text-decoration: underline;
-                }
 
         .page-title-area {
             text-align: center;
@@ -52,10 +65,11 @@
         }
 
         .main-title {
-            font-family: 'Shadows Into Light Two', cursive;
-            font-size: 3.2rem;
-            color: #8b4b3b;
+            font-family: var(--primary-font);
+            font-size: 3.5rem;
+            color: var(--text-dark-brown);
             margin: 0;
+            font-weight: normal;
         }
 
         .subtitle {
@@ -67,37 +81,43 @@
         /* 📐 TWO-COLUMN BOARD WORKSPACE INTERACTION GRID */
         .workspace-grid {
             display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
+            grid-template-columns: 1.4fr 0.6fr;
             gap: 30px;
             width: 100%;
+            align-items: start;
         }
 
         .board-panel-card {
             background: #ffffff;
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(139, 75, 59, 0.04);
-            border: 1px solid #fdf1f2;
-            height: fit-content;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow-soft);
+            border: 2px solid var(--border-pink);
+            min-height: 700px;
+            height: 700px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
         }
 
         .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             border-bottom: 2px solid #fdf5f6;
             padding-bottom: 15px;
+            height: 40px;
+            box-sizing: border-box;
         }
 
             .panel-header h2 {
                 font-size: 1.3rem;
                 font-weight: 700;
-                color: #8b4b3b;
+                color: var(--text-dark-brown);
                 margin: 0;
             }
 
-        /* 📅 CALENDAR CONTROL ACTIONS BAR */
         .calendar-controls {
             display: flex;
             align-items: center;
@@ -107,7 +127,7 @@
         .btn-nav-month {
             background: #fdf5f6;
             border: 1px solid #f4d0d4;
-            color: #8b4b3b;
+            color: var(--text-dark-brown);
             width: 36px;
             height: 36px;
             border-radius: 50%;
@@ -127,14 +147,16 @@
             font-size: 1.1rem;
             min-width: 160px;
             text-align: center;
+            color: var(--text-dark-brown);
         }
 
-        /* 🗓️ MONTH GRID ARCHITECTURE OVERLAYS */
         .calendar-days-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            grid-template-rows: auto repeat(6, 85px);
             gap: 10px;
             text-align: center;
+            margin-bottom: 0;
         }
 
         .weekday-label {
@@ -142,51 +164,73 @@
             color: #b5835a;
             font-size: 0.85rem;
             text-transform: uppercase;
-            padding-bottom: 5px;
+            margin-bottom: 2px;
+            height: 20px;
+            box-sizing: border-box;
         }
 
         .day-tile {
             background: #ffffff;
             border: 2px solid #f7ecee;
             border-radius: 12px;
-            min-height: 85px;
-            padding: 8px;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             cursor: pointer;
             transition: all 0.2s;
             position: relative;
+            height: 85px;
+            min-height: 85px;
+            max-height: 85px;
+            padding: 6px;
+            overflow: hidden;
         }
 
-            .day-tile:hover {
-                transform: translateY(-2px);
-                border-color: #f4d0d4;
-                box-shadow: 0 5px 15px rgba(139, 75, 59, 0.05);
-            }
+        /* Empty layout placeholders that balance out short months */
+        .day-tile-empty {
+            background: #fdfbfa;
+            border: 2px dashed #f5ebe8;
+            border-radius: 12px;
+            height: 85px;
+            box-sizing: border-box;
+            opacity: 0.4;
+        }
 
-            .day-tile.selected {
-                border-color: #b9c68c !important;
-                background: #fbfcf8;
-                box-shadow: 0 0 0 1px #b9c68c;
-            }
+        .day-tile:hover {
+            transform: translateY(-2px);
+            border-color: #f4d0d4;
+            box-shadow: 0 5px 15px rgba(139, 75, 59, 0.05);
+        }
+
+        .day-tile.selected {
+            border-color: #b9c68c !important;
+            background: #fbfcf8;
+            box-shadow: 0 0 0 1px #b9c68c;
+        }
 
         .day-number {
             font-weight: 700;
             font-size: 1rem;
-            color: #644b39;
+            color: var(--text-dark-brown);
             text-align: left;
         }
 
-        /* 🏷️ STATE COLORS - MATCHES THE USER RULES SCHEMA */
         .day-status-badge {
             font-size: 0.72rem;
             font-weight: 600;
-            padding: 2px 6px;
+            padding: 2px 4px;
             border-radius: 6px;
             text-align: center;
-            display: block;
-            margin-top: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.2;
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 32px;
         }
 
         .status-available {
@@ -221,9 +265,10 @@
             color: #9c8a7c;
             text-align: right;
             font-weight: 500;
+            margin-top: 1px;
         }
 
-        /* 🕒 TIME SLOTS SLIDE SIDEBAR LIST CELLS */
+        /* 🕒 TIME SLOTS SIDEBAR LIST CELLS */
         .slots-sidebar-container {
             display: flex;
             flex-direction: column;
@@ -238,23 +283,22 @@
 
         .date-banner-info {
             background: #fdf5f6;
-            padding: 12px 20px;
+            padding: 12px 14px;
             border-radius: 14px;
             font-weight: 600;
-            font-size: 0.95rem;
-            color: #8b4b3b;
+            font-size: 0.9rem;
+            color: var(--text-dark-brown);
             margin: 0;
             text-align: center;
         }
 
-        /* 🌟 WHOLE DAY LOCK BUTTON ACTION */
         .btn-whole-day {
             width: 100%;
             padding: 12px;
             border-radius: 14px;
-            font-family: 'Montserrat', sans-serif;
+            font-family: var(--secondary-font);
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
             border: none;
             display: flex;
@@ -265,12 +309,12 @@
         }
 
             .btn-whole-day.mode-block {
-                background-color: #8b4b3b;
+                background-color: var(--text-dark-brown);
                 color: white;
             }
 
                 .btn-whole-day.mode-block:hover {
-                    background-color: #723c2f;
+                    background-color: #614035;
                 }
 
             .btn-whole-day.mode-unblock {
@@ -282,17 +326,40 @@
                     background-color: #a8b874;
                 }
 
+        /* 🌟 RE-CALIBRATED SIDEBAR SCROLL WINDOW: Adjusted from 525px to 460px to scale proportionally with the shortened card container */
         .slots-list-stack {
             display: flex;
             flex-direction: column;
             gap: 12px;
+            height: 460px;
+            max-height: 460px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
+
+            .slots-list-stack::-webkit-scrollbar {
+                width: 5px;
+            }
+
+            .slots-list-stack::-webkit-scrollbar-track {
+                background: #fdf5f6;
+                border-radius: 10px;
+            }
+
+            .slots-list-stack::-webkit-scrollbar-thumb {
+                background: var(--border-pink);
+                border-radius: 10px;
+            }
+
+                .slots-list-stack::-webkit-scrollbar-thumb:hover {
+                    background: var(--text-brown);
+                }
 
         .slot-row-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 20px;
+            padding: 12px 14px;
             border-radius: 14px;
             border: 1px solid #f7ecee;
             background: #ffffff;
@@ -302,9 +369,9 @@
         .slot-time-meta {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .slot-indicator-dot {
@@ -313,12 +380,11 @@
             border-radius: 50%;
         }
 
-        /* 🔘 ACTION SWITCH BUTTON CONTROL SYSTEM */
         .btn-toggle-slot {
-            font-family: 'Montserrat', sans-serif;
+            font-family: var(--secondary-font);
             font-weight: 600;
-            font-size: 0.8rem;
-            padding: 6px 16px;
+            font-size: 0.75rem;
+            padding: 6px 12px;
             border-radius: 10px;
             cursor: pointer;
             border: none;
@@ -327,7 +393,7 @@
 
         .btn-block-action {
             background-color: #f4d0d4;
-            color: #8b4b3b;
+            color: var(--text-dark-brown);
         }
 
             .btn-block-action:hover {
@@ -346,9 +412,9 @@
         .badge-booked-text {
             color: #d32f2f;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             background: #ffebee;
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 8px;
         }
 
@@ -356,12 +422,22 @@
             text-align: center;
             color: #9c8a7c;
             font-style: italic;
-            padding: 40px 20px;
+            padding: 40px 10px;
+            font-size: 0.88rem;
         }
 
         @@media (max-width: 992px) {
             .workspace-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .board-panel-card {
+                height: auto;
+                min-height: auto;
+            }
+
+            .slots-list-stack {
+                height: 300px;
             }
         }
     </style>
@@ -369,9 +445,9 @@
 
 <div class="slot-config-wrapper">
     <div class="config-inner-container">
-        <div class="back-nav">
-            <a href="/admin">« Back to Dashboard</a>
-        </div>
+        <a href="/admin" class="back-dash-link">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
 
         <div class="page-title-area">
             <h1 class="main-title">🕒 Schedule Configuration</h1>
@@ -389,8 +465,7 @@
                     </div>
                 </div>
 
-                <div class="calendar-days-grid" id="calendarDaysGridBox">
-                </div>
+                <div class="calendar-days-grid" id="calendarDaysGridBox"></div>
             </div>
 
             <div class="board-panel-card slots-sidebar-container">
@@ -402,8 +477,7 @@
                     <div class="date-banner-info" id="activeDateBannerDisplay">
                         Select a day to audit time-slots
                     </div>
-                    <div id="wholeDayButtonPlacement" style="display: none;">
-                    </div>
+                    <div id="wholeDayButtonPlacement" style="display: none;"></div>
                 </div>
 
                 <div class="slots-list-stack" id="daySlotsStackWrapper">
@@ -442,7 +516,6 @@
 
                 renderCalendarMatrix(daysData);
 
-                // Keep layout sidebar state updated on refreshing data grids
                 if(currentlySelectedDateStr) {
                     const updatedDayInfo = daysData.find(d => d.dateString === currentlySelectedDateStr);
                     if(updatedDayInfo) {
@@ -460,6 +533,8 @@
             const gridContainer = document.getElementById("calendarDaysGridBox");
             gridContainer.innerHTML = "";
 
+            let totalCellsRendered = 0;
+
             dayLabels.forEach(label => {
                 const labelDiv = document.createElement("div");
                 labelDiv.className = "weekday-label";
@@ -473,7 +548,9 @@
 
                 for (let i = 0; i < firstDayOfWeekIndex; i++) {
                     const paddingDiv = document.createElement("div");
+                    paddingDiv.className = "day-tile-empty";
                     gridContainer.appendChild(paddingDiv);
+                    totalCellsRendered++;
                 }
             }
 
@@ -498,7 +575,16 @@
                 `;
 
                 gridContainer.appendChild(tile);
+                totalCellsRendered++;
             });
+
+            const targetedMatrixLimit = 42;
+            while (totalCellsRendered < targetedMatrixLimit) {
+                const trailPlaceholder = document.createElement("div");
+                trailPlaceholder.className = "day-tile-empty";
+                gridContainer.appendChild(trailPlaceholder);
+                totalCellsRendered++;
+            }
         }
 
         function selectDayTile(chosenDateStr, isBlocked) {
@@ -514,14 +600,12 @@
             });
             document.getElementById("activeDateBannerDisplay").innerText = formattedDateDisplay;
 
-            // Make action button visible and mount it cleanly
             document.getElementById("wholeDayButtonPlacement").style.display = "block";
             renderWholeDayActionButton();
 
             fetchDayTimeSlots(chosenDateStr);
         }
 
-        // 🌟 GENERATE WHOLE DAY CONFIG BUTTON
         function renderWholeDayActionButton() {
             const btnPlacement = document.getElementById("wholeDayButtonPlacement");
             if (!currentlySelectedDateStr) return;
@@ -541,12 +625,10 @@
             }
         }
 
-        // 🌟 HANDLES WHOLE DAY API TRIGGER (PASSES HOUR AS NULL)
         async function toggleWholeDayBlock(mode) {
             const endpoint = mode === "block" ? "block-slot" : "unblock-slot";
             const methodType = mode === "block" ? "POST" : "DELETE";
 
-            // When blocking/unblocking a whole day, pass hour as empty/null string context parameter
             try {
                 const response = await fetch(`/api/AdminCalendar/${endpoint}?date=${currentlySelectedDateStr}`, {
                     method: methodType
@@ -592,7 +674,6 @@
                 return;
             }
 
-            // If the whole day is blocked by admin, provide visual helper feedback on individual rows
             slots.forEach(slot => {
                 const row = document.createElement("div");
                 row.className = "slot-row-item";
@@ -610,7 +691,6 @@
                 if (currentStatus === "Available") {
                     actionElementControl = `<button class="btn-toggle-slot btn-block-action" onclick="toggleBlockAPI('${dateString}', ${slot.slotHour}, 'block')"><i class="fas fa-ban"></i> Block</button>`;
                 } else if (currentStatus === "Blocked") {
-                    // If blocked because of whole day rule, let them know they should open the whole day up top
                     if (isCurrentDayEntirelyBlocked) {
                         actionElementControl = `<span style="font-size:0.75rem; color:#9c8a7c; font-style:italic;">Day Blocked</span>`;
                     } else {
@@ -637,7 +717,7 @@
             const methodType = transitionMode === "block" ? "POST" : "DELETE";
 
             try {
-                const response = await fetch(`/api/AdminCalendar/${endpoint}?date=${dateString}&hour=${hour}`, {
+                const response = await fetch(`/api/AdminCalendar/web-block?date=${dateString}&hour=${hour}`, {
                     method: methodType
                 });
 

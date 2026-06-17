@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/admin-dashboard.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="/css/admin-dashboard.css" asp-append-version="true" />
 }
 
 <div class="container">
@@ -31,7 +31,7 @@
         <button class="action-bar-btn" onclick="location.href='@Url.Action("ManageAppointments", "Admin")'">
             <i class="far fa-calendar-check"></i> <span>Manage Appointments</span>
         </button>
-        <button class="action-bar-btn" onclick="location.href='@Url.Action("Index", "AdminOrders", new { status = "All" })'">
+        <button class="action-bar-btn" onclick="location.href='/AdminOrders?status=All'">
             <i class="fas fa-receipt"></i> <span>Manage Orders</span>
         </button>
         <button class="action-bar-btn" onclick="location.href='@Url.Action("Index", "AdminCancellations", "Admin")'">
@@ -83,12 +83,11 @@
     </div>
 
     <div class="section-box">
-    <div class="section-header">
-        <h2><i class="fas fa-star"></i> Top Services</h2>
+        <div class="section-header">
+            <h2><i class="fas fa-star"></i> Top Services</h2>
         </div>
 
         <div class="services-grid">
-            <!-- Service Item 1 -->
             <div class="service-row">
                 <div class="rank-badge">#1</div>
                 <h4 class="service-name">Custom Nail Art Design</h4>
@@ -96,7 +95,6 @@
                 <p class="service-price">₱1,020.00</p>
             </div>
 
-            <!-- Service Item 2 -->
             <div class="service-row">
                 <div class="rank-badge">#2</div>
                 <h4 class="service-name">Gel Manicure</h4>
@@ -109,7 +107,7 @@
     <div class="section-box">
         <div class="section-header">
             <h2><i class="fas fa-user-friends"></i> Recent Orders</h2>
-            <span class="badge-total">@(ViewData["TotalOrdersCount"] ?? 0) total</span>
+            <span class="badge-total">@(((List<KlawQ.Models.Order>)(ViewData["PendingOrdersList"] ?? new List<KlawQ.Models.Order>())).Count) pending</span>
         </div>
 
         <div class="table-responsive">
@@ -128,21 +126,54 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>D-1</td>
-                        <td class="customer-info">Juan Dela Cruz<p>User Contact Details</p></td>
-                        <td>Standard Delivery</td>
-                        <td>GCash</td>
-                        <td>09123456789</td>
-                        <td><span class="badge">💅 Press-On</span></td>
-                        <td>2026-06-16</td>
-                        <td><span class="status status-pending"><i class="far fa-clock"></i> Pending</span></td>
-                        <td>
-                            <button type="button" class="btn-action" onclick="location.href='@Url.Action("Index", "AdminOrders", new { status = "Pending" })'">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                        </td>
-                    </tr>
+                    @{
+                        var pendingOrders = ViewData["PendingOrdersList"] as List<KlawQ.Models.Order> ?? new List<KlawQ.Models.Order>();
+                    }
+                    @if (!pendingOrders.Any())
+                    {
+                        <tr>
+                            <td colspan="9" style="text-align: center; color: #9c8a7c; font-style: italic; padding: 25px;">
+                                🎉 No pending orders currently require review!
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var order in pendingOrders)
+                        {
+                            <tr>
+                                <td>D-@order.OrderID</td>
+                                <td class="customer-info">
+                                    @order.Full_Name
+                                    <p style="font-size: 0.78rem; color: #9c8a7c; margin: 2px 0 0 0;">@order.Social_Account</p>
+                                </td>
+                                <td>@order.Delivery_Method</td>
+                                <td>@order.Payment_Method</td>
+                                <td>@order.Contact_Number</td>
+                                <td>
+                                    @if (order.Order_Type == 'C' || order.Order_Type == 'c')
+                                    {
+                                        <span class="badge" style="background: #fce4ec; color: #ba68c8;">✨ Custom Set</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge" style="background: #fdf5f6; color: #d88c9a;">💅 Press-On</span>
+                                    }
+                                </td>
+                                <td>@order.Order_Date.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    <span class="status status-pending">
+                                        <i class="far fa-clock"></i> @order.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn-action" onclick="location.href='/AdminOrders?status=Pending'">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
                 </tbody>
             </table>
         </div>

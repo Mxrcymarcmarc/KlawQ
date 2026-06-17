@@ -20,13 +20,13 @@ namespace KlawQ.Controllers
 
         // 🖥️ WEB VIEW: Accessed via browser at https://localhost:7158/AdminOrders
         [HttpGet("")]
-        [ApiExplorerSettings(IgnoreApi = true)] // Hides it from Swagger to prevent 500 view engine errors
+        [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> Index([FromQuery] string status = "All", [FromQuery] int months = 3)
         {
             var viewModel = await GetFilteredOrdersDataAsync(status, months);
 
-            // 🌟 FIXED: Points explicitly to your layout file's home in the Admin folder
-            return View("~/Views/Admin/AdminOrders.cshtml", viewModel);
+            // Points explicitly to your layout file's home in the Admin folder
+            return View("~/Views/Admin/ManageOrders.cshtml", viewModel);
         }
 
         // 📡 API DATA ENDPOINT: Accessed via Swagger or API data calls at https://localhost:7158/AdminOrders/data
@@ -37,17 +37,48 @@ namespace KlawQ.Controllers
             return Ok(viewModel);
         }
 
-        // 🧠 Reusable helper method to handle database queries without code duplication
+        // 🚀 NEW POST ENDPOINT: Processes the background fetch state transitions asynchronously
+        [HttpPost("UpdateStatus")]
+        public async Task<IActionResult> UpdateStatus([FromQuery] int orderId, [FromQuery] string status)
+        {
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderID == orderId);
+            if (order == null)
+            {
+                return NotFound("Target base order mapping record missing.");
+            }
+
+            // Allowed state validation check block
+            string[] validStates = { "Pending", "In Progress", "Completed" };
+            if (!validStates.Contains(status))
+            {
+                return BadRequest("Invalid target status conversion parameter string submitted.");
+            }
+
+            // Update database state
+            order.Status = status;
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        // 🧠 Reusable helper method to handle database queries
         private async Task<AdminOrdersViewModel> GetFilteredOrdersDataAsync(string status, int months)
         {
-            DateTime cutoffDate = DateTime.Now.AddMonths(-months);
-
-            // Fetch data cleanly while eagerly loading structural item collections
+            // Base tracking query eagerly pulling downstream item structural bindings
             var query = _context.Orders
                 .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
-                .Where(o => o.Order_Date >= cutoffDate);
+                .AsQueryable();
 
+            // 🌟 LOGIC TWEAK: If looking for backlog status types ("Pending"/"In Progress"), 
+            // skip chronological date limits so old unfulfilled items don't hide from admins.
+            if (string.Equals(status, "All", StringComparison.OrdinalIgnoreCase) || string.Equals(status, "Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                DateTime cutoffDate = DateTime.Now.AddMonths(-months);
+                query = query.Where(o => o.Order_Date >= cutoffDate);
+            }
+
+            // Apply status filter strings
             if (!string.Equals(status, "All", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(o => o.Status == status);
