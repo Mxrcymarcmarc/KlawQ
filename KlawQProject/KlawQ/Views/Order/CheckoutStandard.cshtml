@@ -1,5 +1,3 @@
-@{
-}
 @model KlawQ.Models.OrderStartViewModel
 @{
     ViewData["Title"] = "Finalize Order";
@@ -22,10 +20,15 @@
             <p class="page-subtitle">Provide your sizing photo and delivery details to complete your order.</p>
         </div>
 
-        <form action="/Order/CheckoutStandard" method="post" enctype="multipart/form-data" class="grid-layout">
+        <form asp-controller="Order" asp-action="CheckoutStandard" method="post" enctype="multipart/form-data" class="grid-layout">
             @Html.AntiForgeryToken()
 
-            @* product ids passed from Start *@
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All" class="text-danger" style="color: #d32f2f; font-weight: 600; grid-column: 1 / -1; background: #ffebee; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #f4c7c7;"></div>
+            }
+
+            @* Product IDs and Quantities passed from the checkout staging timeline *@
             @if (Model?.Products != null && Model.Products.Any())
             {
                 foreach (var p in Model.Products)
@@ -35,16 +38,19 @@
                 }
             }
 
+            <input type="hidden" name="DeliveryMethod" value="Standard Delivery" />
+            <input type="hidden" name="PaymentMethod" value="PayMongo" />
+
             <div class="grid-col">
                 <div class="section-box">
                     <h2 class="section-title"><i class="far fa-user"></i> Your Information</h2>
-                    <div class="form-group"><label>Full Name *</label><input type="text" name="FullName" required></div>
-                    <div class="form-group"><label>Email *</label><input type="email" name="Email" required></div>
-                    <div class="form-group"><label>Phone *</label><input type="tel" name="ContactNumber" required></div>
-                    <div class="form-group"><label>Social (IG/FB) *</label><input type="text" name="SocialAccount" required></div>
-                    <div class="form-group"><label>Delivery Address *</label><input type="text" name="DeliveryLocation" required></div>
+                    <div class="form-group"><label>Full Name *</label><input type="text" name="FullName" required value="@Model?.Submit?.FullName"></div>
+                    <div class="form-group"><label>Email *</label><input type="email" name="Email" required value="@Model?.Submit?.Email"></div>
+                    <div class="form-group"><label>Phone *</label><input type="tel" name="ContactNumber" required value="@Model?.Submit?.ContactNumber"></div>
+                    <div class="form-group"><label>Social (IG/FB) *</label><input type="text" name="SocialAccount" required value="@Model?.Submit?.SocialAccount"></div>
+                    <div class="form-group"><label>Delivery Address *</label><input type="text" name="DeliveryLocation" required value="@Model?.Submit?.DeliveryLocation"></div>
 
-                    @* show selected design cards (all selected press-ons) *@
+                    @* Displays your selected press-on accessory design miniatures *@
                     @if (Model?.Products != null && Model.Products.Any())
                     {
                         <div class="form-group" style="margin-top:12px;">
@@ -77,11 +83,11 @@
 
                     <div class="reference-photos">
                         <div class="ref-card correct">
-                            <img src="~/images/right1.jpg" alt="Correct" class="ref-img">
+                            <img src="@Url.Content("~/images/right1.jpg")" alt="Correct" class="ref-img">
                             <p class="ref-label"><i class="fas fa-check"></i> Correct Angle</p>
                         </div>
                         <div class="ref-card incorrect">
-                            <img src="~/images/wrong1.jpg" alt="Avoid" class="ref-img">
+                            <img src="@Url.Content("~/images/wrong1.jpg")" alt="Avoid" class="ref-img">
                             <p class="ref-label"><i class="fas fa-times"></i> Avoid Angle</p>
                         </div>
                     </div>
