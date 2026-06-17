@@ -21,7 +21,7 @@ namespace KlawQ.Models
         public int UserID { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        public List<CartItem> Items { get; set; } = new();
+        public List<CartItem> Items { get; set; } = [];
     }
 
     public class CartItem

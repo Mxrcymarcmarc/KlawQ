@@ -1,11 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace KlawQ.Models
 {
     public class RegisterViewModel
     {
         [Required]
-        [Display(Name = "Full Name")]
+        [Display(Name = "Username")]
         public string FullName { get; set; } = string.Empty;
 
         [Required]

@@ -1,4 +1,4 @@
-﻿:root {
+:root {
     --primary-font: 'Shadows Into Light Two', cursive;
     --secondary-font: 'Montserrat', sans-serif;
     --text-brown: #795548;
@@ -105,7 +105,7 @@ p, label, input, textarea, button, h4 {
         margin-bottom: 0.5rem;
     }
 
-    .form-group input, .form-group textarea {
+    .form-group input, .form-group textarea, .form-group select {
         width: 100%;
         box-sizing: border-box;
         padding: 0.8rem 1rem;
@@ -115,6 +115,7 @@ p, label, input, textarea, button, h4 {
         outline: none;
         transition: 0.2s;
         color: var(--text-brown);
+        background-color: var(--bg-white);
     }
 
         .form-group input:focus, .form-group textarea:focus {

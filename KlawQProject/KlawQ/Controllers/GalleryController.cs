@@ -7,13 +7,9 @@ using Microsoft.EntityFrameworkCore;
 namespace KlawQ.Controllers
 {
     [Route("[controller]")]
-    public class GalleryController : Controller
+    public class GalleryController(ApplicationDbContext context) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        public GalleryController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+        private readonly ApplicationDbContext _context = context;
 
         [HttpGet("")]
         [AllowAnonymous]
@@ -22,8 +18,8 @@ namespace KlawQ.Controllers
             var products = await _context.Products.ToListAsync();
 
             // If user authenticated, get their favorited product IDs to render heart states
-            List<int> favIds = new();
-            if (User.Identity?.IsAuthenticated == true)
+            List<int> favIds = [];
+            if (User.Identity?.IsAuthenticated is true)
             {
                 var email = User.Identity.Name;
                 var user = await _context.UserProfiles.FirstOrDefaultAsync(u => u.Email == email);

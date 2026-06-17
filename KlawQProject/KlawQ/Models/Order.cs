@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace KlawQ.Models
 {
@@ -19,7 +19,7 @@ namespace KlawQ.Models
         public required string Status { get; set; } = string.Empty;
 
         // Navigation
-        public List<OrderItem> Items { get; set; } = new();
+        public List<OrderItem> Items { get; set; } = [];
     }
 
     public class OrderItem

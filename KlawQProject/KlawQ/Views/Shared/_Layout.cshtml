@@ -18,14 +18,27 @@
 
     <nav class="sticky-nav">
         <div class="nav-container">
-            <a class="nav-brand" asp-controller="Home" asp-action="Index">🎀 Klaw By Krys</a>
+            <div class="nav-brand-group">
+                @if (navbarMode == "full" && User.Identity?.IsAuthenticated == true)
+                {
+                    <button id="navGearBtn" class="nav-gear-btn" title="Settings Menu">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                }
+                <a class="nav-brand" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/gallery/logoklawqicon.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
+                    Klaw By Krys
+                </a>
+            </div>
             @if (navbarMode == "full")
             {
+                var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+                var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
                 <ul class="nav-links">
-                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li><a asp-controller="Gallery" asp-action="Index">Gallery</a></li>
-                    <li><a asp-controller="Favorites" asp-action="Index">Favorites</a></li>
-                    <li><a asp-controller="Appointment" asp-action="Index">Appointment</a></li>
+                    <li><a class="@(currentController == "Home" && currentAction == "Index" ? "active" : "")" asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><a class="@(currentController == "Gallery" || currentController == "GalleryDetails" ? "active" : "")" asp-controller="Gallery" asp-action="Index">Gallery</a></li>
+                    <li><a class="@(currentController == "Favorites" ? "active" : "")" asp-controller="Favorites" asp-action="Index">Favorites</a></li>
+                    <li><a class="@(currentController == "Appointment" ? "active" : "")" asp-controller="Appointment" asp-action="Index">Appointment</a></li>
                 </ul>
 
                 <div class="cart-button">
@@ -56,9 +69,79 @@
         @RenderBody()
     </main>
     <form id="logoutForm" action="/Account/Logout" method="post" style="display:none;">@Html.AntiForgeryToken()</form>
-    <form id="logoutForm" action="/Account/Logout" method="post" style="display:none;">@Html.AntiForgeryToken()</form>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    @if (navbarMode == "full" && User.Identity?.IsAuthenticated == true)
+    {
+        <div id="sideSettingsDrawer" class="settings-drawer">
+            <button id="closeDrawerBtn" class="close-drawer-btn" title="Close Menu">&times;</button>
+            <div class="drawer-content">
+                <ul class="drawer-menu drawer-menu-top">
+                    <li>
+                        <a href="/Account/Profile" class="drawer-item">
+                            <i class="fa-solid fa-circle-user menu-icon"></i>
+                            <span class="menu-text">View Profile</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/Home/OrderHistory" class="drawer-item">
+                            <i class="fa-solid fa-clock-rotate-left menu-icon"></i>
+                            <span class="menu-text">View Order History</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/Home/FAQ" class="drawer-item">
+                            <i class="fa-solid fa-circle-info menu-icon"></i>
+                            <span class="menu-text">View FAQ</span>
+                        </a>
+                    </li>
+                </ul>
+                <ul class="drawer-menu drawer-menu-bottom">
+                    <li>
+                        <a href="/Account/Logout" class="drawer-item" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">
+                            <i class="fa-solid fa-right-from-bracket menu-icon"></i>
+                            <span class="menu-text">Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div id="drawerOverlay" class="drawer-overlay"></div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const gearBtn = document.getElementById("navGearBtn");
+                const closeBtn = document.getElementById("closeDrawerBtn");
+                const drawer = document.getElementById("sideSettingsDrawer");
+                const overlay = document.getElementById("drawerOverlay");
+
+                if (gearBtn && drawer && overlay) {
+                    const openDrawer = function () {
+                        drawer.classList.add("open");
+                        overlay.classList.add("open");
+                        document.body.style.overflow = "hidden";
+                    };
+
+                    const closeDrawer = function () {
+                        drawer.classList.remove("open");
+                        overlay.classList.remove("open");
+                        document.body.style.overflow = "";
+                    };
+
+                    gearBtn.addEventListener("click", openDrawer);
+                    if (closeBtn) {
+                        closeBtn.addEventListener("click", closeDrawer);
+                    }
+                    overlay.addEventListener("click", closeDrawer);
+
+                    document.addEventListener("keydown", function (e) {
+                        if (e.key === "Escape" && drawer.classList.contains("open")) {
+                            closeDrawer();
+                        }
+                    });
+                }
+            });
+        </script>
+    }
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 

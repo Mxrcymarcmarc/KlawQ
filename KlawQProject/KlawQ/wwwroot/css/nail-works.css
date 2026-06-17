@@ -1,10 +1,11 @@
-﻿:root {
+:root {
     --primary-font: 'Shadows Into Light Two', cursive;
     --secondary-font: 'Montserrat', sans-serif;
     --text-brown: #8d6e5d;
     --text-dark-brown: #795548;
     --card-bg: #ffffff;
     --accent-green: #a7c47d;
+    --accent-green-hover: #92b068;
     --accent-pink-light: #fce4ec;
     --border-pink: #f8bbd0;
     --shadow-soft: 0 8px 25px rgba(248, 187, 208, 0.4);
@@ -17,20 +18,20 @@
 }
 
 .nail-works-container {
-    max-width: 1000px;
+    max-width: 1100px;
     margin: 0 auto;
     color: var(--text-brown);
 }
 
-    .nail-works-container h1 {
-        font-family: var(--primary-font);
-        font-weight: normal;
-    }
+.nail-works-container h1 {
+    font-family: var(--primary-font);
+    font-weight: normal;
+}
 
-    .nail-works-container p,
-    .tab-btn {
-        font-family: var(--secondary-font);
-    }
+.nail-works-container p,
+.tab-btn {
+    font-family: var(--secondary-font);
+}
 
 .page-header {
     text-align: center;
@@ -74,20 +75,20 @@
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     border: 2px solid transparent;
     transition: all 0.3s ease;
 }
 
-    .tab-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    }
+.tab-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
 
-    .tab-btn.active {
-        background: var(--accent-green);
-        color: white;
-    }
+.tab-btn.active {
+    background: var(--accent-green);
+    color: white;
+}
 
 .gallery-grid {
     display: grid;
@@ -107,9 +108,9 @@
     position: relative;
 }
 
-    .gallery-card:hover {
-        transform: translateY(-5px);
-    }
+.gallery-card:hover {
+    transform: translateY(-5px);
+}
 
 .nail-img {
     width: 100%;
@@ -131,6 +132,7 @@
     background-color: var(--accent-pink-light);
     border: 2px dashed var(--text-brown);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     text-decoration: none;
@@ -138,10 +140,10 @@
     transition: all 0.3s ease;
 }
 
-    .custom-request-card:hover {
-        background-color: #f8bbd0;
-        transform: translateY(-5px);
-    }
+.custom-request-card:hover {
+    background-color: #f8bbd0;
+    transform: translateY(-5px);
+}
 
 .custom-request-content {
     text-align: center;
@@ -173,41 +175,48 @@
     top: 15px;
     right: 15px;
     z-index: 10;
-    background: transparent;
-    border: none;
+    background: #fff;
+    border: 3px solid #fde6ea;
     cursor: pointer;
-    font-size: 1.6rem;
+    font-size: 1.1rem;
     padding: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-    .favorite-btn:hover {
-        transform: scale(1.1);
-    }
-
-    .favorite-btn:active {
-        transform: scale(0.9);
-    }
-
-.heart-outline {
-    color: #ffffff;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-    display: block;
+.favorite-btn:hover {
+    transform: scale(1.1);
 }
 
-.heart-solid {
-    display: none;
-    color: #ff6b8b;
-    filter: drop-shadow(0 2px 4px rgba(255, 107, 139, 0.4));
+.favorite-btn:active {
+    transform: scale(0.9);
 }
 
-.favorite-btn.is-active .heart-outline {
+/* Heart icon color — same pink for both states, icon fill is the only difference */
+/* Two-icon approach: hollow shown by default, solid hidden */
+.favorite-btn .heart-hollow {
+    color: #e2557a;
+    display: inline;
+}
+
+.favorite-btn .heart-filled {
+    color: #e2557a;
     display: none;
 }
 
-.favorite-btn.is-active .heart-solid {
-    display: block;
-    animation: heartPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* When favorited: flip visibility */
+.favorite-btn.favorited .heart-hollow {
+    display: none;
+}
+
+.favorite-btn.favorited .heart-filled {
+    display: inline;
 }
 
 @keyframes heartPop {
@@ -218,6 +227,30 @@
     100% {
         transform: scale(1);
     }
+}
+
+/* Pop animation applied by JS on toggle */
+.fav-pop {
+    animation: heartPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* .btn-heart variant (used on Details page) — two-icon approach */
+.btn-heart .heart-hollow {
+    color: #e2557a;
+    display: inline;
+}
+
+.btn-heart .heart-filled {
+    color: #e2557a;
+    display: none;
+}
+
+.btn-heart.favorited .heart-hollow {
+    display: none;
+}
+
+.btn-heart.favorited .heart-filled {
+    display: inline;
 }
 
 @keyframes fadeIn {
