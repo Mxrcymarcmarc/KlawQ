@@ -122,6 +122,10 @@
     transition: all 0.2s ease;
 }
 
+.clickable-metric {
+    cursor: pointer;
+}
+
 .clickable-metric:hover {
     border-color: var(--accent-pink-dark);
     transform: translateY(-2px);

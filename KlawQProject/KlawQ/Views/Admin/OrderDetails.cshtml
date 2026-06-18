@@ -30,6 +30,7 @@
     string designNotes = "";
     List<string> inspirations = new List<string>();
     bool isCustomApproved = Model.Order_Type == 'P' && !string.IsNullOrWhiteSpace(Model.Thumb_Photo) && Model.Thumb_Photo.TrimStart().StartsWith("{");
+    decimal customPrice = 0;
     if ((Model.Order_Type == 'C' || isCustomApproved) && !string.IsNullOrWhiteSpace(Model.Thumb_Photo))
     {
         try
@@ -49,6 +50,11 @@
                         inspirations.Add(base64);
                     }
                 }
+            }
+            if (doc.RootElement.TryGetProperty("price", out var priceProp))
+            {
+                if (priceProp.ValueKind == System.Text.Json.JsonValueKind.Number) customPrice = priceProp.GetDecimal();
+                else if (priceProp.ValueKind == System.Text.Json.JsonValueKind.String && decimal.TryParse(priceProp.GetString(), out var parsedPrice)) customPrice = parsedPrice;
             }
         }
         catch { }
@@ -526,35 +532,74 @@
                 <!-- Card 3 -->
                 <div class="card">
                     <p class="section-title"><i class="fa-solid fa-receipt"></i> Order Summary</p>
-                    @if (Model.Items != null && Model.Items.Any())
+                    @if (Model.Order_Type == 'C')
                     {
-                        foreach (var item in Model.Items)
+                        <!-- Custom Request: Show items with Pending Quote -->
+                        <div class="order-item-row">
+                            <span class="order-item-name">Custom Press-On Set Request</span>
+                            <span class="order-item-price" style="color: var(--text-light-brown); font-weight: 500;">Pending Quote</span>
+                        </div>
+                        <div class="order-item-meta">Qty: 1 &nbsp;|&nbsp; <span class="badge-size">Size: Custom</span></div>
+
+                        @foreach (var item in Model.Items ?? Enumerable.Empty<KlawQ.Models.OrderItem>())
                         {
-                            <div class="order-item-row">
-                                <span class="order-item-name">@(item.Product?.Product_Name ?? "Press-On Set")</span>
-                                <span class="order-item-price">₱@((item.Product?.Product_Price ?? 0).ToString("N2"))</span>
+                            <div class="order-item-row" style="margin-top: 8px;">
+                                <span class="order-item-name">
+                                    @(item.Product?.Product_Name ?? "Press-On Set")
+                                    @if (item.Product != null && item.Product.IsDeleted)
+                                    {
+                                        <span style="color: #dc3545; font-size: 0.8rem; font-weight: 600;">(Deleted)</span>
+                                    }
+                                </span>
+                                <span class="order-item-price" style="color: var(--text-light-brown); font-weight: 500;">Pending Quote</span>
                             </div>
-                            <div class="order-item-meta">Qty: @item.Quantity &nbsp;|&nbsp; <span class="badge-size">Size: @(Model.Order_Type == 'C' ? "Custom" : "Standard")</span></div>
+                            <div class="order-item-meta">Qty: @item.Quantity &nbsp;|&nbsp; <span class="badge-size">Size: Custom</span></div>
                         }
+
+                        <hr class="divider-line" />
+                        <div class="total-row">
+                            <span>Total</span>
+                            <span class="total-amount" style="font-size: 1.25rem; color: var(--text-light-brown);">Pending Quote</span>
+                        </div>
                     }
                     else
                     {
-                        <div class="order-item-row">
-                            <span class="order-item-name">Custom Press-On Set Request</span>
-                            <span class="order-item-price">₱150.00</span>
-                        </div>
-                        <div class="order-item-meta">Qty: 1 &nbsp;|&nbsp; <span class="badge-size">Size: Custom</span></div>
-                    }
-                    <hr class="divider-line" />
-                    <div class="total-row">
-                        <span>Total</span>
-                        @{
-                            var totalAmount = Model.Items != null && Model.Items.Any()
-                                ? Model.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity)
-                                : 150.00m;
+                        <!-- Approved Custom Request or Standard Order -->
+                        @if (isCustomApproved)
+                        {
+                            <div class="order-item-row">
+                                <span class="order-item-name">Custom Press-On Set</span>
+                                <span class="order-item-price">₱@customPrice.ToString("N2")</span>
+                            </div>
+                            <div class="order-item-meta">Qty: 1 &nbsp;|&nbsp; <span class="badge-size">Size: Custom</span></div>
                         }
-                        <span class="total-amount">₱@totalAmount.ToString("N2")</span>
-                    </div>
+
+                        @foreach (var item in Model.Items ?? Enumerable.Empty<KlawQ.Models.OrderItem>())
+                        {
+                            <div class="order-item-row" style="margin-top: @(isCustomApproved ? "8px" : "0px")">
+                                <span class="order-item-name">
+                                    @(item.Product?.Product_Name ?? "Press-On Set")
+                                    @if (item.Product != null && item.Product.IsDeleted)
+                                    {
+                                        <span style="color: #dc3545; font-size: 0.8rem; font-weight: 600;">(Deleted)</span>
+                                    }
+                                </span>
+                                <span class="order-item-price">₱@((item.Product?.Product_Price ?? 0).ToString("N2"))</span>
+                            </div>
+                            <div class="order-item-meta">Qty: @item.Quantity &nbsp;|&nbsp; <span class="badge-size">Size: Standard</span></div>
+                        }
+
+                        <hr class="divider-line" />
+                        <div class="total-row">
+                            <span>Total</span>
+                            @{
+                                var totalAmount = customPrice + (Model.Items != null && Model.Items.Any()
+                                    ? Model.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity)
+                                    : 0m);
+                            }
+                            <span class="total-amount">₱@totalAmount.ToString("N2")</span>
+                        </div>
+                    }
                 </div>
 
                 <!-- Card 4 -->

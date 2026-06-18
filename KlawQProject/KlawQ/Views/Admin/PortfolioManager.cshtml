@@ -19,6 +19,24 @@
     <link rel="stylesheet" href="/css/portfolio-manager.css" />
 
     <style>
+        .back-dash-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-brown);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .back-dash-link:hover {
+            color: var(--text-dark-brown);
+            transform: translateX(-3px);
+            text-decoration: none;
+        }
+
         :root {
             --border-pink: #f8bbd0;
             --text-brown: #795548;
@@ -27,6 +45,7 @@
             --shadow-soft: 0 10px 30px rgba(121, 85, 72, 0.08);
             --bg-soft-pink: #fff5f6;
             --accent-pink: #fce4ec;
+            --accent-green-hover: #92b068;
         }
 
         /* limit description to two lines */
@@ -35,8 +54,8 @@
         /* layout grid wrapper - spaced and wide */
         .portfolio-grid-layout {
             display: grid;
-            grid-template-columns: 420px 1fr;
-            gap: 4rem;
+            grid-template-columns: 1fr;
+            gap: 2rem;
             align-items: start;
             margin-top: 1rem;
             width: 100%;
@@ -47,7 +66,13 @@
             max-width: 1600px !important;
             width: 96% !important;
             margin: 0 auto;
-            padding: 2rem 2rem;
+            padding: 3.5rem 3rem !important;
+        }
+
+        .page-header {
+            padding: 2.5rem 0 1.5rem 0 !important;
+            margin-bottom: 2rem !important;
+            text-align: center;
         }
 
         /* Uniform styling for textareas, inputs and selects */
@@ -170,13 +195,57 @@
             font-family: var(--secondary-font);
         }
 
-        /* gallery grid: force 3 columns layout on desktop */
+        /* gallery grid: force 4 columns layout on desktop */
         .portfolio-container .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 24px;
             align-items: stretch;
             grid-auto-rows: 1fr;
+        }
+
+        .btn-add-work {
+            background-color: var(--accent-green);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            font-family: var(--secondary-font);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-add-work:hover {
+            background-color: var(--accent-green-hover);
+        }
+
+        .btn-pagination {
+            background-color: #faf8f9;
+            border: 1px solid var(--border-pink);
+            color: var(--text-brown);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+        .btn-pagination:hover:not(:disabled) {
+            background-color: var(--accent-pink);
+            color: var(--text-dark-brown);
+            border-color: var(--border-pink);
+        }
+        .btn-pagination:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         .portfolio-container .gallery-item {
@@ -490,19 +559,19 @@
             background-color: var(--accent-green-hover);
         }
 
-        @@media (max-width: 1300px) {
+        @@media (max-width: 1400px) {
+            .portfolio-container .gallery-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @@media (max-width: 1000px) {
             .portfolio-container .gallery-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
 
-        @@media (max-width: 991px) {
-            .portfolio-grid-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @@media (max-width: 767px) {
+        @@media (max-width: 600px) {
             .portfolio-container .gallery-grid {
                 grid-template-columns: 1fr;
             }
@@ -518,77 +587,35 @@
 }
 
 <div class="portfolio-container">
+    <div style="max-width: 1100px; margin: 0 auto;">
+        <a href="/admin" class="back-dash-link">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
 
-    <div class="page-header">
-        <h1 class="page-title"><i class="fas fa-palette title-icon-green"></i> Admin Portfolio Manager <i class="fas fa-palette title-icon-green"></i></h1>
-        <p class="page-subtitle">Add, edit, and organize your nail work gallery</p>
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-palette title-icon-green"></i> Admin Portfolio Manager <i class="fas fa-palette title-icon-green"></i></h1>
+            <p class="page-subtitle">Add, edit, and organize your nail work gallery</p>
+        </div>
     </div>
 
     <div class="portfolio-grid-layout">
 
-        <div class="section-box form-section">
-            <div class="section-header">
-                <h2><i class="far fa-image"></i> Add New Work</h2>
-            </div>
-
-            <form class="portfolio-form" action="/admin/PortfolioManager/create" method="post" enctype="multipart/form-data">
-                @Html.AntiForgeryToken()
-
-                <div class="form-group">
-                    <label>Work Type</label>
-                    <div class="type-toggle-container">
-                        <button type="button" class="btn-toggle-type active" id="btn-type-original" onclick="setFormType('Original')">Original Sets</button>
-                        <button type="button" class="btn-toggle-type" id="btn-type-presson" onclick="setFormType('PressOn')">Press-Ons</button>
-                    </div>
-                    <input type="hidden" id="form_Product_Type" name="Product_Type" value="Original" />
-                </div>
-
-                <div class="form-group">
-                    <label for="Product_Name">Title <span class="required">*</span></label>
-                    <input type="text" id="Product_Name" name="Product_Name" placeholder="Work title" required />
-                </div>
-
-                <div class="form-group">
-                    <label for="Product_Description">Description <span class="required">*</span></label>
-                    <textarea id="Product_Description" name="Product_Description" placeholder="Enter a short description" required></textarea>
-                </div>
-
-                <div class="form-group" id="form-group-price">
-                    <label for="Product_Price">Price <span class="required">*</span></label>
-                    <input type="number" step="0.01" id="Product_Price" name="Product_Price" placeholder="0.00" required />
-                </div>
-
-                <div class="form-group" id="form-group-stock" style="display: none;">
-                    <label for="Product_Stock">Stock</label>
-                    <input type="number" id="Product_Stock" name="Product_Stock" placeholder="1" value="1" required />
-                </div>
-
-                <div class="form-group">
-                    <label>Upload Image <span class="required">*</span></label>
-                    <div class="upload-area sizing-upload" id="upload-area-create">
-                        <i class="fas fa-upload retro-camera" id="upload-icon-create"></i>
-                        <h4 id="upload-status-text-create">Click to upload image</h4>
-                        <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-save"><i class="fas fa-save"></i> Save</button>
-                </div>
-            </form>
-        </div>
-
         <div class="section-box gallery-section">
             <div class="section-header flex-between">
                 <h2><i class="fas fa-images" style="color: var(--accent-green); margin-right: 8px; font-size: 1.8rem; vertical-align: middle;"></i> Uploaded Work</h2>
-                <span class="badge-total" id="visible-count-badge">@($"{Model?.Count() ?? 0} items")</span>
+                <button type="button" class="btn-add-work" onclick="openAddModal()">
+                    <i class="fas fa-plus"></i> Add Work
+                </button>
             </div>
 
             <!-- Tabs Navigation -->
-            <div class="history-tabs-container">
-                <div class="history-tab active" data-tab="All">All Works</div>
-                <div class="history-tab" data-tab="Original">Original Sets</div>
-                <div class="history-tab" data-tab="PressOn">Press-On Sets</div>
+            <div class="history-tabs-container" style="justify-content: space-between; align-items: center;">
+                <div class="tabs-left" style="display: flex; gap: 1.5rem;">
+                    <div class="history-tab active" data-tab="All">All Works</div>
+                    <div class="history-tab" data-tab="Original">Original Sets</div>
+                    <div class="history-tab" data-tab="PressOn">Press-On Sets</div>
+                </div>
+                <span class="badge-total" id="visible-count-badge">@($"{Model?.Count() ?? 0} items")</span>
             </div>
 
             <div class="gallery-grid">
@@ -652,9 +679,9 @@
                                      else
                                      {
                                          <span class="price-badge">₱@item.Product_Price.ToString("N2")</span>
-                                         <span class="stock-badge in-stock" style="background-color: #e6f2d9; color: #557a2b;">
-                                             <i class="fa-regular fa-calendar-check"></i> Appointment Set
-                                         </span>
+                                          <span class="stock-badge in-stock" style="background-color: #e6f2d9; color: #557a2b;">
+                                              <i class="fas fa-sparkles"></i> Product Set
+                                          </span>
                                      }
                                  </div>
                             </div>
@@ -682,10 +709,78 @@
                     }
                 }
             </div>
+
+            <!-- Pagination controls footer -->
+            <div class="pagination-container" id="pagination-controls" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2.5rem; margin-bottom: 1rem;">
+                <button type="button" class="btn-pagination" id="prev-page-btn" onclick="changePage(-1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="page-number-display" id="page-num-display">Page 1 of 1</span>
+                <button type="button" class="btn-pagination" id="next-page-btn" onclick="changePage(1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
         </div>
 
     </div>
 
+</div>
+
+<!-- Add Product Modal -->
+<div id="addWorkModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content-box">
+        <div class="modal-header">
+            <h2><i class="far fa-image"></i> Add New Work</h2>
+            <button type="button" class="close-modal-btn" onclick="closeAddModal()">&times;</button>
+        </div>
+        
+        <form class="portfolio-form" action="/admin/PortfolioManager/create" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <label>Work Type</label>
+                <div class="type-toggle-container">
+                    <button type="button" class="btn-toggle-type active" id="btn-type-original" onclick="setFormType('Original')">Original Sets</button>
+                    <button type="button" class="btn-toggle-type" id="btn-type-presson" onclick="setFormType('PressOn')">Press-Ons</button>
+                </div>
+                <input type="hidden" id="form_Product_Type" name="Product_Type" value="Original" />
+            </div>
+
+            <div class="form-group">
+                <label for="Product_Name">Title <span class="required">*</span></label>
+                <input type="text" id="Product_Name" name="Product_Name" placeholder="Work title" required />
+            </div>
+
+            <div class="form-group">
+                <label for="Product_Description">Description <span class="required">*</span></label>
+                <textarea id="Product_Description" name="Product_Description" placeholder="Enter a short description" required></textarea>
+            </div>
+
+            <div class="form-group" id="form-group-price">
+                <label for="Product_Price">Price <span class="required">*</span></label>
+                <input type="number" step="0.01" id="Product_Price" name="Product_Price" placeholder="0.00" required />
+            </div>
+
+            <div class="form-group" id="form-group-stock" style="display: none;">
+                <label for="Product_Stock">Stock</label>
+                <input type="number" id="Product_Stock" name="Product_Stock" placeholder="1" value="1" required />
+            </div>
+
+            <div class="form-group">
+                <label>Upload Image <span class="required">*</span></label>
+                <div class="upload-area sizing-upload" id="upload-area-create">
+                    <i class="fas fa-upload retro-camera" id="upload-icon-create"></i>
+                    <h4 id="upload-status-text-create">Click to upload image</h4>
+                    <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-modal btn-modal-cancel" onclick="closeAddModal()">Cancel</button>
+                <button type="submit" class="btn-modal btn-modal-save"><i class="fas fa-save"></i> Save</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Edit Product Modal -->
@@ -754,6 +849,8 @@
     <script>
         // State
         let currentTab = "All"; // "All", "Original", "PressOn"
+        const ITEMS_PER_PAGE = 12;
+        let currentPage = 1;
 
         document.addEventListener("DOMContentLoaded", () => {
             setupTabListeners();
@@ -768,6 +865,7 @@
                     tabs.forEach(t => t.classList.remove("active"));
                     this.classList.add("active");
                     currentTab = this.getAttribute("data-tab");
+                    currentPage = 1; // reset page on tab switch
                     filterAndDisplayGallery();
                 });
             });
@@ -776,7 +874,9 @@
         function filterAndDisplayGallery() {
             const items = document.querySelectorAll(".gallery-item:not(.empty-state-container):not(.empty-state)");
             let visibleCount = 0;
+            const matchingItems = [];
 
+            // First pass: filter by tab
             items.forEach(item => {
                 const itemType = item.getAttribute("data-type"); // "Original" or "PressOn"
 
@@ -790,8 +890,29 @@
                 }
 
                 if (matchesTab) {
-                    item.style.display = "flex";
+                    matchingItems.push(item);
                     visibleCount++;
+                } else {
+                    item.style.display = "none";
+                }
+            });
+
+            // Calculate pagination metrics
+            const totalPages = Math.ceil(visibleCount / ITEMS_PER_PAGE) || 1;
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+
+            // Second pass: show only current page items
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = startIndex + ITEMS_PER_PAGE;
+
+            matchingItems.forEach((item, index) => {
+                if (index >= startIndex && index < endIndex) {
+                    item.style.display = "flex";
                 } else {
                     item.style.display = "none";
                 }
@@ -812,6 +933,61 @@
                     emptyState.style.display = "none";
                 }
             }
+
+            // Update pagination UI
+            updatePaginationUI(totalPages);
+        }
+
+        function updatePaginationUI(totalPages) {
+            const paginationControls = document.getElementById("pagination-controls");
+            const pageNumDisplay = document.getElementById("page-num-display");
+            const prevBtn = document.getElementById("prev-page-btn");
+            const nextBtn = document.getElementById("next-page-btn");
+
+            if (totalPages <= 1) {
+                paginationControls.style.display = "none";
+            } else {
+                paginationControls.style.display = "flex";
+                pageNumDisplay.textContent = `Page ${currentPage} of ${totalPages}`;
+                prevBtn.disabled = (currentPage === 1);
+                nextBtn.disabled = (currentPage === totalPages);
+            }
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            filterAndDisplayGallery();
+            
+            const gallerySection = document.querySelector(".gallery-section");
+            if (gallerySection) {
+                gallerySection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Add Modal triggers
+        function openAddModal() {
+            const form = document.querySelector("#addWorkModal form");
+            if (form) {
+                form.reset();
+            }
+            setFormType('Original');
+
+            const fileInput = document.getElementById("imageFile");
+            if (fileInput) fileInput.value = "";
+            
+            const statusText = document.getElementById('upload-status-text-create');
+            if (statusText) statusText.innerHTML = "Click to upload image";
+            
+            const uploadIcon = document.getElementById('upload-icon-create');
+            if (uploadIcon) uploadIcon.className = 'fas fa-upload retro-camera';
+
+            document.getElementById("addWorkModal").style.display = "flex";
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeAddModal() {
+            document.getElementById("addWorkModal").style.display = "none";
+            document.body.style.overflow = "";
         }
 
         // Add form type buttons toggler
@@ -1014,9 +1190,13 @@
 
         // Close modal if clicking outside the modal box
         window.addEventListener("click", function(event) {
-            const modal = document.getElementById("editWorkModal");
-            if (event.target === modal) {
+            const editModal = document.getElementById("editWorkModal");
+            const addModal = document.getElementById("addWorkModal");
+            if (event.target === editModal) {
                 closeEditModal();
+            }
+            if (event.target === addModal) {
+                closeAddModal();
             }
         });
     </script>

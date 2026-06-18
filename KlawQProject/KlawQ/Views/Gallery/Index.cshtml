@@ -1,6 +1,10 @@
 @model IEnumerable<KlawQ.Models.Products>
 @{
     ViewData["Title"] = "Nail Works";
+    if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+    {
+        ViewData["NavbarMode"] = "none";
+    }
 }
 
 @section Styles {
@@ -15,6 +19,24 @@
     <link rel="stylesheet" href="~/css/nail-works.css" />
 
     <style>
+    .back-dash-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #795548;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.2s;
+        font-family: 'Montserrat', sans-serif;
+    }
+    .back-dash-link:hover {
+        color: #5d4037;
+        transform: translateX(-3px);
+        text-decoration: none;
+    }
+
     /* Merged gallery styles from Backend for consistent appearance */
     .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:20px}
     .gallery-card, .gallery-item{background:#fff;border-radius:16px;overflow:hidden;position:relative;border:6px solid transparent;box-shadow:0 8px 18px rgba(0,0,0,.06);display:flex;flex-direction:column}
@@ -42,6 +64,12 @@
 
 <div class="nail-works-wrapper">
     <div class="nail-works-container">
+        @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+        {
+            <a href="/admin" class="back-dash-link">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        }
 
         <div class="page-header">
             <div class="header-icons">
@@ -60,13 +88,16 @@
 
         <div class="gallery-grid">
 
-            <a href="/Order/CheckoutCustom" class="gallery-card custom-request-card" data-type="presson">
-                <div class="custom-request-content">
-                    <i class="far fa-images custom-icon"></i>
-                    <h3>Custom Request</h3>
-                    <p>Click here to design your own set!</p>
-                </div>
-            </a>
+            @if (!(User.Identity?.IsAuthenticated == true && User.IsInRole("Admin")))
+            {
+                <a href="/Order/CheckoutCustom" class="gallery-card custom-request-card" data-type="presson">
+                    <div class="custom-request-content">
+                        <i class="far fa-images custom-icon"></i>
+                        <h3>Custom Request</h3>
+                        <p>Click here to design your own set!</p>
+                    </div>
+                </a>
+            }
 
             @{
                 var favIds = ViewData["FavoritedIds"] as List<int> ?? new List<int>();
@@ -83,10 +114,13 @@
                 var dataType = isPressOn ? "presson" : "original";
                 var detailsLink = "/Gallery/Details/" + p.ProductID;
             <div class="gallery-card image-card" data-type="@dataType">
-                <button class="favorite-btn btn-heart @(favIds.Contains(p.ProductID) ? "favorited" : "")" data-id="@p.ProductID" aria-label="Favorite this set">
-                    <i class="fa-regular fa-heart heart-hollow"></i>
-                    <i class="fa-solid fa-heart heart-filled"></i>
-                </button>
+                @if (!(User.Identity?.IsAuthenticated == true && User.IsInRole("Admin")))
+                {
+                    <button class="favorite-btn btn-heart @(favIds.Contains(p.ProductID) ? "favorited" : "")" data-id="@p.ProductID" aria-label="Favorite this set">
+                        <i class="fa-regular fa-heart heart-hollow"></i>
+                        <i class="fa-solid fa-heart heart-filled"></i>
+                    </button>
+                }
                 <a class="card-link" href="@detailsLink" style="display:block">
                     @{
                         // Robustly obtain a title for the alt attribute in case the model property name differs
@@ -124,6 +158,7 @@
                 item.style.display = types.includes(filter) ? '' : 'none';
             }
         });
+        paginateGallery();
     }));
 
     // apply default filter (presson)
@@ -131,6 +166,98 @@
         const el = document.querySelector('.tab-btn.active');
         if(el) el.click();
     })();
+
+    // 📋 Dynamic client-side pagination engine for the Gallery Grid
+    function paginateGallery() {
+        const grid = document.querySelector('.gallery-grid');
+        if (!grid) return;
+        
+        const activeTab = document.querySelector('.tab-btn.active');
+        const filter = activeTab ? activeTab.getAttribute('data-filter') : 'presson';
+        const allItems = Array.from(grid.querySelectorAll('.gallery-card[data-type]'));
+        const visibleItems = allItems.filter(item => {
+            const types = (item.getAttribute('data-type')||'').split(/\s+/);
+            return types.includes(filter);
+        });
+        
+        // 6 rows of 3 columns = 18 items per page
+        const itemsPerPage = 18;
+        const totalItems = visibleItems.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        
+        let currentPage = 1;
+        
+        let paginationContainer = document.querySelector('.gallery-pagination');
+        if (!paginationContainer) {
+            paginationContainer = document.createElement('div');
+            paginationContainer.className = 'gallery-pagination';
+            paginationContainer.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 2.5rem; width: 100%;';
+            grid.parentElement.appendChild(paginationContainer);
+        }
+        
+        if (totalItems <= itemsPerPage) {
+            visibleItems.forEach(item => item.style.display = '');
+            paginationContainer.style.display = 'none';
+            return;
+        }
+        
+        paginationContainer.style.display = 'flex';
+        
+        function showPage(page) {
+            currentPage = page;
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            
+            allItems.forEach(item => {
+                item.style.display = 'none';
+            });
+            
+            visibleItems.forEach((item, idx) => {
+                if (idx >= start && idx < end) {
+                    item.style.display = '';
+                }
+            });
+            
+            renderControls();
+        }
+        
+        function renderControls() {
+            paginationContainer.innerHTML = "";
+            
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'pagination-btn prev-btn';
+            prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            prevBtn.style.cssText = 'background: white; border: 1.5px solid #fde6ea; color: #e2557a; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => { showPage(currentPage - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+            if (prevBtn.disabled) prevBtn.style.opacity = '0.5';
+            
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'pagination-btn next-btn';
+            nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            nextBtn.style.cssText = 'background: white; border: 1.5px solid #fde6ea; color: #e2557a; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => { showPage(currentPage + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+            if (nextBtn.disabled) nextBtn.style.opacity = '0.5';
+            
+            const infoSpan = document.createElement('span');
+            infoSpan.style.cssText = 'font-weight: 600; color: #795548; font-size: 0.95rem; font-family: Montserrat, sans-serif;';
+            infoSpan.innerHTML = `Page ${currentPage} of ${totalPages}`;
+            
+            paginationContainer.appendChild(prevBtn);
+            paginationContainer.appendChild(infoSpan);
+            paginationContainer.appendChild(nextBtn);
+            
+            [prevBtn, nextBtn].forEach(btn => {
+                if (!btn.disabled) {
+                    btn.onmouseover = () => { btn.style.background = '#fde6ea'; };
+                    btn.onmouseout = () => { btn.style.background = 'white'; };
+                }
+            });
+        }
+        
+        showPage(1);
+    }
 
     // Favorite toggling is handled in ~/js/nail-works-favs.js to ensure server sync and single handler
     </script>

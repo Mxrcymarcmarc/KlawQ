@@ -262,7 +262,16 @@
 
                                     <td>@(order.Contact_Number)</td>
 
-                                    <td>@(order.Order_Type == 'P' || order.Order_Type == 'p' ? "💅 Press-On" : "🎨 Custom")</td>
+                                    <td>
+                                        @if (order.Order_Type == 'P' || order.Order_Type == 'p')
+                                        {
+                                            <span><i class="fas fa-sparkles" style="color: #d88c9a; margin-right: 5px;"></i> Press-On</span>
+                                        }
+                                        else
+                                        {
+                                            <span><i class="fas fa-paint-brush" style="color: #ba68c8; margin-right: 5px;"></i> Custom</span>
+                                        }
+                                    </td>
                                     <td>
                                         <span class="status-text status-@order.Status.ToLower()">
                                             @order.Status

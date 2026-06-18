@@ -124,7 +124,8 @@ namespace KlawQ.Controllers
                 bool isAlreadyBooked = bookingsForDay.Any(b =>
                     b.Time_Slot == exactSlotTime &&
                     b.Appointment != null &&
-                    b.Appointment.Down_Payment_Paid);
+                    b.Appointment.Down_Payment_Paid &&
+                    (b.Appointment.Status == 0 || b.Appointment.Status == 1));
 
                 // Check if admin blocked either the entire day (null) or this specific business hour slot
                 bool isSlotBlockedByAdmin = adminHourlyBlocks.Any(o => o.BlockedHour == null || o.BlockedHour == hour);
@@ -142,8 +143,11 @@ namespace KlawQ.Controllers
         }
 
         [HttpPost("booking")]
-        public async Task<IActionResult> BookSlot([FromBody] BookingWithAppointmentRequest request)
+        public async Task<IActionResult> BookSlot([FromBody] BookingRequest request)
         {
+            if (request == null || request.AppId <= 0)
+                return BadRequest("Booking failed: Invalid appointment reference data!");
+
             request.Appointment_Date = NormalizeToPH(request.Appointment_Date);
             request.Time_Slot = NormalizeToPH(request.Time_Slot);
 
@@ -157,8 +161,12 @@ namespace KlawQ.Controllers
             if (request.Appointment_Date.Date == TodayInPH().AddDays(1))
                 return BadRequest("Booking failed: You cannot book a time slot for tomorrow!");
 
-            if (string.IsNullOrWhiteSpace(request.Full_Name))
-                return BadRequest("Booking failed: Full Name is required!");
+            var pendingAppointment = await _context.Appointments.FindAsync(request.AppId);
+            if (pendingAppointment == null)
+                return BadRequest("Booking failed: Appointment reference not found!");
+
+            if (string.IsNullOrWhiteSpace(pendingAppointment.Full_Name))
+                return BadRequest("Booking failed: Full Name is required on the appointment!");
 
             DayOfWeek dayOfWeek = request.Appointment_Date.DayOfWeek;
             if (dayOfWeek == DayOfWeek.Tuesday)
@@ -174,7 +182,8 @@ namespace KlawQ.Controllers
                     s.Appointment_Date.Date == request.Appointment_Date.Date &&
                     s.Time_Slot == request.Time_Slot &&
                     s.Appointment != null &&
-                    s.Appointment.Down_Payment_Paid);
+                    s.Appointment.Down_Payment_Paid &&
+                    (s.Appointment.Status == 0 || s.Appointment.Status == 1));
 
             if (isExactSlotTaken)
                 return BadRequest("Booking failed: This specific time slot has already been reserved and paid for!");
@@ -185,27 +194,12 @@ namespace KlawQ.Controllers
                 .CountAsync(s =>
                     s.Appointment_Date.Date == request.Appointment_Date.Date &&
                     s.Appointment != null &&
-                    s.Appointment.Down_Payment_Paid);
+                    s.Appointment.Down_Payment_Paid &&
+                    (s.Appointment.Status == 0 || s.Appointment.Status == 1));
 
             if (totalBookingsForDay >= maxSlotsForThisDay)
                 return BadRequest("Booking failed: This date has reached full operational capacity!");
             // --- End of Validation Guards ---
-
-            // Create a PENDING appointment placeholder.
-            var pendingAppointment = new Appointment
-            {
-                Full_Name = request.Full_Name,
-                Social_Account = request.Social_Account,
-                Phone = request.Phone,
-                Additional_Notes = request.Additional_Notes,
-                Appointment_Type = request.Appointment_Type,
-                Inspiration_Image = request.Inspiration_Image ?? string.Empty,
-                Down_Payment_Paid = false,
-                Status = 0
-            };
-
-            _context.Appointments.Add(pendingAppointment);
-            await _context.SaveChangesAsync(); // generates AppId
 
             var scheduler = new Scheduler
             {
@@ -263,11 +257,16 @@ namespace KlawQ.Controllers
             <html>
             <head>
                 <meta charset=""utf-8"">
+                <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
                 <title>Payment Successful</title>
+                <link rel=""preconnect"" href=""https://fonts.googleapis.com"">
+                <link rel=""preconnect"" href=""https://fonts.gstatic.com"" crossorigin>
+                <link href=""https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"" rel=""stylesheet"">
+                <link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"">
                 <style>
                     body {
-                        background-color: #fffafb;
-                        font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+                        background-color: #fdf5f6;
+                        font-family: 'Montserrat', sans-serif;
                         display: flex;
                         justify-content: center;
                         align-items: center;
@@ -275,51 +274,57 @@ namespace KlawQ.Controllers
                         margin: 0;
                     }
                     .card {
-                        background-color: #fcd8dd;
+                        background-color: #ffffff;
                         padding: 40px;
-                        border-radius: 16px;
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-                        border: 1px solid #fbc0c7;
+                        border-radius: 20px;
+                        box-shadow: 0 10px 30px rgba(121, 85, 72, 0.08);
+                        border: 1.5px solid #fce4ec;
                         text-align: center;
                         max-width: 450px;
                         width: 90%;
                         box-sizing: border-box;
                     }
-                    .emoji {
-                        font-size: 48px; 
-                        margin-bottom: 16px;
+                    .success-icon {
+                        color: #2e7d32;
+                        font-size: 54px;
+                        margin-bottom: 24px;
+                        display: inline-block;
                     }
                     h3 {
-                        color: #8b4b3b;
+                        color: #7a5046;
                         font-size: 24px;
-                        margin-bottom: 12px;
+                        font-weight: 700;
                         margin-top: 0;
+                        margin-bottom: 12px;
                     }
                     p {
                         color: #8a6a62;
                         font-size: 15px;
                         line-height: 1.6;
+                        margin-top: 0;
                         margin-bottom: 20px;
                     }
                     .redirect-text {
-                        font-size: 13px; 
-                        color: #a08077; 
-                        font-style: italic; 
+                        font-size: 13px;
+                        color: #a08077;
+                        font-style: italic;
                         margin-bottom: 28px;
                     }
                     .btn {
-                        background-color: #88b04b;
+                        background-color: #7a5046;
                         color: #ffffff;
                         padding: 12px 32px;
                         border-radius: 24px;
                         text-decoration: none;
                         font-weight: 600;
+                        font-size: 15px;
                         display: inline-block;
-                        box-shadow: 0 6px 12px rgba(136,176,75,0.18);
-                        transition: background 0.2s ease;
+                        box-shadow: 0 6px 12px rgba(122,80,70,0.15);
+                        transition: all 0.2s ease;
                     }
                     .btn:hover {
-                        background-color: #76993f;
+                        background-color: #5d3a31;
+                        transform: translateY(-2px);
                     }
                 </style>
                 <script>
@@ -330,7 +335,7 @@ namespace KlawQ.Controllers
             </head>
             <body>
                 <div class=""card"">
-                    <div class=""emoji"">✨</div>
+                    <i class=""fas fa-check-circle success-icon""></i>
                     <h3>Payment Received!</h3>
                     <p>Your ₱150 reservation downpayment via GCash has been processed successfully. Your appointment slot is officially secured!</p>
                     <p class=""redirect-text"">Redirecting you back home automatically in 5 seconds...</p>
@@ -398,7 +403,8 @@ namespace KlawQ.Controllers
                 int totalBookingsForDay = monthlyBookings.Count(b =>
                     b.Appointment_Date.Date == loopDate.Date &&
                     b.Appointment != null &&
-                    b.Appointment.Down_Payment_Paid);
+                    b.Appointment.Down_Payment_Paid &&
+                    (b.Appointment.Status == 0 || b.Appointment.Status == 1));
 
                 // Identify if an admin profile explicitly blocked out this entire date row (BlockedHour is null)
                 bool isDayBlockedByAdmin = adminBlocks.Any(o => o.TargetDate.Date == loopDate.Date && o.BlockedHour == null);

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KlawQ.Models
@@ -17,6 +17,8 @@ namespace KlawQ.Models
         public int Reschedule_Count { get; set; } = 0;
         public required char Appointment_Type { get; set; } = 'S'; // H for home service and 'S' for studio-based service
         public int Status { get; set; }
+        public decimal Price { get; set; } = 0m;
+        public bool IsCustom { get; set; } = false;
 
         public Scheduler? Scheduler { get; set; }
     }

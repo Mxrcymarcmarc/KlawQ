@@ -225,6 +225,38 @@
             color: #bbb;
             text-decoration: none;
         }
+
+        /* 🕒 POP-UP MODAL ENGINE LAYOUT SCHEMAS */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(121, 85, 72, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-close-trigger {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-brown);
+        }
     </style>
 }
 
@@ -285,6 +317,7 @@
                                             <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; flex-grow: 1; gap: 1rem;">
                                                 @{
                                                     var pressOnInspirations = new List<string>();
+                                                    decimal customPrice = 0;
                                                     if (!string.IsNullOrWhiteSpace(order.Thumb_Photo) && order.Thumb_Photo.TrimStart().StartsWith("{"))
                                                     {
                                                         try
@@ -297,6 +330,11 @@
                                                                     var b64 = el.GetString();
                                                                     if (!string.IsNullOrWhiteSpace(b64)) pressOnInspirations.Add(b64);
                                                                 }
+                                                            }
+                                                            if (doc.RootElement.TryGetProperty("price", out var priceProp))
+                                                            {
+                                                                if (priceProp.ValueKind == System.Text.Json.JsonValueKind.Number) customPrice = priceProp.GetDecimal();
+                                                                else if (priceProp.ValueKind == System.Text.Json.JsonValueKind.String && decimal.TryParse(priceProp.GetString(), out var parsedPrice)) customPrice = parsedPrice;
                                                             }
                                                         }
                                                         catch {}
@@ -312,7 +350,7 @@
                                                                 <div class="order-item-details">
                                                                     <h3 class="order-item-title" style="font-size: 1.05rem;">Custom Press-On Set</h3>
                                                                     <div class="order-item-price-qty">
-                                                                        Custom Design &nbsp;|&nbsp; <span class="badge-size" style="font-size: 11px;">Custom</span>
+                                                                        ₱@customPrice.ToString("N2") &nbsp;|&nbsp; <span class="badge-size" style="font-size: 11px;">Custom</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -333,7 +371,13 @@
                                                             <div style="display: flex; gap: 1rem; align-items: center;">
                                                                 <img src="@img" alt="@(item.Product?.Product_Name)" class="order-item-image" style="width: 70px; height: 70px;" />
                                                                 <div class="order-item-details">
-                                                                    <h3 class="order-item-title" style="font-size: 1.05rem;">@(item.Product?.Product_Name ?? "Press-On Set")</h3>
+                                                                    <h3 class="order-item-title" style="font-size: 1.05rem;">
+                                                                        @(item.Product?.Product_Name ?? "Press-On Set")
+                                                                        @if (item.Product != null && item.Product.IsDeleted)
+                                                                        {
+                                                                            <span style="color: #dc3545; font-size: 0.8rem; font-weight: 600;">(Deleted)</span>
+                                                                        }
+                                                                    </h3>
                                                                     <div class="order-item-price-qty">
                                                                         ₱@(price.ToString("N2")) × @item.Quantity &nbsp;|&nbsp; <span class="badge-size" style="font-size: 11px;">Standard</span>
                                                                     </div>
@@ -390,7 +434,12 @@
                                                         @foreach (var item in order.Items ?? Enumerable.Empty<KlawQ.Models.OrderItem>())
                                                         {
                                                             <p style="font-size: 13px; color: var(--text-brown); margin: 2px 0;">
-                                                                <i class="fas fa-chevron-right" style="font-size: 10px; color: var(--border-pink);"></i> @(item.Product?.Product_Name) <strong>(x@item.Quantity)</strong>
+                                                                <i class="fas fa-chevron-right" style="font-size: 10px; color: var(--border-pink);"></i> @(item.Product?.Product_Name)
+                                                                @if (item.Product != null && item.Product.IsDeleted)
+                                                                {
+                                                                    <span style="color: #dc3545; font-size: 0.8rem; font-weight: 600;">(Deleted)</span>
+                                                                }
+                                                                <strong>(x@item.Quantity)</strong>
                                                             </p>
                                                         }
                                                     </div>
@@ -449,12 +498,31 @@
 
                                         <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 16px; flex-wrap: wrap; margin-top: 0.5rem; border-top: 1px dashed #f0e6e8; padding-top: 12px;">
                                             <div class="order-total-line" style="margin: 0;">
-                                                @{
-                                                    var totalAmount = order.Items != null && order.Items.Any()
-                                                        ? order.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity)
-                                                        : 150.00m;
+                                                @if (type == 'C')
+                                                {
+                                                    <span>Total: </span><span class="order-total-price" style="font-size: 1.1rem; color: var(--text-light-brown);">Pending Quote</span>
                                                 }
-                                                Total: <span class="order-total-price">₱@totalAmount.ToString("N2")</span>
+                                                else
+                                                {
+                                                    decimal customPrice = 0;
+                                                    if (!string.IsNullOrWhiteSpace(order.Thumb_Photo) && order.Thumb_Photo.TrimStart().StartsWith("{"))
+                                                    {
+                                                        try
+                                                        {
+                                                            var doc = System.Text.Json.JsonDocument.Parse(order.Thumb_Photo);
+                                                            if (doc.RootElement.TryGetProperty("price", out var priceProp))
+                                                            {
+                                                                if (priceProp.ValueKind == System.Text.Json.JsonValueKind.Number) customPrice = priceProp.GetDecimal();
+                                                                else if (priceProp.ValueKind == System.Text.Json.JsonValueKind.String && decimal.TryParse(priceProp.GetString(), out var parsedPrice)) customPrice = parsedPrice;
+                                                            }
+                                                        }
+                                                        catch {}
+                                                    }
+                                                    var totalAmount = customPrice + (order.Items != null && order.Items.Any()
+                                                        ? order.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity)
+                                                        : 0m);
+                                                    <span>Total: </span><span class="order-total-price">₱@totalAmount.ToString("N2")</span>
+                                                }
                                             </div>
 
                                             <div class="order-card-actions" style="margin-top: 0; justify-content: flex-end;">
@@ -477,7 +545,7 @@
                                                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                                                         @if (status == "Pending")
                                                         {
-                                                            <button class="btn-admin-action btn-admin-approve" onclick="approveCustomRequest(@order.OrderID)" title="Approve Request">
+                                                            <button class="btn-admin-action btn-admin-approve" onclick="openApproveModal(event, @order.OrderID)" title="Approve Request">
                                                                 <i class="fas fa-check"></i> Approve
                                                             </button>
                                                             <button class="btn-admin-action btn-admin-reject" onclick="rejectCustomRequest(@order.OrderID)" title="Reject Request">
@@ -515,6 +583,27 @@
     <img class="image-modal-content" id="lightboxTargetImage">
 </div>
 
+<!-- Approve Price Modal -->
+<div id="approvePriceModal" class="modal-overlay">
+    <div style="background: white; margin: auto; padding: 25px; border-radius: 16px; border: 1.5px solid var(--accent-pink); max-width: 400px; width: 90%; box-shadow: 0 8px 30px rgba(139, 75, 59, 0.15); box-sizing: border-box; text-align: left; position: relative;">
+        <span class="modal-close-trigger" onclick="closeApproveModal()">&times;</span>
+        <h3 style="font-family: 'Shadows Into Light Two', cursive; font-size: 26px; color: var(--text-brown); margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-tag" style="color: var(--accent-green-hover);"></i> Approve Custom Request
+        </h3>
+        <p style="font-size: 13px; color: var(--text-light-brown); line-height: 1.5; margin-bottom: 20px;">
+            Please enter the custom design price for the Press-On Set. This will convert the request to an active order with this price.
+        </p>
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-light-brown); font-weight: 600; display: block; margin-bottom: 6px;">Price for Custom Press-Ons (₱)</label>
+            <input type="number" id="approveCustomPriceInput" step="0.01" min="0" value="150.00" style="width: 100%; padding: 10px 12px; font-family: 'Montserrat', sans-serif; font-size: 15px; color: var(--text-brown); border: 1.5px solid var(--border-pink); border-radius: 10px; outline: none; box-sizing: border-box;" />
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn-admin-action" onclick="closeApproveModal()" style="border-color: #bbb; color: #777; background: transparent; min-width: 90px; height: 36px; border-radius: 18px; font-weight: 600; font-size: 0.85rem; cursor: pointer;">Cancel</button>
+            <button class="btn-admin-action btn-admin-approve" onclick="submitApproveCustomRequest()" style="background: var(--accent-green); color: white; border-color: transparent; min-width: 90px; height: 36px; border-radius: 18px; font-weight: 600; font-size: 0.85rem; cursor: pointer;">Approve</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         // Tab routing variables
@@ -522,8 +611,33 @@
         let currentStatusFilter = "All"; // "All", "Pending", "In Progress", "Completed", "Cancelled"
 
         document.addEventListener("DOMContentLoaded", () => {
+            // Read status from URL query parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusParam = urlParams.get('status');
+            
+            // Normalize and map URL status to valid filter names
+            if (statusParam) {
+                const validStatuses = ["All", "Pending", "In Progress", "Completed", "Cancelled"];
+                const matched = validStatuses.find(s => s.toLowerCase() === statusParam.trim().toLowerCase());
+                if (matched) {
+                    currentStatusFilter = matched;
+                }
+            }
+
             setupTabListeners();
             setupStatusFilterListeners();
+
+            // Highlight the correct status sub-filter button on load
+            const btns = document.querySelectorAll(".status-filter-btn");
+            btns.forEach(b => {
+                const dataStatus = b.getAttribute("data-status");
+                if (dataStatus && dataStatus.toLowerCase() === currentStatusFilter.toLowerCase()) {
+                    b.classList.add("active");
+                } else {
+                    b.classList.remove("active");
+                }
+            });
+
             filterAndDisplayOrders();
         });
 
@@ -641,16 +755,39 @@
             }
         }
 
-        async function approveCustomRequest(orderId) {
-            if (!confirm(`Approve custom request #${orderId}? This will automatically create an active order for the client.`)) return;
+        let activeApproveOrderId = null;
+
+        function openApproveModal(evt, orderId) {
+            if (evt) {
+                evt.stopPropagation();
+                evt.preventDefault();
+            }
+            activeApproveOrderId = orderId;
+            document.getElementById("approveCustomPriceInput").value = "150.00";
+            document.getElementById("approvePriceModal").classList.add("active");
+        }
+
+        function closeApproveModal() {
+            document.getElementById("approvePriceModal").classList.remove("active");
+            activeApproveOrderId = null;
+        }
+
+        async function submitApproveCustomRequest() {
+            if (!activeApproveOrderId) return;
+            const price = parseFloat(document.getElementById("approveCustomPriceInput").value);
+            if (isNaN(price) || price < 0) {
+                alert("Please enter a valid price (greater than or equal to 0).");
+                return;
+            }
 
             try {
-                const response = await fetch(`/AdminOrders/ApproveCustomRequest?orderId=${orderId}`, {
+                const response = await fetch(`/AdminOrders/ApproveCustomRequest?orderId=${activeApproveOrderId}&price=${price}`, {
                     method: 'POST'
                 });
 
                 if (response.ok) {
                     alert("Custom request approved successfully! An active order has been created.");
+                    closeApproveModal();
                     location.reload();
                 } else {
                     alert(await response.text() || "Error approving custom request.");

@@ -111,14 +111,36 @@ namespace KlawQ.Controllers
                 if (user != null)
                 {
                     orders = await _context.Orders
+                        .IgnoreQueryFilters()
                         .Include(o => o.Items)
                         .ThenInclude(oi => oi.Product)
-                        .Where(o => o.UserID == user.UserID && o.Order_Type == 'P')
+                        .Where(o => o.UserID == user.UserID && (o.Order_Type == 'P' || o.Order_Type == 'C'))
                         .OrderByDescending(o => o.Order_Date)
                         .ToListAsync();
                 }
             }
             return View(orders);
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpGet("Home/AppointmentHistory")]
+        public async Task<IActionResult> AppointmentHistory()
+        {
+            List<Appointment> appointments = [];
+            if (User.Identity?.IsAuthenticated is true)
+            {
+                var email = User.Identity.Name;
+                var user = await _context.UserProfiles.FirstOrDefaultAsync(u => u.Email == email);
+                if (user != null)
+                {
+                    appointments = await _context.Appointments
+                        .Include(a => a.Scheduler)
+                        .Where(a => a.UserId == user.UserID && a.Down_Payment_Paid)
+                        .OrderByDescending(a => a.AppId)
+                        .ToListAsync();
+                }
+            }
+            return View(appointments);
         }
 
         [AllowAnonymous]

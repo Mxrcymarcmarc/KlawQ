@@ -7,11 +7,34 @@
     else if (mainImg.StartsWith("~")) mainImg = Url.Content(mainImg);
     else if (!mainImg.StartsWith("/")) mainImg = Url.Content("~/" + mainImg.TrimStart('/'));
     else mainImg = Url.Content(mainImg);
+
+    if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+    {
+        ViewData["NavbarMode"] = "none";
+    }
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/nail-works.css" />
     <style>
+        .back-dash-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #795548;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .back-dash-link:hover {
+            color: #5d4037;
+            transform: translateX(-3px);
+            text-decoration: none;
+        }
+
         .details-container {
             max-width: 1200px;
             margin: 24px auto;
@@ -309,6 +332,12 @@
 }
 
 <div class="details-container">
+    @if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+    {
+        <a href="/Gallery" class="back-dash-link">
+            <i class="fas fa-arrow-left"></i> Back to Gallery
+        </a>
+    }
     <div class="details-row">
         <!-- Left card: Image -->
         <div class="image-card">
@@ -337,7 +366,7 @@
                 @if (Model.Product_Type != null && Model.Product_Type.ToLower().Contains("original"))
                 {
                     <div class="btn-action-row">
-                        <a href="/Appointment?Inspiration_Image=@Uri.EscapeDataString(mainImg)&Inspiration_Title=@Uri.EscapeDataString(Model.Product_Name)" class="btn-details-primary">Book Appointment</a>
+                        <a href="/Appointment?Inspiration_Image=@Uri.EscapeDataString(mainImg)&Inspiration_Title=@Uri.EscapeDataString(Model.Product_Name)&Price=@Model.Product_Price" class="btn-details-primary">Book Appointment</a>
 
                         <button type="button" class="favorite-btn btn-heart @(((ViewData["IsFavorited"] as bool?)==true) ? "favorited" : "")" data-id="@Model.ProductID" aria-label="Toggle favorite">
                             <i class="fa-regular fa-heart heart-hollow"></i>
@@ -375,7 +404,7 @@
                 else
                 {
                     <div class="btn-action-row">
-                        <a href="/Appointment?Inspiration_Image=@Uri.EscapeDataString(mainImg)&Inspiration_Title=@Uri.EscapeDataString(Model.Product_Name)" class="btn-details-primary">Book Appointment</a>
+                        <a href="/Appointment?Inspiration_Image=@Uri.EscapeDataString(mainImg)&Inspiration_Title=@Uri.EscapeDataString(Model.Product_Name)&Price=@Model.Product_Price" class="btn-details-primary">Book Appointment</a>
 
                         <button type="button" class="favorite-btn btn-heart @(((ViewData["IsFavorited"] as bool?)==true) ? "favorited" : "")" data-id="@Model.ProductID" aria-label="Toggle favorite">
                             <i class="fa-regular fa-heart heart-hollow"></i>

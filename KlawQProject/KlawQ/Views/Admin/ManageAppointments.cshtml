@@ -1,519 +1,677 @@
 @model IEnumerable<KlawQ.Models.Scheduler>
 @{
-    ViewData["Title"] = "Manage Appointments";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["NavbarMode"] = "admin";
+ViewData["Title"] = "Manage Appointments";
+Layout = "~/Views/Shared/_Layout.cshtml";
+ViewData["NavbarMode"] = "admin";
 }
 
 @section Styles {
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="~/css/home-page.css" asp-append-version="true" />
 
-    <style>
-        :root {
-            --primary-font: 'Shadows Into Light Two', cursive;
-            --secondary-font: 'Montserrat', sans-serif;
-            --text-brown: #8d6e5d;
-            --text-dark-brown: #795548;
-            --card-bg: #ffffff;
-            --accent-green: #a7c47d;
-            --accent-green-hover: #92b068;
-            --accent-pink-light: #fce4ec;
-            --border-pink: #f8bbd0;
-            --shadow-soft: 0 10px 30px rgba(121, 85, 72, 0.08);
-            --color-approve: #b9c68c;
-            --color-reject: #e57373;
-            --color-complete: #81c784;
-            --color-cancel: #ba68c8;
-        }
-
-        .manage-appt-wrapper {
-            background-color: #fdfafb;
-            padding: 3rem 1rem;
-            min-height: 100vh;
-            font-family: var(--secondary-font);
-            color: var(--text-brown);
-        }
-
-        .manage-appt-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        /* 🌟 BACK BUTTON STYLING: Balanced alongside the text alignment definitions */
-        .back-dash-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-brown);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-            transition: all 0.2s;
-        }
-
-            .back-dash-link:hover {
-                color: var(--text-dark-brown);
-                transform: translateX(-3px);
-            }
-
-        .page-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .page-title {
-            font-family: var(--primary-font);
-            font-size: 3.5rem;
-            margin: 0;
-            color: var(--text-dark-brown);
-            font-weight: normal;
-        }
-
-        .section-heading {
-            font-size: 1.4rem;
-            color: var(--text-dark-brown);
-            margin: 2rem 0 1rem 0;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .appointment-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: var(--shadow-soft);
-            margin-bottom: 2.5rem;
-            border: 2px solid var(--border-pink);
-        }
-
-        .appointment-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-            /* 🌟 FIXED THE DATA HEADERS: Keeps headers locked in place while scrolling rows */
-            .appointment-table th {
-                color: var(--text-dark-brown);
-                font-weight: 600;
-                padding: 1rem;
-                border-bottom: 2px solid var(--border-pink);
-                font-size: 0.9rem;
-                text-transform: uppercase;
-                position: sticky;
-                top: 0;
-                background: var(--card-bg);
-                z-index: 10;
-            }
-
-            .appointment-table td {
-                padding: 1.2rem 1rem;
-                color: var(--text-brown);
-                border-bottom: 1px solid #f7ecee;
-                font-size: 0.95rem;
-                vertical-align: middle;
-            }
-
-        /* 🌟 FIX: Locked height configuration containers for table view panels */
-        .table-responsive {
-            max-height: 320px;
-            overflow-y: auto;
-            overflow-x: auto;
-            padding-right: 5px;
-        }
-
-            /* Clean scrollbar styling rules for WebKit view engines */
-            .table-responsive::-webkit-scrollbar {
-                width: 6px;
-                height: 6px;
-            }
-
-            .table-responsive::-webkit-scrollbar-track {
-                background: #fdf5f6;
-                border-radius: 10px;
-            }
-
-            .table-responsive::-webkit-scrollbar-thumb {
-                background: var(--border-pink);
-                border-radius: 10px;
-            }
-
-                .table-responsive::-webkit-scrollbar-thumb:hover {
-                    background: var(--text-brown);
-                }
-
-        .customer-meta {
-            font-weight: 600;
-            color: var(--text-dark-brown);
-        }
-
-        .customer-subtext {
-            font-size: 0.8rem;
-            color: #9c8a7c;
-            margin: 2px 0 0 0;
-        }
-
-        .date-badge {
-            color: var(--text-dark-brown);
-            font-weight: 600;
-            background: #fdf5f6;
-            padding: 4px 10px;
-            border-radius: 8px;
-            border: 1px solid var(--border-pink);
-            font-size: 0.88rem;
-        }
-
-        .action-flex-box {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .btn-panel-action {
-            font-family: var(--secondary-font);
-            font-weight: 600;
-            font-size: 0.8rem;
-            padding: 6px 14px;
-            border-radius: 10px;
-            cursor: pointer;
-            border: none;
-            color: white;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-            .btn-panel-action:hover {
-                transform: translateY(-1px);
-                filter: brightness(0.95);
-            }
-
-        .btn-approve {
-            background-color: var(--color-approve);
-        }
-
-        .btn-reject {
-            background-color: var(--color-reject);
-        }
-
-        .btn-complete {
-            background-color: var(--color-complete);
-        }
-
-        .btn-reschedule {
-            background-color: var(--text-brown);
-        }
-
-        .btn-cancel {
-            background-color: var(--color-cancel);
-        }
-
-        .empty-table-msg {
-            text-align: center;
-            padding: 40px;
-            font-style: italic;
-            color: #9c8a7c;
-        }
-
-        /* 🕒 POP-UP MODAL ENGINE LAYOUT SCHEMAS */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(121, 85, 72, 0.4);
-            backdrop-filter: blur(4px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-            .modal-overlay.active {
-                opacity: 1;
-                visibility: visible;
-            }
-
-        .modal-wrapper-card {
-            background: white;
-            border-radius: 24px;
-            width: 90%;
-            max-width: 850px;
-            min-height: 440px;
-            height: 440px;
-            padding: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-            border: 2px solid var(--border-pink);
-            display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 25px;
-            position: relative;
-            box-sizing: border-box;
-        }
-
-        .modal-close-trigger {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-brown);
-        }
-
-        .modal-calendar-header-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            padding: 0 5px;
-        }
-
-        .modal-calendar-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-dark-brown);
-            margin: 0;
-        }
-
-        .btn-modal-nav {
-            background: #fdf5f6;
-            border: 1px solid #f4d0d4;
-            color: var(--text-dark-brown);
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.2s;
-        }
-
-            .btn-modal-nav:hover {
-                background: #f4d0d4;
-            }
-
-        .mini-grid-calendar {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-            text-align: center;
-        }
-
-        .mini-weekday {
-            font-weight: 700;
-            font-size: 0.75rem;
-            color: var(--text-brown);
-            padding-bottom: 4px;
-        }
-
-        .mini-day-tile {
-            border: 1px solid #f7ecee;
-            border-radius: 8px;
-            padding: 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            background: white;
-            font-weight: 600;
-            box-sizing: border-box;
-            height: 36px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-            .mini-day-tile:hover:not(.disabled) {
-                border-color: var(--border-pink);
-                background: #fdf5f6;
-            }
-
-            .mini-day-tile.disabled {
-                opacity: 0.3;
-                cursor: not-allowed;
-                background: #fafafa;
-            }
-
-            .mini-day-tile.selected {
-                border-color: var(--color-approve) !important;
-                background: #fbfcf8;
-                box-shadow: 0 0 0 1px var(--color-approve);
-            }
-
-        .slots-modal-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            height: 320px;
-            max-height: 320px;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-
-        .slot-modal-pill {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid #f7ecee;
-            font-size: 0.88rem;
-            font-weight: 600;
-        }
-
-        .btn-select-slot {
-            background-color: var(--accent-green);
-            color: white;
-            border: none;
-            padding: 4px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
-            .btn-select-slot:hover {
-                background-color: var(--accent-green-hover);
-            }
-
-        .slot-pill-blocked {
-            color: #ba68c8;
-            font-style: italic;
-            font-size: 0.8rem;
-            font-weight: normal;
-        }
-
-        @@media (max-width: 768px) {
-            .modal-wrapper-card {
-                grid-template-columns: 1fr;
-                height: auto;
-                min-height: auto;
-            }
-
-            .slots-modal-stack {
-                height: 200px;
-            }
-        }
-    </style>
+<style>
+    .home-wrapper {
+    min-height: 80vh;
+    background-color: var(--bg-soft-pink);
+    padding: 2rem 0;
 }
 
-<div class="manage-appt-wrapper">
-    <div class="manage-appt-container">
+.back-dash-link {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+color: var(--text-brown);
+text-decoration: none;
+font-weight: 600;
+font-size: 0.9rem;
+margin-bottom: 1.5rem;
+transition: all 0.2s;
+}
 
-        <!-- 🌟 BACK LINK: Aligned structurally with the admin hub interface metrics -->
-        <a href="/admin" class="back-dash-link">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
+.back-dash-link:hover {
+color: var(--text-dark-brown);
+transform: translateX(-3px);
+text-decoration: none;
+}
 
-        <div class="page-header">
-            <h1 class="page-title">💅 Manage Appointments</h1>
-            <p class="page-subtitle">Track, confirm, reschedule, or complete dynamic client sessions.</p>
-        </div>
+.appointment-card {
+background: #ffffff;
+border-radius: 20px;
+padding: 1.5rem;
+box-shadow: 0 10px 30px rgba(121, 85, 72, 0.08);
+border: 1.5px solid var(--border-pink);
+}
 
-        <!-- 📌 TABLE 1: PENDING REQUESTS AWAITING APPROVAL -->
-        <h2 class="section-heading"><i class="far fa-clock"></i> New Requests Awaiting Approval</h2>
-        <div class="appointment-card">
-            <div class="table-responsive">
-                <table class="appointment-table">
-                    <thead>
-                        <tr>
-                            <th>Customer</th>
-                            <th>Contact Info</th>
-                            <th>Requested Session</th>
-                            <th>Scheduled Date & Time</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (!Model.Any(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 0))
-                        {
-                            <tr><td colspan="5" class="empty-table-msg">No pending requests found.</td></tr>
-                        }
-                        else
-                        {
-                            foreach (var item in Model.Where(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 0))
-                            {
-                                <tr id="row-scheduler-@item.SchedulerID">
-                                    <td class="customer-meta">@item.Appointment.Full_Name</td>
-                                    <td>
-                                        <p class="customer-subtext">📞 @item.Appointment.Phone</p>
-                                        <p class="customer-subtext">📱 @item.Appointment.Social_Account</p>
-                                    </td>
-                                    <td><span class="date-badge">@item.Appointment.Appointment_Type</span></td>
-                                    <td><span class="date-badge">@item.Appointment_Date.ToString("MMMM dd, yyyy") @item.Time_Slot.ToString("h:mm tt")</span></td>
-                                    <td>
-                                        <div class="action-flex-box">
-                                            <button class="btn-panel-action btn-approve" onclick="updateStatusAPI(@item.SchedulerID, 1)"><i class="fas fa-check"></i> Approve</button>
-                                            <button class="btn-panel-action btn-reject" onclick="updateStatusAPI(@item.SchedulerID, 3)"><i class="fas fa-times"></i> Reject</button>
-                                        </div>
-                                    </td>
+.appointment-table {
+width: 100%;
+border-collapse: collapse;
+text-align: left;
+}
+
+.appointment-table th {
+color: var(--text-dark-brown);
+font-weight: 600;
+padding: 1rem;
+border-bottom: 2px solid var(--border-pink);
+font-size: 0.9rem;
+text-transform: uppercase;
+position: sticky;
+top: 0;
+background: #ffffff;
+z-index: 10;
+}
+
+.appointment-table td {
+padding: 1.2rem 1rem;
+color: var(--text-brown);
+border-bottom: 1px solid #f7ecee;
+font-size: 0.95rem;
+vertical-align: middle;
+}
+
+.table-responsive {
+max-height: 400px;
+overflow-y: auto;
+overflow-x: auto;
+padding-right: 5px;
+}
+
+/* Clean scrollbar styling rules for WebKit view engines */
+.table-responsive::-webkit-scrollbar {
+width: 6px;
+height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+background: #fdf5f6;
+border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+background: var(--border-pink);
+border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+background: var(--text-brown);
+}
+
+.customer-meta {
+font-weight: 600;
+color: var(--text-dark-brown);
+}
+
+.customer-subtext {
+font-size: 0.8rem;
+color: #9c8a7c;
+margin: 4px 0 0 0;
+display: flex;
+align-items: center;
+gap: 6px;
+white-space: nowrap;
+}
+
+.customer-subtext i {
+color: var(--text-light-brown);
+width: 16px;
+text-align: center;
+}
+
+.date-badge {
+color: var(--text-dark-brown);
+font-weight: 600;
+background: #fdf5f6;
+padding: 6px 12px;
+border-radius: 8px;
+border: 1px solid var(--border-pink);
+font-size: 0.88rem;
+white-space: nowrap;
+}
+
+.action-flex-box {
+display: flex;
+gap: 8px;
+flex-wrap: nowrap;
+}
+
+@@media (max-width: 992px) {
+.action-flex-box {
+flex-wrap: wrap;
+}
+}
+
+/* Premium admin action buttons matching Manage Orders */
+.btn-admin-action {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 6px;
+padding: 0.5rem 1.2rem;
+border: 1px solid transparent;
+border-radius: 20px;
+font-weight: 600;
+font-size: 0.85rem;
+cursor: pointer;
+transition: all 0.2s ease;
+font-family: var(--secondary-font);
+text-decoration: none;
+min-width: 110px;
+height: 38px;
+box-sizing: border-box;
+}
+
+.btn-admin-approve {
+border-color: var(--accent-green);
+color: var(--accent-green-hover);
+background: transparent;
+}
+
+.btn-admin-approve:hover {
+background: var(--accent-green);
+color: #ffffff;
+border-color: transparent;
+}
+
+.btn-admin-reject {
+border-color: #dc3545;
+color: #dc3545;
+background: transparent;
+}
+
+.btn-admin-reject:hover {
+background: #dc3545;
+color: #ffffff;
+border-color: transparent;
+}
+
+.btn-admin-reschedule {
+border-color: var(--text-brown);
+color: var(--text-brown);
+background: transparent;
+}
+
+.btn-admin-reschedule:hover {
+background: var(--text-brown);
+color: #ffffff;
+border-color: transparent;
+}
+
+.btn-admin-view {
+border-color: #9c27b0;
+color: #9c27b0;
+background: transparent;
+min-width: 38px !important;
+width: 38px;
+padding: 0;
+}
+
+.btn-admin-view:hover {
+background: #9c27b0;
+color: #ffffff;
+border-color: transparent;
+}
+
+.empty-table-msg {
+text-align: center;
+padding: 40px;
+font-style: italic;
+color: #9c8a7c;
+}
+
+/* DETAILS MODAL LAYOUT & ELEMENT STYLING */
+.modal-wrapper-card.details-modal-card {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 25px;
+max-width: 800px;
+height: auto !important;
+min-height: auto !important;
+max-height: 90vh;
+overflow-y: auto;
+}
+
+.details-image-container {
+display: flex;
+flex-direction: column;
+width: 100%;
+}
+
+.inspiration-image-wrapper {
+width: 100%;
+height: 320px;
+background: #faf5f6;
+border-radius: 12px;
+border: 1px dashed var(--border-pink);
+display: flex;
+align-items: center;
+justify-content: center;
+overflow: hidden;
+}
+
+.details-info-container {
+display: flex;
+flex-direction: column;
+width: 100%;
+}
+
+.details-display-grid {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 12px 16px;
+}
+
+.info-cell {
+display: flex;
+flex-direction: column;
+}
+
+.cell-label {
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+color: #9c8a7c;
+font-weight: 600;
+margin-bottom: 4px;
+}
+
+.cell-val {
+font-size: 0.95rem;
+color: var(--text-dark-brown);
+font-weight: 600;
+}
+
+@@media (max-width: 768px) {
+.modal-wrapper-card.details-modal-card {
+grid-template-columns: 1fr;
+}
+.inspiration-image-wrapper {
+height: 240px;
+}
+}
+
+/* 🕒 POP-UP MODAL ENGINE LAYOUT SCHEMAS */
+.modal-overlay {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(121, 85, 72, 0.4);
+backdrop-filter: blur(4px);
+display: flex;
+justify-content: center;
+align-items: center;
+z-index: 9999;
+opacity: 0;
+visibility: hidden;
+transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+opacity: 1;
+visibility: visible;
+}
+
+.modal-wrapper-card {
+background: white;
+border-radius: 24px;
+width: 90%;
+max-width: 850px;
+min-height: 440px;
+height: 440px;
+padding: 30px;
+box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+border: 2px solid var(--border-pink);
+display: grid;
+grid-template-columns: 1.1fr 0.9fr;
+gap: 25px;
+position: relative;
+box-sizing: border-box;
+}
+
+.modal-close-trigger {
+position: absolute;
+top: 15px;
+right: 20px;
+font-size: 1.5rem;
+cursor: pointer;
+color: var(--text-brown);
+}
+
+.modal-calendar-header-wrapper {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 15px;
+padding: 0 5px;
+}
+
+.modal-calendar-title {
+font-size: 1.1rem;
+font-weight: 700;
+color: var(--text-dark-brown);
+margin: 0;
+}
+
+.btn-modal-nav {
+background: #fdf5f6;
+border: 1px solid #f4d0d4;
+color: var(--text-dark-brown);
+width: 32px;
+height: 32px;
+border-radius: 50%;
+cursor: pointer;
+display: flex;
+justify-content: center;
+align-items: center;
+transition: all 0.2s;
+}
+
+.btn-modal-nav:hover {
+background: #f4d0d4;
+}
+
+.mini-grid-calendar {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 6px;
+text-align: center;
+}
+
+.mini-weekday {
+font-weight: 700;
+font-size: 0.75rem;
+color: var(--text-brown);
+padding-bottom: 4px;
+}
+
+.mini-day-tile {
+border: 1px solid #f7ecee;
+border-radius: 8px;
+padding: 6px;
+font-size: 0.85rem;
+cursor: pointer;
+background: white;
+font-weight: 600;
+box-sizing: border-box;
+height: 36px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+}
+
+.mini-day-tile:hover:not(.disabled) {
+border-color: var(--border-pink);
+background: #fdf5f6;
+}
+
+.mini-day-tile.disabled {
+opacity: 0.3;
+cursor: not-allowed;
+background: #fafafa;
+}
+
+.mini-day-tile.selected {
+border-color: var(--color-approve) !important;
+background: #fbfcf8;
+box-shadow: 0 0 0 1px var(--color-approve);
+}
+
+.slots-modal-stack {
+display: flex;
+flex-direction: column;
+gap: 8px;
+height: 320px;
+max-height: 320px;
+overflow-y: auto;
+padding-right: 5px;
+}
+
+.slot-modal-pill {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 10px 14px;
+border-radius: 10px;
+border: 1px solid #f7ecee;
+font-size: 0.88rem;
+font-weight: 600;
+}
+
+.btn-select-slot {
+background-color: var(--accent-green);
+color: white;
+border: none;
+padding: 4px 10px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 0.75rem;
+font-weight: 700;
+}
+
+.btn-select-slot:hover {
+background-color: var(--accent-green-hover);
+}
+
+.slot-pill-blocked {
+color: #ba68c8;
+font-style: italic;
+font-size: 0.8rem;
+font-weight: normal;
+}
+
+@@media (max-width: 768px) {
+.modal-wrapper-card {
+grid-template-columns: 1fr;
+height: auto;
+min-height: auto;
+}
+
+.slots-modal-stack {
+height: 200px;
+}
+}
+</style>
+}
+
+<div class="home-wrapper">
+    <section class="home-section bookmarks-section" style="padding: 1rem 1rem 3rem 1rem; max-width: 100%;">
+        <div class="container" style="max-width: 1400px; margin: 0 auto; width: 100%;">
+
+            <div style="max-width: 1100px; margin: 0 auto;">
+                <a href="/admin" class="back-dash-link">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-calendar-alt title-icon-green"></i> Manage Appointments <i class="fas fa-calendar-alt title-icon-green"></i></h2>
+                    <p class="section-subtitle">Track, confirm, reschedule, or complete client nail sessions.</p>
+                </div>
+            </div>
+
+            <div class="bookmarks-board" style="padding: 2rem 1.5rem;">
+                <!-- Tabs Navigation -->
+                <div class="history-tabs-container">
+                    <div class="history-tab active" data-tab="NewRequests">New Requests</div>
+                    <div class="history-tab" data-tab="ActiveSchedules">Active Schedules</div>
+                </div>
+
+                <!-- 📌 TABLE 1: PENDING REQUESTS AWAITING APPROVAL -->
+                <div id="new-requests-table-container" class="appointment-card" style="margin-top: 1.5rem;">
+                    <div class="table-responsive">
+                        <table class="appointment-table">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Contact Info</th>
+                                    <th>Requested Session</th>
+                                    <th>Scheduled Date & Time</th>
+                                    <th>Actions</th>
                                 </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
+                            </thead>
+                            <tbody>
+                                @if (!Model.Any(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 0))
+                                {
+                                    <tr><td colspan="5" class="empty-table-msg">No pending requests found.</td></tr>
+                                }
+                                else
+                                {
+                                    foreach (var item in Model.Where(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 0))
+                                    {
+                                        var appointment = item.Appointment!;
+                                        string displayAddress = "";
+                                        string displayNotes = appointment.Additional_Notes ?? "";
+
+                                        if (appointment.Appointment_Type == 'H')
+                                        {
+                                            if (displayNotes.StartsWith("Address:", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                int separatorIdx = displayNotes.IndexOf("\n\n");
+                                                if (separatorIdx != -1)
+                                                {
+                                                    displayAddress = displayNotes.Substring(8, separatorIdx - 8).Trim();
+                                                    displayNotes = displayNotes.Substring(separatorIdx + 2).Trim();
+                                                }
+                                                else
+                                                {
+                                                    displayAddress = displayNotes.Substring(8).Trim();
+                                                    displayNotes = "";
+                                                }
+                                            }
+                                        }
+                                        <tr id="row-scheduler-@item.SchedulerID">
+                                            <td class="customer-meta">@appointment.Full_Name</td>
+                                            <td>
+                                                <p class="customer-subtext"><i class="fas fa-phone"></i> @appointment.Phone</p>
+                                                <p class="customer-subtext"><i class="fas fa-hashtag"></i> @appointment.Social_Account</p>
+                                            </td>
+                                            <td><span class="date-badge">@(appointment.Appointment_Type == 'S' ? "Studio Session" : "Home-Based Session")</span></td>
+                                            <td><span class="date-badge">@item.Appointment_Date.ToString("MMMM dd, yyyy") @item.Time_Slot.ToString("h:mm tt")</span></td>
+                                            <td>
+                                                <div class="action-flex-box">
+                                                    <button class="btn-admin-action btn-admin-approve" 
+                                                            data-schedulerid="@item.SchedulerID"
+                                                            data-iscustom="@appointment.IsCustom.ToString().ToLower()"
+                                                            onclick="handleApprove(this)"><i class="fas fa-check"></i> Approve</button>
+                                                    <button class="btn-admin-action btn-admin-reject" onclick="updateStatusAPI(@item.SchedulerID, 3)"><i class="fas fa-times"></i> Reject</button>
+                                                    <button class="btn-admin-action btn-admin-view" 
+                                                            data-id="@appointment.AppId"
+                                                            data-name="@appointment.Full_Name"
+                                                            data-phone="@appointment.Phone"
+                                                            data-social="@appointment.Social_Account"
+                                                            data-type="@(appointment.Appointment_Type == 'S' ? "Studio Session" : "Home-Based Session")"
+                                                            data-date="@item.Appointment_Date.ToString("MMMM dd, yyyy")"
+                                                            data-time="@item.Time_Slot.ToString("h:mm tt")"
+                                                            data-notes="@displayNotes"
+                                                            data-address="@displayAddress"
+                                                            data-image="@appointment.Inspiration_Image"
+                                                            data-status="Awaiting Approval"
+                                                            data-price="@appointment.Price"
+                                                            data-iscustom="@appointment.IsCustom.ToString().ToLower()"
+                                                            onclick="openDetailsModal(this)"
+                                                            title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 📌 TABLE 2: ACTIVE SCHEDULES & BOOKINGS -->
+                <div id="active-schedules-table-container" class="appointment-card" style="margin-top: 1.5rem; display: none;">
+                    <div class="table-responsive">
+                        <table class="appointment-table">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Contact Info</th>
+                                    <th>Session Type</th>
+                                    <th>Scheduled Date & Time</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.Any(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 1))
+                                {
+                                    <tr><td colspan="5" class="empty-table-msg">No active scheduled appointments recorded.</td></tr>
+                                }
+                                else
+                                {
+                                    foreach (var item in Model.Where(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 1))
+                                    {
+                                        var appointment = item.Appointment!;
+                                        string displayAddress = "";
+                                        string displayNotes = appointment.Additional_Notes ?? "";
+
+                                        if (appointment.Appointment_Type == 'H')
+                                        {
+                                            if (displayNotes.StartsWith("Address:", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                int separatorIdx = displayNotes.IndexOf("\n\n");
+                                                if (separatorIdx != -1)
+                                                {
+                                                    displayAddress = displayNotes.Substring(8, separatorIdx - 8).Trim();
+                                                    displayNotes = displayNotes.Substring(separatorIdx + 2).Trim();
+                                                }
+                                                else
+                                                {
+                                                    displayAddress = displayNotes.Substring(8).Trim();
+                                                    displayNotes = "";
+                                                }
+                                            }
+                                        }
+                                        <tr id="row-scheduler-@item.SchedulerID">
+                                            <td class="customer-meta">@appointment.Full_Name</td>
+                                            <td>
+                                                <p class="customer-subtext"><i class="fas fa-phone"></i> @appointment.Phone</p>
+                                                <p class="customer-subtext"><i class="fas fa-hashtag"></i> @appointment.Social_Account</p>
+                                            </td>
+                                            <td><span class="date-badge">@(appointment.Appointment_Type == 'S' ? "Studio Session" : "Home-Based Session")</span></td>
+                                            <td id="time-cell-@item.SchedulerID"><span class="date-badge">@item.Appointment_Date.ToString("MMMM dd, yyyy") @item.Time_Slot.ToString("h:mm tt")</span></td>
+                                            <td>
+                                                <div class="action-flex-box">
+                                                    <button class="btn-admin-action btn-admin-approve" onclick="updateStatusAPI(@item.SchedulerID, 2)"><i class="fas fa-check-double"></i> Complete</button>
+                                                    <button class="btn-admin-action btn-admin-reschedule" onclick="openRescheduleModal(@item.SchedulerID)"><i class="far fa-calendar-alt"></i> Reschedule</button>
+                                                    <button class="btn-admin-action btn-admin-reject" onclick="updateStatusAPI(@item.SchedulerID, 4)"><i class="fas fa-ban"></i> Cancel</button>
+                                                    <button class="btn-admin-action btn-admin-view" 
+                                                            data-id="@appointment.AppId"
+                                                            data-name="@appointment.Full_Name"
+                                                            data-phone="@appointment.Phone"
+                                                            data-social="@appointment.Social_Account"
+                                                            data-type="@(appointment.Appointment_Type == 'S' ? "Studio Session" : "Home-Based Session")"
+                                                            data-date="@item.Appointment_Date.ToString("MMMM dd, yyyy")"
+                                                            data-time="@item.Time_Slot.ToString("h:mm tt")"
+                                                            data-notes="@displayNotes"
+                                                            data-address="@displayAddress"
+                                                            data-image="@appointment.Inspiration_Image"
+                                                            data-status="Active"
+                                                            data-price="@appointment.Price"
+                                                            onclick="openDetailsModal(this)"
+                                                            title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
-
-        <!-- 📌 TABLE 2: ACTIVE SCHEDULES & BOOKINGS -->
-        <h2 class="section-heading"><i class="far fa-calendar-check"></i> Active Schedules & Bookings</h2>
-        <div class="appointment-card">
-            <div class="table-responsive">
-                <table class="appointment-table">
-                    <thead>
-                        <tr>
-                            <th>Customer</th>
-                            <th>Contact Info</th>
-                            <th>Session Type</th>
-                            <th>Scheduled Date & Time</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (!Model.Any(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 1))
-                        {
-                            <tr><td colspan="5" class="empty-table-msg">No active scheduled appointments recorded.</td></tr>
-                        }
-                        else
-                        {
-                            foreach (var item in Model.Where(s => s.Appointment != null && s.Appointment.Down_Payment_Paid && s.Appointment.Status == 1))
-                            {
-                                <tr id="row-scheduler-@item.SchedulerID">
-                                    <td class="customer-meta">@item.Appointment.Full_Name</td>
-                                    <td>
-                                        <p class="customer-subtext">📞 @item.Appointment.Phone</p>
-                                        <p class="customer-subtext">📱 @item.Appointment.Social_Account</p>
-                                    </td>
-                                    <td><span class="date-badge">@item.Appointment.Appointment_Type</span></td>
-                                    <td id="time-cell-@item.SchedulerID"><span class="date-badge">@item.Appointment_Date.ToString("MMMM dd, yyyy") @item.Time_Slot.ToString("h:mm tt")</span></td>
-                                    <td>
-                                        <div class="action-flex-box">
-                                            <button class="btn-panel-action btn-complete" onclick="updateStatusAPI(@item.SchedulerID, 2)"><i class="fas fa-check-double"></i> Complete</button>
-                                            <button class="btn-panel-action btn-reschedule" onclick="openRescheduleModal(@item.SchedulerID)"><i class="far fa-calendar-alt"></i> Reschedule</button>
-                                            <button class="btn-panel-action btn-reject" onclick="updateStatusAPI(@item.SchedulerID, 4)"><i class="fas fa-ban"></i> Cancel</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>
+    </section>
 </div>
 
 <!-- 🕒 POP-UP MODAL: RESCHEDULING ENGINE WORKSPACE -->
@@ -543,167 +701,500 @@
     </div>
 </div>
 
+<!-- Details Modal Overlay -->
+<div class="modal-overlay" id="detailsModalOverlay">
+    <div class="modal-wrapper-card details-modal-card">
+        <span class="modal-close-trigger" onclick="closeDetailsModal()">&times;</span>
+        
+        <!-- Left Side: Design Reference Image -->
+        <div class="details-image-container">
+            <h3 class="modal-calendar-title" style="margin-bottom: 15px;"><i class="fas fa-image"></i> Design Reference</h3>
+            <div class="inspiration-image-wrapper">
+                <img id="detailsInspirationImage" src="" alt="Design Reference" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px; display: none;" />
+                <div id="imagePlaceholderText" style="text-align: center; color: var(--text-light-brown);">
+                    <i class="far fa-image" style="font-size: 3rem; margin-bottom: 10px; display: block; color: var(--border-pink);"></i>
+                    No Reference Image
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Details Grid -->
+        <div class="details-info-container">
+            <h3 class="modal-calendar-title" style="margin-bottom: 20px;"><i class="fas fa-info-circle"></i> Appointment Details</h3>
+            
+            <div class="details-display-grid">
+                <div class="info-cell">
+                    <span class="cell-label">Reference ID</span>
+                    <span class="cell-val" id="detailsRefId"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Customer Name</span>
+                    <span class="cell-val" id="detailsName"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Phone Number</span>
+                    <span class="cell-val" id="detailsPhone"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Email / Social</span>
+                    <span class="cell-val" id="detailsSocial"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Session Type</span>
+                    <span class="cell-val" id="detailsType"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Date & Time</span>
+                    <span class="cell-val" id="detailsDateTime"></span>
+                </div>
+                <div class="info-cell" id="detailsAddressCell" style="display: none; grid-column: span 2;">
+                    <span class="cell-label">Service Address</span>
+                    <span class="cell-val" id="detailsAddress"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Status</span>
+                    <span class="cell-val" id="detailsStatus"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Price</span>
+                    <span class="cell-val" id="detailsPrice"></span>
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div style="margin-top: 20px;">
+                <span class="cell-label">Notes & Requests</span>
+                <p id="detailsNotes" style="font-size: 0.9rem; color: var(--text-brown); background: #fdf5f6; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-pink); margin: 6px 0 0 0; min-height: 80px; box-sizing: border-box; overflow-y: auto; max-height: 120px; white-space: pre-wrap;"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quoting Modal Overlay -->
+<div class="modal-overlay" id="quoteModalOverlay">
+    <div style="background: white; margin: auto; padding: 25px; border-radius: 16px; border: 1.5px solid var(--accent-pink); max-width: 400px; width: 90%; box-shadow: 0 8px 30px rgba(139, 75, 59, 0.15); box-sizing: border-box; text-align: left; position: relative;">
+        <span class="modal-close-trigger" onclick="closeQuoteModal()">&times;</span>
+        <h3 style="font-family: 'Shadows Into Light Two', cursive; font-size: 26px; color: var(--text-brown); margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-tag" style="color: var(--accent-green-hover);"></i> Approve Custom Appointment
+        </h3>
+        <p style="font-size: 13px; color: var(--text-light-brown); line-height: 1.5; margin-bottom: 20px;">
+            Please enter the custom design price for this appointment. This will approve the request with this quoted price.
+        </p>
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-light-brown); font-weight: 600; display: block; margin-bottom: 6px;">Price for Custom Set (₱)</label>
+            <input type="number" id="quotedPriceInput" step="0.01" min="0" value="150.00" style="width: 100%; padding: 10px 12px; font-family: 'Montserrat', sans-serif; font-size: 15px; color: var(--text-brown); border: 1.5px solid var(--border-pink); border-radius: 10px; outline: none; box-sizing: border-box;" />
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn-admin-action" onclick="closeQuoteModal()" style="border-color: #bbb; color: #777; background: transparent; min-width: 90px; height: 36px; border-radius: 18px; font-weight: 600; font-size: 0.85rem; cursor: pointer;">Cancel</button>
+            <button class="btn-admin-action btn-admin-approve" onclick="submitQuote()" style="background: var(--accent-green); color: white; border-color: transparent; min-width: 90px; height: 36px; border-radius: 18px; font-weight: 600; font-size: 0.85rem; cursor: pointer;">Approve</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
-    <script>
-        let targetSchedulerId = null;
-        let activeModalYear = 2026;
-        let activeModalMonth = 6;
-        let chosenDateStr = "";
+<script>
+    let targetSchedulerId = null;
+    let activeModalYear = 2026;
+    let activeModalMonth = 6;
+    let chosenDateStr = "";
 
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        const weekdayLabels = ["S", "M", "T", "W", "T", "F", "S"];
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const weekdayLabels = ["S", "M", "T", "W", "T", "F", "S"];
 
-        async function updateStatusAPI(schedulerId, targetStatusCode) {
-            let confirmationMessage = "Proceed with this status modification adjustment?";
-            if (targetStatusCode === 1) confirmationMessage = "Approve this appointment request?";
-            if (targetStatusCode === 2) confirmationMessage = "Mark this appointment session as completed?";
-            if (targetStatusCode === 3) confirmationMessage = "Reject this appointment booking?";
-            if (targetStatusCode === 4) confirmationMessage = "Cancel this active scheduled session?";
+    let targetQuoteSchedulerId = null;
 
-            if (!confirm(confirmationMessage)) return;
-
-            try {
-                const response = await fetch(`/admin/UpdateAppointmentStatus?schedulerId=${schedulerId}&statusCode=${targetStatusCode}`, {
-                    method: 'POST',
-                    headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value }
-                });
-
-                if (response.ok) {
-                    document.getElementById(`row-scheduler-${schedulerId}`).remove();
-                    location.reload();
-                } else {
-                    alert(await response.text() || "Action rejected by business logic parameters.");
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Network communication exception error.");
-            }
+    function handleApprove(btn) {
+        const schedulerId = btn.getAttribute('data-schedulerid');
+        const isCustom = btn.getAttribute('data-iscustom') === 'true';
+        if (isCustom) {
+            openQuotingModal(schedulerId);
+        } else {
+            updateStatusAPI(schedulerId, 1);
         }
+    }
 
-        // 🕒 POP-UP RESCHEDULING ENGINE MODAL MECHANICS
-        function openRescheduleModal(schedulerId) {
-            targetSchedulerId = schedulerId;
+    function openQuotingModal(schedulerId) {
+        targetQuoteSchedulerId = schedulerId;
+        document.getElementById('quotedPriceInput').value = '150.00';
+        document.getElementById('quoteModalOverlay').classList.add('active');
+    }
 
-            const now = new Date();
-            activeModalYear = 2026;
-            activeModalMonth = 6;
+    function closeQuoteModal() {
+        document.getElementById('quoteModalOverlay').classList.remove('active');
+        targetQuoteSchedulerId = null;
+    }
 
-            document.getElementById("rescheduleModalOverlay").classList.add("active");
-            fetchModalCalendarMonth();
+    async function submitQuote() {
+        const priceInput = document.getElementById('quotedPriceInput').value.trim();
+        if (!priceInput || isNaN(priceInput) || parseFloat(priceInput) < 0) {
+            alert("Please enter a valid, non-negative price.");
+            return;
         }
+        const price = parseFloat(priceInput);
 
-        function closeRescheduleModal() {
-            document.getElementById("rescheduleModalOverlay").classList.remove("active");
-            targetSchedulerId = null;
-            document.getElementById("modalHourlySlotsWrapper").innerHTML = '<div class="empty-table-msg" style="padding:20px 0;">Select a date to audit free hours</div>';
-        }
-
-        function navigateModalMonth(direction) {
-            activeModalMonth += direction;
-            if (activeModalMonth > 12) {
-                activeModalMonth = 1;
-                activeModalYear++;
-            } else if (activeModalMonth < 1) {
-                activeModalMonth = 12;
-                activeModalYear--;
-            }
-            fetchModalCalendarMonth();
-        }
-
-        async function fetchModalCalendarMonth() {
-            document.getElementById("modalMonthHeader").innerText = `${monthNames[activeModalMonth - 1]} ${activeModalYear}`;
-            try {
-                const response = await fetch(`/api/AdminCalendar/month-admin-status?year=${activeModalYear}&month=${activeModalMonth}`);
-                if (!response.ok) throw new Error("Faulty response context profiles.");
-                const days = await response.json();
-                renderModalCalendar(days);
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        function renderModalCalendar(daysData) {
-            const container = document.getElementById("modalCalendarDaysGrid");
-            container.innerHTML = "";
-
-            weekdayLabels.forEach(lbl => {
-                const item = document.createElement("div");
-                item.className = "mini-weekday";
-                item.innerText = lbl;
-                container.appendChild(item);
+        try {
+            const response = await fetch(`/admin/ApproveCustomAppointment?schedulerId=${targetQuoteSchedulerId}&price=${price}`, {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value }
             });
 
-            if (daysData.length > 0) {
-                const paddingCount = new Date(daysData[0].dateString).getDay();
-                for (let i = 0; i < paddingCount; i++) {
-                    container.appendChild(document.createElement("div"));
-                }
+            if (response.ok) {
+                alert("Appointment approved with quoted price!");
+                closeQuoteModal();
+                location.reload();
+            } else {
+                alert(await response.text() || "Action rejected by business logic parameters.");
             }
+        } catch (err) {
+            console.error(err);
+            alert("Network communication exception error.");
+        }
+    }
 
-            daysData.forEach(day => {
-                const tile = document.createElement("div");
-                tile.className = "mini-day-tile";
-                const dateNum = new Date(day.dateString).getDate();
-                tile.innerText = dateNum;
+    document.addEventListener("DOMContentLoaded", () => {
+        const tabs = document.querySelectorAll(".history-tab");
+        const newRequestsContainer = document.getElementById("new-requests-table-container");
+        const activeSchedulesContainer = document.getElementById("active-schedules-table-container");
 
-                if (!day.isAvailable && day.status !== "Available") {
-                    tile.className += " disabled";
+        tabs.forEach(tab => {
+            tab.addEventListener("click", function () {
+                tabs.forEach(t => t.classList.remove("active"));
+                this.classList.add("active");
+                const targetTab = this.getAttribute("data-tab");
+
+                if (targetTab === "NewRequests") {
+                    newRequestsContainer.style.display = "block";
+                    activeSchedulesContainer.style.display = "none";
                 } else {
-                    tile.onclick = () => {
-                        document.querySelectorAll(".mini-day-tile").forEach(t => t.classList.remove("selected"));
-                        tile.classList.add("selected");
-                        chosenDateStr = day.dateString;
-                        fetchModalHourlySlots(day.dateString);
-                    };
+                    newRequestsContainer.style.display = "none";
+                    activeSchedulesContainer.style.display = "block";
                 }
-                container.appendChild(tile);
             });
-        }
+        });
 
-        async function fetchModalHourlySlots(dateStr) {
-            const wrapper = document.getElementById("modalHourlySlotsWrapper");
-            wrapper.innerHTML = '<div class="empty-table-msg">Loading slots...</div>';
-            try {
-                const response = await fetch(`/api/AdminCalendar/day-slots-admin-status?chosenDate=${dateStr}`);
-                const slots = await response.json();
-                wrapper.innerHTML = "";
-
-                slots.forEach(slot => {
-                    const row = document.createElement("div");
-                    row.className = "slot-modal-pill";
-
-                    if (slot.status === "Available") {
-                        row.innerHTML = `<span>${slot.formattedTime}</span>
-                            <button class="btn-select-slot" onclick="executeRescheduleAPI('${dateStr}', ${slot.slotHour})">Assign</button>`;
-                    } else {
-                        row.innerHTML = `<span>${slot.formattedTime}</span><span class="slot-pill-blocked">${slot.status}</span>`;
-                    }
-                    wrapper.appendChild(row);
-                });
-            } catch (err) {
-                wrapper.innerHTML = '<div class="empty-table-msg">Error parsing hours.</div>';
-            }
-        }
-
-        async function executeRescheduleAPI(dateStr, hour) {
-            if (!confirm(`Relocate this appointment session to ${dateStr} at hour slot ${hour}:00?`)) return;
-
-            try {
-                const response = await fetch(`/admin/RescheduleAppointment?schedulerId=${targetSchedulerId}&newDate=${dateStr}&newHour=${hour}`, {
-                    method: 'POST',
-                    headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value }
-                });
-
-                if (response.ok) {
-                    alert("Appointment rescheduled successfully!");
-                    closeRescheduleModal();
-                    location.reload();
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialTab = urlParams.get('tab');
+        if (initialTab) {
+            const targetTabEl = document.querySelector(`.history-tab[data-tab="${initialTab}"]`);
+            if (targetTabEl) {
+                tabs.forEach(t => t.classList.remove("active"));
+                targetTabEl.classList.add("active");
+                if (initialTab === "NewRequests") {
+                    newRequestsContainer.style.display = "block";
+                    activeSchedulesContainer.style.display = "none";
                 } else {
-                    alert(await response.text() || "Reschedule action denied.");
+                    newRequestsContainer.style.display = "none";
+                    activeSchedulesContainer.style.display = "block";
                 }
-            } catch (err) {
-                alert("Communication error processing request.");
             }
         }
-    </script>
+
+        const pendingTable = document.querySelector("#new-requests-table-container table");
+        const activeTable = document.querySelector("#active-schedules-table-container table");
+        if (pendingTable) paginateTable(pendingTable, 3);
+        if (activeTable) paginateTable(activeTable, 3);
+    });
+
+async function updateStatusAPI(schedulerId, targetStatusCode) {
+let confirmationMessage = "Proceed with this status modification adjustment?";
+if (targetStatusCode === 1) confirmationMessage = "Approve this appointment request?";
+if (targetStatusCode === 2) confirmationMessage = "Mark this appointment session as completed?";
+if (targetStatusCode === 3) confirmationMessage = "Reject this appointment booking?";
+if (targetStatusCode === 4) confirmationMessage = "Cancel this active scheduled session?";
+
+if (!confirm(confirmationMessage)) return;
+
+try {
+const response = await fetch(`/admin/UpdateAppointmentStatus?schedulerId=${schedulerId}&statusCode=${targetStatusCode}`, {
+method: 'POST',
+headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value }
+});
+
+if (response.ok) {
+location.reload();
+}
+else
+{
+    alert(await response.text() || "Action rejected by business logic parameters.");
+}
+} catch (err) {
+console.error(err);
+alert("Network communication exception error.");
+}
+}
+
+// 🕒 POP-UP RESCHEDULING ENGINE MODAL MECHANICS
+function openRescheduleModal(schedulerId) {
+targetSchedulerId = schedulerId;
+
+const now = new Date();
+activeModalYear = now.getFullYear();
+activeModalMonth = now.getMonth() + 1;
+
+document.getElementById("rescheduleModalOverlay").classList.add("active");
+fetchModalCalendarMonth();
+}
+
+function closeRescheduleModal() {
+document.getElementById("rescheduleModalOverlay").classList.remove("active");
+targetSchedulerId = null;
+document.getElementById("modalHourlySlotsWrapper").innerHTML = '<div class="empty-table-msg" style="padding:20px 0;">Select a date to audit free hours</div>';
+}
+
+function openDetailsModal(btn) {
+    const id = btn.getAttribute('data-id');
+    const name = btn.getAttribute('data-name');
+    const phone = btn.getAttribute('data-phone');
+    const social = btn.getAttribute('data-social');
+    const type = btn.getAttribute('data-type');
+    const date = btn.getAttribute('data-date');
+    const time = btn.getAttribute('data-time');
+    const notes = btn.getAttribute('data-notes');
+    const address = btn.getAttribute('data-address');
+    const image = btn.getAttribute('data-image');
+    const status = btn.getAttribute('data-status');
+    const price = btn.getAttribute('data-price');
+    const isCustom = btn.getAttribute('data-iscustom') === 'true';
+
+    document.getElementById('detailsRefId').innerText = `APP-${id}`;
+    document.getElementById('detailsName').innerText = name;
+    document.getElementById('detailsPhone').innerText = phone;
+    document.getElementById('detailsSocial').innerText = social;
+    document.getElementById('detailsType').innerText = type;
+    document.getElementById('detailsDateTime').innerText = `${date} at ${time}`;
+    document.getElementById('detailsStatus').innerText = status;
+    
+    const priceVal = parseFloat(price);
+    if (priceVal > 0) {
+        document.getElementById('detailsPrice').innerText = `₱${priceVal.toFixed(2)}`;
+    } else if (isCustom) {
+        document.getElementById('detailsPrice').innerText = 'Awaiting Quote';
+    } else {
+        document.getElementById('detailsPrice').innerText = '₱0.00';
+    }
+    
+    document.getElementById('detailsNotes').innerText = notes ? notes.trim() : "No special requests or additional notes specified.";
+
+    const addressCell = document.getElementById('detailsAddressCell');
+    const addressVal = document.getElementById('detailsAddress');
+    if (address && address.trim() !== '') {
+        addressVal.innerText = address.trim();
+        addressCell.style.display = 'flex';
+    } else {
+        addressVal.innerText = '';
+        addressCell.style.display = 'none';
+    }
+
+    const imgEl = document.getElementById('detailsInspirationImage');
+    const placeholderEl = document.getElementById('imagePlaceholderText');
+    if (image && image !== 'null' && image !== '') {
+        imgEl.src = image;
+        imgEl.style.display = 'block';
+        placeholderEl.style.display = 'none';
+    } else {
+        imgEl.src = '';
+        imgEl.style.display = 'none';
+        placeholderEl.style.display = 'block';
+    }
+
+    document.getElementById('detailsModalOverlay').classList.add('active');
+}
+
+function closeDetailsModal() {
+    document.getElementById('detailsModalOverlay').classList.remove('active');
+}
+
+function navigateModalMonth(direction) {
+activeModalMonth += direction;
+if (activeModalMonth > 12) {
+activeModalMonth = 1;
+activeModalYear++;
+}
+else if (activeModalMonth < 1)
+{
+    activeModalMonth = 12;
+    activeModalYear--;
+}
+fetchModalCalendarMonth();
+}
+
+async function fetchModalCalendarMonth() {
+document.getElementById("modalMonthHeader").innerText = `${monthNames[activeModalMonth - 1]} ${activeModalYear}`;
+try {
+const response = await fetch(`/api/AdminCalendar/month-admin-status?year=${activeModalYear}&month=${activeModalMonth}`);
+if (!response.ok) throw new Error("Faulty response context profiles.");
+const days = await response.json();
+renderModalCalendar(days);
+} catch (err) {
+console.error(err);
+}
+}
+
+function renderModalCalendar(daysData) {
+const container = document.getElementById("modalCalendarDaysGrid");
+container.innerHTML = "";
+
+weekdayLabels.forEach(lbl => {
+const item = document.createElement("div");
+item.className = "mini-weekday";
+item.innerText = lbl;
+container.appendChild(item);
+});
+
+if (daysData.length > 0) {
+const paddingCount = new Date(daysData[0].dateString).getDay();
+for (let i = 0; i < paddingCount; i++) {
+container.appendChild(document.createElement("div"));
+}
+}
+
+daysData.forEach(day => {
+const tile = document.createElement("div");
+tile.className = "mini-day-tile";
+const dateNum = new Date(day.dateString).getDate();
+tile.innerText = dateNum;
+
+if (!day.isAvailable && day.status !== "Available") {
+tile.className += " disabled";
+}
+else
+{
+    tile.onclick = () => {
+    document.querySelectorAll(".mini-day-tile").forEach(t => t.classList.remove("selected"));
+    tile.classList.add("selected");
+    chosenDateStr = day.dateString;
+    fetchModalHourlySlots(day.dateString);
+    };
+}
+container.appendChild(tile);
+});
+}
+
+async function fetchModalHourlySlots(dateStr) {
+const wrapper = document.getElementById("modalHourlySlotsWrapper");
+wrapper.innerHTML = '<div class="empty-table-msg">Loading slots...</div>';
+try {
+const response = await fetch(`/api/AdminCalendar/day-slots-admin-status?chosenDate=${dateStr}`);
+const slots = await response.json();
+wrapper.innerHTML = "";
+
+slots.forEach(slot => {
+const row = document.createElement("div");
+row.className = "slot-modal-pill";
+
+if (slot.status === "Available") {
+row.innerHTML = `<span>${slot.formattedTime}</span>
+<button class="btn-select-slot" onclick="executeRescheduleAPI('${dateStr}', ${slot.slotHour})">Assign</button>`;
+}
+else
+{
+    row.innerHTML = `<span>${slot.formattedTime}</span><span class="slot-pill-blocked">${slot.status}</span>`;
+}
+wrapper.appendChild(row);
+});
+} catch (err) {
+wrapper.innerHTML = '<div class="empty-table-msg">Error parsing hours.</div>';
+}
+}
+
+async function executeRescheduleAPI(dateStr, hour) {
+if (!confirm(`Relocate this appointment session to ${dateStr} at hour slot ${hour}:00?`)) return;
+
+try {
+const response = await fetch(`/admin/RescheduleAppointment?schedulerId=${targetSchedulerId}&newDate=${dateStr}&newHour=${hour}`, {
+method: 'POST',
+headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value }
+});
+
+if (response.ok) {
+alert("Appointment rescheduled successfully!");
+closeRescheduleModal();
+location.reload();
+}
+else
+{
+    alert(await response.text() || "Reschedule action denied.");
+}
+} catch (err) {
+alert("Communication error processing request.");
+}
+}
+
+// 📋 Dynamic client-side pagination engine
+function paginateTable(tableElement, pageSize = 3) {
+    const tbody = tableElement.querySelector('tbody');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+        return !row.querySelector('.empty-table-msg') && !row.querySelector('[colspan]');
+    });
+    
+    if (rows.length <= pageSize) return;
+    
+    let currentPage = 1;
+    const totalPages = Math.ceil(rows.length / pageSize);
+    
+    const paginationContainer = document.createElement('div');
+    paginationContainer.className = 'pagination-container';
+    paginationContainer.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 1.5rem; width: 100%;';
+    
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'btn-pagination btn-prev';
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i> Prev';
+    prevBtn.style.cssText = 'background: white; border: 1px solid var(--border-pink); color: var(--text-brown); padding: 6px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;';
+    
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'btn-pagination btn-next';
+    nextBtn.innerHTML = 'Next <i class="fas fa-chevron-right"></i>';
+    nextBtn.style.cssText = 'background: white; border: 1px solid var(--border-pink); color: var(--text-brown); padding: 6px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;';
+    
+    const infoSpan = document.createElement('span');
+    infoSpan.className = 'pagination-info';
+    infoSpan.style.cssText = 'font-weight: 600; color: var(--text-brown); font-size: 0.95rem;';
+    
+    paginationContainer.appendChild(prevBtn);
+    paginationContainer.appendChild(infoSpan);
+    paginationContainer.appendChild(nextBtn);
+    
+    const parentContainer = tableElement.parentElement;
+    if (parentContainer.classList.contains('table-responsive')) {
+        parentContainer.parentElement.appendChild(paginationContainer);
+    } else {
+        tableElement.parentElement.appendChild(paginationContainer);
+    }
+    
+    function showPage(page) {
+        currentPage = page;
+        const start = (page - 1) * pageSize;
+        const end = start + pageSize;
+        
+        rows.forEach((row, idx) => {
+            if (idx >= start && idx < end) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        infoSpan.innerHTML = `Page <span class="current-page">${currentPage}</span> of <span class="total-pages">${totalPages}</span>`;
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+        
+        [prevBtn, nextBtn].forEach(btn => {
+            btn.onmouseover = () => { if (!btn.disabled) { btn.style.background = 'var(--text-brown)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--text-brown)'; } };
+            btn.onmouseout = () => { btn.style.background = 'white'; btn.style.color = 'var(--text-brown)'; btn.style.borderColor = 'var(--border-pink)'; };
+        });
+    }
+    
+    prevBtn.onclick = () => {
+        if (currentPage > 1) showPage(currentPage - 1);
+    };
+    
+    nextBtn.onclick = () => {
+        if (currentPage < totalPages) showPage(currentPage + 1);
+    };
+    
+    showPage(1);
+}
+</script>
+
 }

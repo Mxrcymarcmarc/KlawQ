@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using KlawQ.Data;
 using KlawQ.Models;
@@ -14,20 +15,13 @@ namespace KlawQ.Controllers
 {
     [Route("[controller]")]
     [Authorize]
-    public class OrderController : Controller
+    public class OrderController(ApplicationDbContext context, IWebHostEnvironment env, PayMongoService payMongoService) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
-        private readonly PayMongoService _payMongoService; // 🌟 Private tracking reference descriptor
-        private static readonly char[] SplitChars = { ',', '&' };
+        private readonly ApplicationDbContext _context = context;
+        private readonly IWebHostEnvironment _env = env;
+        private readonly PayMongoService _payMongoService = payMongoService; // 🌟 Private tracking reference descriptor
+        private static readonly char[] SplitChars = [ ',', '&' ];
 
-        // 🌟 Injected PayMongoService through the controller constructor dependency tree
-        public OrderController(ApplicationDbContext context, IWebHostEnvironment env, PayMongoService payMongoService)
-        {
-            _context = context;
-            _env = env;
-            _payMongoService = payMongoService;
-        }
 
         [HttpGet("Start")]
         public async Task<IActionResult> Start([FromQuery] int[] productIds, [FromQuery] int[] qtys, int productId = 0)
@@ -246,7 +240,7 @@ namespace KlawQ.Controllers
                 _context.Add(order);
                 await _context.SaveChangesAsync();
 
-                if (model.ProductIds != null && model.ProductIds.Length > 0)
+                if (model.ProductIds?.Length > 0)
                 {
                     for (int i = 0; i < model.ProductIds.Length; i++)
                     {
@@ -302,7 +296,7 @@ namespace KlawQ.Controllers
                 var user = await _context.UserProfiles.FirstOrDefaultAsync(u => u.Email == email);
                 if (user == null) return Unauthorized();
 
-                var selectedProductIds = model.ProductIds ?? Array.Empty<int>();
+                var selectedProductIds = model.ProductIds ?? [];
 
                 if (!ModelState.IsValid) return View("CheckoutCustom", new OrderStartViewModel { Products = await _context.Products.Where(p => selectedProductIds.Contains(p.ProductID)).ToListAsync(), Submit = model });
 
@@ -325,7 +319,7 @@ namespace KlawQ.Controllers
                 }
 
                 var payload = new { designNotes = model.DesignNotes, inspirations = inspirations };
-                var inspJson = System.Text.Json.JsonSerializer.Serialize(payload);
+                var inspJson = JsonSerializer.Serialize(payload);
 
                 var order = new Order
                 {
@@ -335,7 +329,7 @@ namespace KlawQ.Controllers
                     Social_Account = model.SocialAccount,
                     Delivery_Location = model.DeliveryLocation,
                     Delivery_Method = model.DeliveryMethod,
-                    Payment_Method = "Custom Request",
+                    Payment_Method = "PayMongo",
                     Contact_Number = !string.IsNullOrWhiteSpace(model.ContactNumber) ? model.ContactNumber : "0",
                     Hand_Photo = handBase64 ?? string.Empty,
                     Thumb_Photo = inspJson,
@@ -346,7 +340,7 @@ namespace KlawQ.Controllers
                 _context.Add(order);
                 await _context.SaveChangesAsync();
 
-                if (model.ProductIds != null && model.ProductIds.Length > 0)
+                if (model.ProductIds?.Length > 0)
                 {
                     for (int i = 0; i < model.ProductIds.Length; i++)
                     {
@@ -361,7 +355,7 @@ namespace KlawQ.Controllers
 
                 // Clean up cart items that were submitted in the custom request
                 var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserID == order.UserID);
-                if (cart != null && model.ProductIds != null && model.ProductIds.Length > 0)
+                if (cart != null && model.ProductIds?.Length > 0)
                 {
                     var cartItemsToRemove = await _context.CartItems
                         .Where(ci => ci.CartId == cart.CartId && model.ProductIds.Contains(ci.ProductID))
@@ -389,28 +383,93 @@ namespace KlawQ.Controllers
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderID == orderId);
             if (order == null) return NotFound();
 
-            string htmlContent = @"
+            const string htmlContent = @"
             <!DOCTYPE html>
             <html>
             <head>
                 <meta charset=""utf-8"">
+                <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
                 <title>Custom Request Submitted</title>
+                <link rel=""preconnect"" href=""https://fonts.googleapis.com"">
+                <link rel=""preconnect"" href=""https://fonts.gstatic.com"" crossorigin>
+                <link href=""https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"" rel=""stylesheet"">
+                <link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"">
                 <style>
-                    body { background-color: #fffafb; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-                    .card { background-color: #fcd8dd; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #fbc0c7; text-align: center; max-width: 450px; width: 90%; }
-                    .emoji { font-size: 48px; margin-bottom: 16px; }
-                    h3 { color: #8b4b3b; font-size: 24px; margin: 0 0 12px 0; }
-                    p { color: #8a6a62; font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
-                    .btn { background-color: #88b04b; color: white; padding: 12px 32px; border-radius: 24px; text-decoration: none; font-weight: 600; display: inline-block; transition: background-color 0.2s; }
-                    .btn:hover { background-color: #7ba240; }
+                    body {
+                        background-color: #fdf5f6;
+                        font-family: 'Montserrat', sans-serif;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                    }
+                    .card {
+                        background-color: #ffffff;
+                        padding: 40px;
+                        border-radius: 20px;
+                        box-shadow: 0 10px 30px rgba(121, 85, 72, 0.08);
+                        border: 1.5px solid #fce4ec;
+                        text-align: center;
+                        max-width: 450px;
+                        width: 90%;
+                        box-sizing: border-box;
+                    }
+                    .success-icon {
+                        color: #7a5046;
+                        font-size: 54px;
+                        margin-bottom: 24px;
+                        display: inline-block;
+                    }
+                    h3 {
+                        color: #7a5046;
+                        font-size: 24px;
+                        font-weight: 700;
+                        margin-top: 0;
+                        margin-bottom: 12px;
+                    }
+                    p {
+                        color: #8a6a62;
+                        font-size: 15px;
+                        line-height: 1.6;
+                        margin-top: 0;
+                        margin-bottom: 20px;
+                    }
+                    .redirect-text {
+                        font-size: 13px;
+                        color: #a08077;
+                        font-style: italic;
+                        margin-bottom: 28px;
+                    }
+                    .btn {
+                        background-color: #7a5046;
+                        color: #ffffff;
+                        padding: 12px 32px;
+                        border-radius: 24px;
+                        text-decoration: none;
+                        font-weight: 600;
+                        font-size: 15px;
+                        display: inline-block;
+                        box-shadow: 0 6px 12px rgba(122,80,70,0.15);
+                        transition: all 0.2s ease;
+                    }
+                    .btn:hover {
+                        background-color: #5d3a31;
+                        transform: translateY(-2px);
+                    }
                 </style>
-                <script>setTimeout(function() { window.location.href = '/Gallery'; }, 4000);</script>
+                <script>
+                    setTimeout(function() {
+                        window.location.href = '/Gallery';
+                    }, 4000);
+                </script>
             </head>
             <body>
                 <div class=""card"">
-                    <div class=""emoji"">💅</div>
+                    <i class=""fas fa-paper-plane success-icon""></i>
                     <h3>Request Submitted!</h3>
                     <p>Your custom press-on design request has been successfully recorded. The studio will review your request details shortly!</p>
+                    <p class=""redirect-text"">Redirecting you to the Gallery in 4 seconds...</p>
                     <a href=""/Gallery"" class=""btn"">Return to Gallery</a>
                 </div>
             </body>
@@ -434,7 +493,7 @@ namespace KlawQ.Controllers
             var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserID == order.UserID);
             if (cart != null)
             {
-                var productIds = order.Items.Select(oi => oi.ProductID).ToList();
+                var productIds = order.Items.Select(oi => oi.ProductID);
                 var cartItemsToRemove = await _context.CartItems
                     .Where(ci => ci.CartId == cart.CartId && productIds.Contains(ci.ProductID))
                     .ToListAsync();
@@ -447,27 +506,93 @@ namespace KlawQ.Controllers
 
             await _context.SaveChangesAsync();
 
-            string htmlContent = @"
+            const string htmlContent = @"
             <!DOCTYPE html>
             <html>
             <head>
                 <meta charset=""utf-8"">
+                <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
                 <title>Order Confirmed</title>
+                <link rel=""preconnect"" href=""https://fonts.googleapis.com"">
+                <link rel=""preconnect"" href=""https://fonts.gstatic.com"" crossorigin>
+                <link href=""https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"" rel=""stylesheet"">
+                <link rel=""stylesheet"" href=""https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"">
                 <style>
-                    body { background-color: #fffafb; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-                    .card { background-color: #fcd8dd; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #fbc0c7; text-align: center; max-width: 450px; width: 90%; }
-                    .emoji { font-size: 48px; margin-bottom: 16px; }
-                    h3 { color: #8b4b3b; font-size: 24px; margin: 0 0 12px 0; }
-                    p { color: #8a6a62; font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
-                    .btn { background-color: #88b04b; color: white; padding: 12px 32px; border-radius: 24px; text-decoration: none; font-weight: 600; display: inline-block; }
+                    body {
+                        background-color: #fdf5f6;
+                        font-family: 'Montserrat', sans-serif;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                    }
+                    .card {
+                        background-color: #ffffff;
+                        padding: 40px;
+                        border-radius: 20px;
+                        box-shadow: 0 10px 30px rgba(121, 85, 72, 0.08);
+                        border: 1.5px solid #fce4ec;
+                        text-align: center;
+                        max-width: 450px;
+                        width: 90%;
+                        box-sizing: border-box;
+                    }
+                    .success-icon {
+                        color: #2e7d32;
+                        font-size: 54px;
+                        margin-bottom: 24px;
+                        display: inline-block;
+                    }
+                    h3 {
+                        color: #7a5046;
+                        font-size: 24px;
+                        font-weight: 700;
+                        margin-top: 0;
+                        margin-bottom: 12px;
+                    }
+                    p {
+                        color: #8a6a62;
+                        font-size: 15px;
+                        line-height: 1.6;
+                        margin-top: 0;
+                        margin-bottom: 20px;
+                    }
+                    .redirect-text {
+                        font-size: 13px;
+                        color: #a08077;
+                        font-style: italic;
+                        margin-bottom: 28px;
+                    }
+                    .btn {
+                        background-color: #7a5046;
+                        color: #ffffff;
+                        padding: 12px 32px;
+                        border-radius: 24px;
+                        text-decoration: none;
+                        font-weight: 600;
+                        font-size: 15px;
+                        display: inline-block;
+                        box-shadow: 0 6px 12px rgba(122,80,70,0.15);
+                        transition: all 0.2s ease;
+                    }
+                    .btn:hover {
+                        background-color: #5d3a31;
+                        transform: translateY(-2px);
+                    }
                 </style>
-                <script>setTimeout(function() { window.location.href = '/Home/Index'; }, 4000);</script>
+                <script>
+                    setTimeout(function() {
+                        window.location.href = '/Home/Index';
+                    }, 4000);
+                </script>
             </head>
             <body>
                 <div class=""card"">
-                    <div class=""emoji"">💅</div>
+                    <i class=""fas fa-check-circle success-icon""></i>
                     <h3>Payment Successful!</h3>
                     <p>Your custom press-on order downpayment has been received securely. The studio has locked in your order profile!</p>
+                    <p class=""redirect-text"">Redirecting you back home automatically in 4 seconds...</p>
                     <a href=""/Home/Index"" class=""btn"">Return Home</a>
                 </div>
             </body>
@@ -483,13 +608,18 @@ namespace KlawQ.Controllers
             var order = await _context.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.OrderID == orderId);
             if (order != null)
             {
-                // Wipe the phantom record from database to prevent order inflation stubs
-                _context.OrderItems.RemoveRange(order.Items);
-                _context.Orders.Remove(order);
-                await _context.SaveChangesAsync();
+                bool isCustom = !string.IsNullOrWhiteSpace(order.Thumb_Photo) && order.Thumb_Photo.TrimStart().StartsWith('{');
+                if (!isCustom)
+                {
+                    // Wipe the phantom record from database to prevent order inflation stubs
+                    _context.OrderItems.RemoveRange(order.Items);
+                    _context.Orders.Remove(order);
+                    await _context.SaveChangesAsync();
+                    return Content("<h3 style='color:#8b4b3b; text-align:center; margin-top:50px;'>Checkout session closed. Your purchase request was not filed.</h3>", "text/html");
+                }
             }
 
-            return Content("<h3 style='color:#8b4b3b; text-align:center; margin-top:50px;'>Checkout session closed. Your purchase request was not filed.</h3>", "text/html");
+            return RedirectToAction("OrderHistory", "Home");
         }
 
         [HttpGet("OrderDetails/{id}")]
@@ -500,6 +630,7 @@ namespace KlawQ.Controllers
             if (user == null) return RedirectToAction("Login", "Account");
 
             var order = await _context.Orders
+                .IgnoreQueryFilters()
                 .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
                 .FirstOrDefaultAsync(o => o.OrderID == id && o.UserID == user.UserID);
@@ -535,6 +666,69 @@ namespace KlawQ.Controllers
             await _context.SaveChangesAsync();
 
             return Ok();
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpGet("PayOrder/{orderId}")]
+        public async Task<IActionResult> PayOrder(int orderId)
+        {
+            var order = await _context.Orders
+                .IgnoreQueryFilters()
+                .Include(o => o.Items)
+                .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.OrderID == orderId);
+
+            if (order == null)
+            {
+                return NotFound("Order not found.");
+            }
+
+            var email = User.Identity?.Name;
+            var userProfile = await _context.UserProfiles.FirstOrDefaultAsync(u => u.Email == email);
+            if (userProfile == null || order.UserID != userProfile.UserID)
+            {
+                return Unauthorized();
+            }
+
+            if (order.Status != "Payment Pending")
+            {
+                return BadRequest("Order has already been paid or cancelled.");
+            }
+
+            decimal customPrice = 0;
+            if (!string.IsNullOrWhiteSpace(order.Thumb_Photo) && order.Thumb_Photo.TrimStart().StartsWith('{'))
+            {
+                try
+                {
+                    var doc = JsonDocument.Parse(order.Thumb_Photo);
+                    if (doc.RootElement.TryGetProperty("price", out var priceProp))
+                    {
+                        if (priceProp.ValueKind == JsonValueKind.Number) customPrice = priceProp.GetDecimal();
+                        else if (priceProp.ValueKind == JsonValueKind.String && decimal.TryParse(priceProp.GetString(), out var parsedPrice)) customPrice = parsedPrice;
+                    }
+                }
+                catch {}
+            }
+
+            decimal totalAmount = customPrice + (order.Items != null ? order.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity) : 0);
+
+            if (totalAmount <= 0)
+            {
+                totalAmount = 150.00m;
+            }
+
+            string domain = $"{Request.Scheme}://{Request.Host}";
+            string successUrl = $"{domain}/Order/OrderSuccess?orderId={order.OrderID}";
+            string cancelUrl = $"{domain}/Order/OrderCancelled?orderId={order.OrderID}";
+
+            string checkoutUrl = await _payMongoService.CreateCheckoutSessionAsync(
+                amountInPhp: totalAmount,
+                description: $"Nail Order #{order.OrderID} Checkout Deposit for {order.Full_Name}",
+                successUrl: successUrl,
+                cancelUrl: cancelUrl
+            );
+
+            return Redirect(checkoutUrl);
         }
     }
 }

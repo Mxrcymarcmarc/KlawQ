@@ -4,19 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
     [Route("AdminOrders")]
-    public class AdminOrdersController : Controller
+    public class AdminOrdersController(ApplicationDbContext context) : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context = context;
 
-        public AdminOrdersController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
 
         // 🖥️ WEB VIEW: Accessed via browser at https://localhost:7158/AdminOrders
         [HttpGet("")]
@@ -41,17 +38,35 @@ namespace KlawQ.Controllers
         [HttpPost("UpdateStatus")]
         public async Task<IActionResult> UpdateStatus([FromQuery] int orderId, [FromQuery] string status)
         {
-            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderID == orderId);
+            var order = await _context.Orders.IgnoreQueryFilters().FirstOrDefaultAsync(o => o.OrderID == orderId);
             if (order == null)
             {
                 return NotFound("Target base order mapping record missing.");
             }
 
             // Allowed state validation check block
-            string[] validStates = { "Pending", "In Progress", "Completed", "Cancelled" };
+            string[] validStates = [ "Pending", "In Progress", "Completed", "Cancelled" ];
             if (!validStates.Contains(status))
             {
                 return BadRequest("Invalid target status conversion parameter string submitted.");
+            }
+
+            // Deduct stock if transitioning to Completed
+            if (status == "Completed" && order.Status != "Completed")
+            {
+                var orderItems = await _context.OrderItems
+                    .IgnoreQueryFilters()
+                    .Include(oi => oi.Product)
+                    .Where(oi => oi.OrderID == orderId)
+                    .ToListAsync();
+
+                foreach (var item in orderItems)
+                {
+                    if (item.Product?.Product_Type == "PressOn")
+                    {
+                        item.Product.Product_Stock = Math.Max(0, item.Product.Product_Stock - item.Quantity);
+                    }
+                }
             }
 
             // Update database state
@@ -62,7 +77,7 @@ namespace KlawQ.Controllers
         }
 
         [HttpPost("ApproveCustomRequest")]
-        public async Task<IActionResult> ApproveCustomRequest([FromQuery] int orderId)
+        public async Task<IActionResult> ApproveCustomRequest([FromQuery] int orderId, [FromQuery] decimal price)
         {
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderID == orderId);
             if (order == null)
@@ -70,8 +85,55 @@ namespace KlawQ.Controllers
                 return NotFound("Target order record missing.");
             }
 
+            if (!string.IsNullOrWhiteSpace(order.Thumb_Photo) && order.Thumb_Photo.TrimStart().StartsWith('{'))
+            {
+                try
+                {
+                    var doc = System.Text.Json.JsonDocument.Parse(order.Thumb_Photo);
+                    var root = doc.RootElement;
+                    var dict = new System.Collections.Generic.Dictionary<string, object>();
+                    foreach (var prop in root.EnumerateObject())
+                    {
+                        if (prop.Name != "price")
+                        {
+                            if (prop.Value.ValueKind == System.Text.Json.JsonValueKind.Array)
+                            {
+                                var list = new System.Collections.Generic.List<string>();
+                                foreach (var item in prop.Value.EnumerateArray())
+                                {
+                                    list.Add(item.GetString() ?? "");
+                                }
+                                dict[prop.Name] = list;
+                            }
+                            else if (prop.Value.ValueKind == System.Text.Json.JsonValueKind.Number)
+                            {
+                                dict[prop.Name] = prop.Value.GetDecimal();
+                            }
+                            else if (prop.Value.ValueKind == System.Text.Json.JsonValueKind.True || prop.Value.ValueKind == System.Text.Json.JsonValueKind.False)
+                            {
+                                dict[prop.Name] = prop.Value.GetBoolean();
+                            }
+                            else
+                            {
+                                dict[prop.Name] = prop.Value.GetString() ?? "";
+                            }
+                        }
+                    }
+                    dict["price"] = price;
+                    order.Thumb_Photo = JsonSerializer.Serialize(dict);
+                }
+                catch
+                {
+                    order.Thumb_Photo = JsonSerializer.Serialize(new { price = price });
+                }
+            }
+            else
+            {
+                order.Thumb_Photo = JsonSerializer.Serialize(new { price = price });
+            }
+
             order.Order_Type = 'P'; // Convert custom request to active press-on order
-            order.Status = "Pending"; // Initialize active order status
+            order.Status = "Payment Pending"; // Initialize active order status to require payment
             await _context.SaveChangesAsync();
 
             return Ok();
@@ -86,7 +148,7 @@ namespace KlawQ.Controllers
                 return NotFound("Target order record missing.");
             }
 
-            order.Status = "Cancelled"; // Set status to Cancelled/Rejected
+            order.Status = "Rejected"; // Set status to Rejected
             await _context.SaveChangesAsync();
 
             return Ok();
@@ -96,6 +158,7 @@ namespace KlawQ.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var order = await _context.Orders
+                .IgnoreQueryFilters()
                 .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
                 .FirstOrDefaultAsync(o => o.OrderID == id);
@@ -116,6 +179,7 @@ namespace KlawQ.Controllers
         {
             // Base tracking query eagerly pulling downstream item structural bindings
             var query = _context.Orders
+                .IgnoreQueryFilters()
                 .Include(o => o.Items)
                 .ThenInclude(i => i.Product)
                 .Where(o => o.Status != "Payment Pending")

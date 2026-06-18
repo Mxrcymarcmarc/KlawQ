@@ -1,0 +1,382 @@
+@model IEnumerable<KlawQ.Models.Order>
+@{
+    ViewData["Title"] = "Admin Order History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["NavbarMode"] = "admin";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/home-page.css" asp-append-version="true" />
+
+    <style>
+        .home-wrapper {
+            min-height: 80vh;
+            background-color: var(--bg-soft-pink);
+            padding: 2rem 0;
+        }
+
+        .back-dash-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-brown);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .back-dash-link:hover {
+            color: var(--text-dark-brown);
+            transform: translateX(-3px);
+            text-decoration: none;
+        }
+
+        .order-card-board {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(121, 85, 72, 0.08);
+            border: 1.5px solid var(--border-pink);
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .order-table th {
+            color: var(--text-dark-brown);
+            font-weight: 600;
+            padding: 1rem;
+            border-bottom: 2px solid var(--border-pink);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            background: #ffffff;
+        }
+
+        .order-table td {
+            padding: 1.2rem 1rem;
+            color: var(--text-brown);
+            border-bottom: 1px solid #f7ecee;
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            padding-right: 5px;
+        }
+
+        .customer-meta {
+            font-weight: 600;
+            color: var(--text-dark-brown);
+        }
+
+        .customer-subtext {
+            font-size: 0.8rem;
+            color: #9c8a7c;
+            margin: 4px 0 0 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .customer-subtext i {
+            color: var(--text-light-brown);
+            width: 16px;
+            text-align: center;
+        }
+
+        .date-badge {
+            color: var(--text-dark-brown);
+            font-weight: 600;
+            background: #fdf5f6;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-pink);
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-completed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status-rejected {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .status-cancelled {
+            background-color: #eceff1;
+            color: #455a64;
+            border: 1px solid #cfd8dc;
+        }
+
+        .btn-admin-view {
+            border-color: #9c27b0;
+            color: #9c27b0;
+            background: transparent;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            border: 1px solid #9c27b0;
+            text-decoration: none;
+        }
+
+        .btn-admin-view:hover {
+            background: #9c27b0;
+            color: #ffffff;
+            border-color: transparent;
+        }
+
+        .empty-table-msg {
+            text-align: center;
+            padding: 40px;
+            font-style: italic;
+            color: #9c8a7c;
+        }
+    </style>
+}
+
+<div class="home-wrapper">
+    <section class="home-section bookmarks-section" style="padding: 1rem 1rem 3rem 1rem; max-width: 100%;">
+        <div class="container" style="max-width: 1400px; margin: 0 auto; width: 100%;">
+
+            <div style="max-width: 1100px; margin: 0 auto;">
+                <a href="/admin" class="back-dash-link">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-history title-icon-green"></i> Order History <i class="fas fa-history title-icon-green"></i></h2>
+                    <p class="section-subtitle">Audit past completed transactions, cancelled orders, and rejected requests.</p>
+                </div>
+            </div>
+
+            <div class="bookmarks-board" style="padding: 2rem 1.5rem;">
+                <div class="order-card-board" style="margin-top: 1.5rem;">
+                    <div class="table-responsive">
+                        <table class="order-table" id="orderHistoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Order Date</th>
+                                    <th>Customer Name</th>
+                                    <th>Contact Info</th>
+                                    <th>Payment & Delivery</th>
+                                    <th>Type</th>
+                                    <th>Total Price</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.Any())
+                                {
+                                    <tr><td colspan="9" class="empty-table-msg">No completed or past orders found.</td></tr>
+                                }
+                                else
+                                {
+                                    foreach (var order in Model)
+                                    {
+                                        var status = order.Status ?? "Pending";
+                                        var type = order.Order_Type;
+                                        
+                                        string statusClass = status switch
+                                        {
+                                            "Completed" => "status-completed",
+                                            "Rejected" => "status-rejected",
+                                            "Cancelled" => "status-cancelled",
+                                            _ => ""
+                                        };
+
+                                        // Compute total amount
+                                        decimal customPrice = 0;
+                                        if (!string.IsNullOrWhiteSpace(order.Thumb_Photo) && order.Thumb_Photo.TrimStart().StartsWith("{"))
+                                        {
+                                            try
+                                            {
+                                                var doc = System.Text.Json.JsonDocument.Parse(order.Thumb_Photo);
+                                                if (doc.RootElement.TryGetProperty("price", out var priceProp))
+                                                {
+                                                    if (priceProp.ValueKind == System.Text.Json.JsonValueKind.Number) customPrice = priceProp.GetDecimal();
+                                                    else if (priceProp.ValueKind == System.Text.Json.JsonValueKind.String && decimal.TryParse(priceProp.GetString(), out var parsedPrice)) customPrice = parsedPrice;
+                                                }
+                                            }
+                                            catch {}
+                                        }
+                                        var totalAmount = customPrice + (order.Items != null && order.Items.Any()
+                                            ? order.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity)
+                                            : 0m);
+
+                                        <tr>
+                                            <td style="font-weight: 700;">#ORD-@order.OrderID</td>
+                                            <td><span class="date-badge">@order.Order_Date.ToString("MM/dd/yyyy")</span></td>
+                                            <td class="customer-meta">@order.Full_Name</td>
+                                            <td>
+                                                <p class="customer-subtext"><i class="fas fa-phone"></i> @order.Contact_Number</p>
+                                                <p class="customer-subtext"><i class="fas fa-hashtag"></i> @order.Social_Account</p>
+                                            </td>
+                                            <td>
+                                                <p class="customer-subtext"><i class="fas fa-credit-card"></i> @order.Payment_Method</p>
+                                                <p class="customer-subtext"><i class="fas fa-map-marker-alt"></i> @order.Delivery_Method</p>
+                                            </td>
+                                            <td>
+                                                <span class="date-badge">
+                                                    @if (type == 'P' || type == 'p')
+                                                    {
+                                                        <i class="fas fa-sparkles"></i> @:Press-On
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fas fa-paint-brush"></i> @:Custom
+                                                    }
+                                                </span>
+                                            </td>
+                                            <td style="font-weight: 700; color: var(--text-dark-brown);">
+                                                @if (type == 'C' && status == "Pending")
+                                                {
+                                                    <span style="color: var(--text-light-brown); font-style: italic;">Pending Quote</span>
+                                                }
+                                                else
+                                                {
+                                                    @:₱@totalAmount.ToString("N2")
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="status-badge @statusClass">@status</span>
+                                            </td>
+                                            <td>
+                                                <a href="/AdminOrders/Details/@order.OrderID" class="btn-admin-view" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+<script>
+    // 📋 Dynamic client-side pagination engine
+    function paginateTable(tableElement, pageSize = 3) {
+        const tbody = tableElement.querySelector('tbody');
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+            return !row.querySelector('.empty-table-msg') && !row.querySelector('[colspan]');
+        });
+        
+        if (rows.length <= pageSize) return;
+        
+        let currentPage = 1;
+        const totalPages = Math.ceil(rows.length / pageSize);
+        
+        const paginationContainer = document.createElement('div');
+        paginationContainer.className = 'pagination-container';
+        paginationContainer.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 1.5rem; width: 100%;';
+        
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'btn-pagination btn-prev';
+        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i> Prev';
+        prevBtn.style.cssText = 'background: white; border: 1px solid var(--border-pink); color: var(--text-brown); padding: 6px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;';
+        
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'btn-pagination btn-next';
+        nextBtn.innerHTML = 'Next <i class="fas fa-chevron-right"></i>';
+        nextBtn.style.cssText = 'background: white; border: 1px solid var(--border-pink); color: var(--text-brown); padding: 6px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;';
+        
+        const infoSpan = document.createElement('span');
+        infoSpan.className = 'pagination-info';
+        infoSpan.style.cssText = 'font-weight: 600; color: var(--text-brown); font-size: 0.95rem;';
+        
+        paginationContainer.appendChild(prevBtn);
+        paginationContainer.appendChild(infoSpan);
+        paginationContainer.appendChild(nextBtn);
+        
+        const parentContainer = tableElement.parentElement;
+        if (parentContainer.classList.contains('table-responsive')) {
+            parentContainer.parentElement.appendChild(paginationContainer);
+        } else {
+            tableElement.parentElement.appendChild(paginationContainer);
+        }
+        
+        function showPage(page) {
+            currentPage = page;
+            const start = (page - 1) * pageSize;
+            const end = start + pageSize;
+            
+            rows.forEach((row, idx) => {
+                if (idx >= start && idx < end) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            infoSpan.innerHTML = `Page <span class="current-page">${currentPage}</span> of <span class="total-pages">${totalPages}</span>`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+            
+            [prevBtn, nextBtn].forEach(btn => {
+                btn.onmouseover = () => { if (!btn.disabled) { btn.style.background = 'var(--text-brown)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--text-brown)'; } };
+                btn.onmouseout = () => { btn.style.background = 'white'; btn.style.color = 'var(--text-brown)'; btn.style.borderColor = 'var(--border-pink)'; };
+            });
+        }
+        
+        prevBtn.onclick = () => {
+            if (currentPage > 1) showPage(currentPage - 1);
+        };
+        
+        nextBtn.onclick = () => {
+            if (currentPage < totalPages) showPage(currentPage + 1);
+        };
+        
+        showPage(1);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const table = document.getElementById("orderHistoryTable");
+        if (table) {
+            paginateTable(table, 3);
+        }
+    });
+</script>
+}

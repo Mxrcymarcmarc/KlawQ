@@ -482,7 +482,8 @@ h3 {
     border: 1px solid #ffe8cc;
 }
 
-.status-badge.cancelled {
+.status-badge.cancelled,
+.status-badge.rejected {
     background-color: #fce8e6;
     color: #dc3545;
     border: 1px solid #fcd2cd;

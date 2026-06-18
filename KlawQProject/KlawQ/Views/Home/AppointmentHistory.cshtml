@@ -1,0 +1,387 @@
+@model IEnumerable<KlawQ.Models.Appointment>
+@{
+    ViewData["Title"] = "My Appointment History - Klaw By Krys";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/home-page.css" asp-append-version="true" />
+    <style>
+        .home-wrapper {
+            min-height: 70vh;
+        }
+
+        .appointment-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid var(--border-pink);
+        }
+
+        /* Status Badges Styling */
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+
+        .status-badge.status-0 {
+            background-color: #fff3e0;
+            color: #f57c00;
+            border: 1px solid #ffe0b2;
+        }
+
+        .status-badge.status-1 {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status-badge.status-2 {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            border: 2px solid #a5d6a7;
+        }
+
+        .status-badge.status-3 {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .status-badge.status-4 {
+            background-color: #eceff1;
+            color: #455a64;
+            border: 1px solid #cfd8dc;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        @@media (min-width: 768px) {
+            .details-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
+        .details-item {
+            font-size: 0.88rem;
+            color: var(--text-brown);
+        }
+
+        .details-item strong {
+            color: var(--text-dark-brown);
+        }
+    </style>
+}
+
+<div class="home-wrapper">
+    <section class="home-section bookmarks-section">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-calendar-alt title-icon-green"></i> My Appointment History <i class="fas fa-calendar-alt title-icon-green"></i></h2>
+            <p class="section-subtitle">Track the status of your booked studio or home nail sessions.</p>
+        </div>
+
+        <div class="bookmarks-board" style="padding: 2.5rem 2rem;">
+            <!-- Tabs Navigation -->
+            <div class="history-tabs-container">
+                <div class="history-tab active" data-tab="All">All</div>
+                <div class="history-tab" data-tab="Pending">Awaiting Approval</div>
+                <div class="history-tab" data-tab="Active">Approved / Upcoming</div>
+                <div class="history-tab" data-tab="Completed">Completed</div>
+                <div class="history-tab" data-tab="CancelledRejected">Cancelled / Rejected</div>
+            </div>
+
+            <!-- Appointments Container -->
+            <div id="appointments-container">
+                @if (Model.Any())
+                {
+                    foreach (var app in Model)
+                    {
+                        var status = app.Status;
+                        string statusLabel = status switch
+                        {
+                            0 => "Awaiting Approval",
+                            1 => "Approved / Upcoming",
+                            2 => "Completed",
+                            3 => "Rejected",
+                            4 => "Cancelled",
+                            _ => "Unknown"
+                        };
+
+                        string displayAddress = "";
+                        string displayNotes = app.Additional_Notes ?? "";
+
+                        if (app.Appointment_Type == 'H')
+                        {
+                            if (displayNotes.StartsWith("Address:", StringComparison.OrdinalIgnoreCase))
+                            {
+                                int separatorIdx = displayNotes.IndexOf("\n\n");
+                                if (separatorIdx != -1)
+                                {
+                                    displayAddress = displayNotes.Substring(8, separatorIdx - 8).Trim();
+                                    displayNotes = displayNotes.Substring(separatorIdx + 2).Trim();
+                                }
+                                else
+                                {
+                                    displayAddress = displayNotes.Substring(8).Trim();
+                                    displayNotes = "";
+                                }
+                            }
+                        }
+
+                        <div class="order-card" data-status="@status">
+                            <div class="order-card-header">
+                                <div class="order-meta-info">
+                                    Appointment Reference No. APP-@app.AppId
+                                </div>
+                                <div class="status-badge status-@status">
+                                    @statusLabel
+                                </div>
+                            </div>
+                            <div class="order-card-body">
+                                <div class="order-items-list" style="flex: 1;">
+                                    <div class="order-item-row" style="align-items: flex-start; gap: 20px;">
+                                        @if (!string.IsNullOrEmpty(app.Inspiration_Image))
+                                        {
+                                            <img src="@app.Inspiration_Image" alt="Nail Inspiration" class="appointment-image" />
+                                        }
+                                        else
+                                        {
+                                            <div class="appointment-image" style="background: #faf5f6; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-image" style="font-size: 1.8rem; color: var(--border-pink);"></i>
+                                            </div>
+                                        }
+                                        <div class="order-item-details" style="flex: 1;">
+                                            <h3 class="order-item-title" style="font-size: 1.15rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                                                @if (app.Appointment_Type == 'H')
+                                                {
+                                                    <i class="fas fa-home" style="color: var(--text-dark-brown);"></i>
+                                                    <span>Home Service Appointment</span>
+                                                }
+                                                else
+                                                {
+                                                    <svg viewBox="0 0 512 512" style="width: 1.2rem; height: 1.2rem; fill: var(--text-dark-brown); display: inline-block;">
+                                                        <path d="M224 32c0-17.7 14.3-32 32-32s32 14.3 32 32v160H224V32zM176 224h160c26.5 0 48 21.5 48 48v208c0 17.7-14.3 32-32 32H160c-17.7 0-32-14.3-32-32V272c0-26.5 21.5-48 48-48zm48 96c0-8.8-7.2-16-16-16s-16 7.2-16 16v96c0 8.8 7.2 16 16 16s16-7.2 16-16v-96z"/>
+                                                    </svg>
+                                                    <span>Studio-Based Appointment</span>
+                                                }
+                                            </h3>
+                                            <div class="details-grid">
+                                                <div class="details-item">
+                                                    <strong>Scheduled Date:</strong><br />
+                                                    @(app.Scheduler != null ? app.Scheduler.Appointment_Date.ToString("MMMM dd, yyyy") : "TBD")
+                                                </div>
+                                                <div class="details-item">
+                                                    <strong>Time Slot:</strong><br />
+                                                    @(app.Scheduler != null ? app.Scheduler.Time_Slot.ToString("h:mm tt") : "TBD")
+                                                </div>
+                                                <div class="details-item">
+                                                    <strong>Down-Payment Status:</strong><br />
+                                                    <span style="color: #2e7d32; font-weight: 600;"><i class="fas fa-check-circle"></i> Paid (₱150.00)</span>
+                                                </div>
+                                                <div class="details-item">
+                                                    <strong>Price:</strong><br />
+                                                    @if (app.Price > 0)
+                                                    {
+                                                        <span>₱@app.Price.ToString("F2")</span>
+                                                    }
+                                                    else if (app.IsCustom)
+                                                    {
+                                                        <span style="color: var(--text-light-brown); font-style: italic;">Awaiting Quote</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>₱0.00</span>
+                                                    }
+                                                </div>
+                                                @if (app.Appointment_Type == 'H')
+                                                {
+                                                    <div class="details-item">
+                                                        <strong>Service Address:</strong><br />
+                                                        @(string.IsNullOrEmpty(displayAddress) ? "No address specified" : displayAddress)
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="details-item">
+                                                        <strong>Service Location:</strong><br />
+                                                        Studio (In-Store)
+                                                    </div>
+                                                }
+                                            </div>
+                                            @if (!string.IsNullOrWhiteSpace(displayNotes))
+                                            {
+                                                <div class="details-item" style="margin-top: 10px; font-style: italic;">
+                                                    <strong>Notes:</strong> "@displayNotes"
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                
+                <!-- Dynamic Empty State -->
+                <div id="empty-state" style="display: @(Model.Any() ? "none" : "block"); text-align: center; padding: 3rem 0; color: var(--text-light-brown);">
+                    <i class="fas fa-calendar-times" style="font-size: 3.5rem; margin-bottom: 1.2rem; color: var(--border-pink);"></i>
+                    <p style="font-family: var(--secondary-font); font-size: 1.2rem; margin: 0; font-weight: 500;">No appointments found.</p>
+                </div>
+            </div>
+
+            <!-- Pagination block -->
+            <div class="pagination-container" style="display: none;">
+                <!-- Filled dynamically by JS -->
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const tabs = document.querySelectorAll(".history-tab");
+            const cards = document.querySelectorAll(".order-card");
+            const paginationContainer = document.querySelector(".pagination-container");
+            const emptyState = document.getElementById("empty-state");
+            const itemsPerPage = 3;
+            let currentPage = 1;
+            let currentTab = "All";
+
+            function filterAndPaginate() {
+                let filteredCards = [];
+                
+                cards.forEach(card => {
+                    const status = parseInt(card.getAttribute("data-status"));
+                    let matches = false;
+
+                    if (currentTab === "All") {
+                        matches = true;
+                    } else if (currentTab === "Pending") {
+                        matches = (status === 0);
+                    } else if (currentTab === "Active") {
+                        matches = (status === 1);
+                    } else if (currentTab === "Completed") {
+                        matches = (status === 2);
+                    } else if (currentTab === "CancelledRejected") {
+                        matches = (status === 3 || status === 4);
+                    }
+
+                    if (matches) {
+                        filteredCards.push(card);
+                    } else {
+                        card.style.display = "none";
+                    }
+                });
+
+                const totalItems = filteredCards.length;
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+                if (totalItems === 0) {
+                    emptyState.style.display = "block";
+                    paginationContainer.style.display = "none";
+                } else {
+                    emptyState.style.display = "none";
+                    paginationContainer.style.display = "flex";
+                }
+
+                if (currentPage > totalPages && totalPages > 0) {
+                    currentPage = totalPages;
+                }
+
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+
+                filteredCards.forEach((card, index) => {
+                    if (index >= startIndex && index < endIndex) {
+                        card.style.display = "flex";
+                    } else {
+                        card.style.display = "none";
+                    }
+                });
+
+                renderPagination(totalPages);
+            }
+
+            function renderPagination(totalPages) {
+                paginationContainer.innerHTML = "";
+                if (totalPages <= 1) {
+                    paginationContainer.style.display = "none";
+                    return;
+                }
+
+                paginationContainer.style.display = "flex";
+
+                // Left Arrow
+                const prevBtn = document.createElement("button");
+                prevBtn.className = "pagination-btn prev-btn";
+                prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                if (currentPage === 1) prevBtn.disabled = true;
+                prevBtn.addEventListener("click", () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        filterAndPaginate();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                });
+                paginationContainer.appendChild(prevBtn);
+
+                // Page Numbers
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageBtn = document.createElement("button");
+                    pageBtn.className = `pagination-btn page-number-btn ${i === currentPage ? 'active' : ''}`;
+                    pageBtn.innerText = i;
+                    if (i === currentPage) {
+                        pageBtn.disabled = true;
+                    }
+                    pageBtn.addEventListener("click", () => {
+                        currentPage = i;
+                        filterAndPaginate();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                    paginationContainer.appendChild(pageBtn);
+                }
+
+                // Right Arrow
+                const nextBtn = document.createElement("button");
+                nextBtn.className = "pagination-btn next-btn";
+                nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                if (currentPage === totalPages) nextBtn.disabled = true;
+                nextBtn.addEventListener("click", () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        filterAndPaginate();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                });
+                paginationContainer.appendChild(nextBtn);
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener("click", function () {
+                    tabs.forEach(t => t.classList.remove("active"));
+                    this.classList.add("active");
+                    currentTab = this.getAttribute("data-tab");
+                    currentPage = 1;
+                    filterAndPaginate();
+                });
+            });
+
+            filterAndPaginate();
+        });
+    </script>
+}

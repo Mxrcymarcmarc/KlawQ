@@ -23,10 +23,17 @@
         statusClass = "";
         statusText = "Cancelled";
     }
+    else if (Model.Status.Equals("Rejected", StringComparison.OrdinalIgnoreCase))
+    {
+        statusClass = "";
+        statusText = "Rejected";
+    }
 
     string designNotes = "";
     List<string> inspirations = new List<string>();
-    if (Model.Order_Type == 'C' && !string.IsNullOrWhiteSpace(Model.Thumb_Photo))
+    bool isCustomApproved = Model.Order_Type == 'P' && !string.IsNullOrWhiteSpace(Model.Thumb_Photo) && Model.Thumb_Photo.TrimStart().StartsWith("{");
+    decimal customPrice = 0;
+    if ((Model.Order_Type == 'C' || isCustomApproved) && !string.IsNullOrWhiteSpace(Model.Thumb_Photo))
     {
         try
         {
@@ -45,6 +52,11 @@
                         inspirations.Add(base64);
                     }
                 }
+            }
+            if (doc.RootElement.TryGetProperty("price", out var priceProp))
+            {
+                if (priceProp.ValueKind == System.Text.Json.JsonValueKind.Number) customPrice = priceProp.GetDecimal();
+                else if (priceProp.ValueKind == System.Text.Json.JsonValueKind.String && decimal.TryParse(priceProp.GetString(), out var parsedPrice)) customPrice = parsedPrice;
             }
         }
         catch { }
@@ -484,6 +496,10 @@
                         {
                             <span class="badge-cancelled" style="background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">✕ Cancelled</span>
                         }
+                        else if (Model.Status.Equals("Rejected", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <span class="badge-cancelled" style="background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">✕ Rejected</span>
+                        }
                         else
                         {
                             <span class="badge-confirmed">✓ @statusText</span>
@@ -508,6 +524,10 @@
                     else if (Model.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
                     {
                         <p class="estimated">Cancelled on: <strong>@Model.Order_Date.AddDays(1).ToString("MM/dd/yyyy")</strong></p>
+                    }
+                    else if (Model.Status.Equals("Rejected", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <p class="estimated">Rejected on: <strong>@Model.Order_Date.AddDays(1).ToString("MM/dd/yyyy")</strong></p>
                     }
                     else
                     {
@@ -584,27 +604,80 @@
                 <!-- Card 3: Items Summary Sum List -->
                 <div class="card">
                     <p class="section-title"><i class="fa-solid fa-receipt"></i> Order Summary</p>
-                    @foreach (var item in Model.Items)
+                    @if (Model.Order_Type == 'C')
                     {
+                        <!-- Custom Request: Show items with Pending Quote -->
                         <div class="order-item-row">
-                            <span class="order-item-name">@(item.Product?.Product_Name ?? "Press-On Set")</span>
-                            <span class="order-item-price">₱@((item.Product?.Product_Price ?? 0).ToString("N2"))</span>
+                            <span class="order-item-name">Custom Press-On Set Request</span>
+                            <span class="order-item-price" style="color: var(--text-light-brown); font-weight: 500;">Pending Quote</span>
                         </div>
-                        <div class="order-item-meta">Qty: @item.Quantity &nbsp;|&nbsp; <span class="badge-size">Size: @(Model.Order_Type == 'C' ? "Custom" : "Standard")</span></div>
-                    }
-                    <hr class="divider-line" />
-                    <div class="total-row">
-                        <span>Total</span>
-                        @{
-                            var totalAmount = Model.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity);
+                        <div class="order-item-meta">Qty: 1 &nbsp;|&nbsp; <span class="badge-size">Size: Custom</span></div>
+
+                        @foreach (var item in Model.Items ?? Enumerable.Empty<KlawQ.Models.OrderItem>())
+                        {
+                            <div class="order-item-row" style="margin-top: 8px;">
+                                <span class="order-item-name">@(item.Product?.Product_Name ?? "Press-On Set")</span>
+                                <span class="order-item-price" style="color: var(--text-light-brown); font-weight: 500;">Pending Quote</span>
+                            </div>
+                            <div class="order-item-meta">Qty: @item.Quantity &nbsp;|&nbsp; <span class="badge-size">Size: Custom</span></div>
                         }
-                        <span class="total-amount">₱@totalAmount.ToString("N2")</span>
-                    </div>
+
+                        <hr class="divider-line" />
+                        <div class="total-row">
+                            <span>Total</span>
+                            <span class="total-amount" style="font-size: 1.25rem; color: var(--text-light-brown);">Pending Quote</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Approved Custom Request or Standard Order -->
+                        @if (isCustomApproved)
+                        {
+                            <div class="order-item-row">
+                                <span class="order-item-name">Custom Press-On Set</span>
+                                <span class="order-item-price">₱@customPrice.ToString("N2")</span>
+                            </div>
+                            <div class="order-item-meta">Qty: 1 &nbsp;|&nbsp; <span class="badge-size">Size: Custom</span></div>
+                        }
+
+                        @foreach (var item in Model.Items ?? Enumerable.Empty<KlawQ.Models.OrderItem>())
+                        {
+                            var isDeletedDesign = item.Product != null && item.Product.IsDeleted;
+                            var isPendingOrder = !Model.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase) && !Model.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase);
+
+                            <div class="order-item-row" style="margin-top: @(isCustomApproved ? "8px" : "0px")">
+                                @if (isDeletedDesign && isPendingOrder)
+                                {
+                                    <span class="order-item-name" style="color: #dc3545; font-weight: 600;">
+                                        <i class="fas fa-exclamation-circle"></i> Design is no longer available
+                                    </span>
+                                    <span class="order-item-price" style="color: #dc3545;">-</span>
+                                }
+                                else
+                                {
+                                    <span class="order-item-name">@(item.Product?.Product_Name ?? "Press-On Set")</span>
+                                    <span class="order-item-price">₱@((item.Product?.Product_Price ?? 0).ToString("N2"))</span>
+                                }
+                            </div>
+                            <div class="order-item-meta">Qty: @item.Quantity &nbsp;|&nbsp; <span class="badge-size">Size: Standard</span></div>
+                        }
+
+                        <hr class="divider-line" />
+                        <div class="total-row">
+                            <span>Total</span>
+                            @{
+                                var totalAmount = customPrice + (Model.Items != null && Model.Items.Any()
+                                    ? Model.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity)
+                                    : 0m);
+                            }
+                            <span class="total-amount">₱@totalAmount.ToString("N2")</span>
+                        </div>
+                    }
                 </div>
 
                 <!-- Card 5: Need Help Support Info Box -->
                 <div class="card">
-                    <div class="help-cancel-row">
+                    <div class="help-cancel-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 12px;">
                         <div class="help-text">
                             <i class="fa-solid fa-circle-plus"></i>
                             <div>
@@ -612,6 +685,10 @@
                                 <span class="help-sub">Contact us via Instagram or email.</span>
                             </div>
                         </div>
+                        @if (Model.Status == "Payment Pending")
+                        {
+                            <a href="/Order/PayOrder/@Model.OrderID" class="btn-cancel" style="background: var(--accent-green); color: white; box-shadow: 0 4px 12px rgba(167, 196, 125, 0.2); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; height: 38px; border-radius: 19px; font-weight: 600; padding: 0 24px; box-sizing: border-box; font-size: 13px;">Pay Order</a>
+                        }
                     </div>
                 </div>
 

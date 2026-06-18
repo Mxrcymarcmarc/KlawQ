@@ -39,9 +39,37 @@
                     {
                         var status = order.Status ?? "Pending";
                         var badgeClass = status.Replace(" ", "-").ToLower();
-                        var totalQty = order.Items.Sum(item => item.Quantity);
-                        var totalAmount = order.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity);
+
+                        // Parse custom request fields
+                        string designNotes = "";
+                        var inspirations = new List<string>();
+                        decimal customPrice = 0;
+                        bool isCustom = !string.IsNullOrWhiteSpace(order.Thumb_Photo) && order.Thumb_Photo.TrimStart().StartsWith("{");
+                        if (isCustom)
+                        {
+                            try
+                            {
+                                var doc = System.Text.Json.JsonDocument.Parse(order.Thumb_Photo);
+                                if (doc.RootElement.TryGetProperty("designNotes", out var dnProp)) designNotes = dnProp.GetString() ?? "";
+                                if (doc.RootElement.TryGetProperty("inspirations", out var inspProp) && inspProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                                {
+                                    foreach (var element in inspProp.EnumerateArray())
+                                    {
+                                        var base64 = element.GetString();
+                                        if (!string.IsNullOrWhiteSpace(base64)) inspirations.Add(base64);
+                                    }
+                                }
+                                if (doc.RootElement.TryGetProperty("price", out var priceProp))
+                                {
+                                    if (priceProp.ValueKind == System.Text.Json.JsonValueKind.Number) customPrice = priceProp.GetDecimal();
+                                    else if (priceProp.ValueKind == System.Text.Json.JsonValueKind.String && decimal.TryParse(priceProp.GetString(), out var parsedPrice)) customPrice = parsedPrice;
+                                }
+                            }
+                            catch {}
+                        }
+
                         var itemsList = order.Items.ToList();
+                        var totalQty = (isCustom ? 1 : 0) + order.Items.Sum(item => item.Quantity);
 
                         <div class="order-card" data-status="@status">
                             <div class="order-card-header">
@@ -54,38 +82,87 @@
                             </div>
                             <div class="order-card-body">
                                 <div class="order-items-list">
-                                    @foreach (var item in order.Items)
+                                    @if (isCustom)
                                     {
-                                        var img = item.Product?.Product_Image;
-                                        if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
-                                        else if (img.StartsWith("~")) img = Url.Content(img);
-                                        else if (!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
-                                        else img = Url.Content(img);
-
-                                        var price = item.Product?.Product_Price ?? 0;
-
+                                        var img = inspirations.FirstOrDefault() ?? Url.Content("~/images/placeholder.png");
                                         <div class="order-item-row">
-                                            <img src="@img" alt="@(item.Product?.Product_Name)" class="order-item-image" />
+                                            <img src="@img" alt="Custom Press-On Set" class="order-item-image" />
                                             <div class="order-item-details">
-                                                <h3 class="order-item-title">@(item.Product?.Product_Name ?? "Press-On Set")</h3>
+                                                <h3 class="order-item-title">Custom Press-On Set</h3>
                                                 <div class="order-item-price-qty">
-                                                    ₱@(price % 1 == 0 ? price.ToString("N0") : price.ToString("N2")) × @item.Quantity
+                                                    @if (order.Order_Type == 'C')
+                                                    {
+                                                        <span style="color: var(--text-light-brown);">Pending Quote</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>₱@(customPrice.ToString("N2")) × 1</span>
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
                                     }
+
+                                    @foreach (var item in order.Items)
+                                    {
+                                        var isDeletedDesign = item.Product != null && item.Product.IsDeleted;
+                                        var isPendingOrder = status != "Completed" && status != "Cancelled" && status != "Rejected";
+
+                                        <div class="order-item-row">
+                                            @if (isDeletedDesign && isPendingOrder)
+                                            {
+                                                <div class="order-item-details" style="padding: 10px 0;">
+                                                    <h3 class="order-item-title" style="color: #dc3545; font-weight: 600; font-size: 0.95rem;">
+                                                        <i class="fas fa-exclamation-circle" style="color: #dc3545;"></i> Design is no longer available
+                                                    </h3>
+                                                    <div class="order-item-price-qty" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+                                                        Quantity: @item.Quantity
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                var img = item.Product?.Product_Image;
+                                                if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
+                                                else if (img.StartsWith("~")) img = Url.Content(img);
+                                                else if (!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
+                                                else img = Url.Content(img);
+
+                                                var price = item.Product?.Product_Price ?? 0;
+
+                                                <img src="@img" alt="@(item.Product?.Product_Name)" class="order-item-image" />
+                                                <div class="order-item-details">
+                                                    <h3 class="order-item-title">@(item.Product?.Product_Name ?? "Press-On Set")</h3>
+                                                    <div class="order-item-price-qty">
+                                                        @if (order.Order_Type == 'C')
+                                                        {
+                                                            <span style="color: var(--text-light-brown);">Pending Quote</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>₱@(price % 1 == 0 ? price.ToString("N0") : price.ToString("N2")) × @item.Quantity</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
                                 </div>
                                 <div class="order-card-summary">
-                                    @if (itemsList.Count > 1)
+                                    @if (order.Order_Type != 'C' && (itemsList.Count > 1 || (isCustom && itemsList.Count > 0)))
                                     {
                                         <div class="order-price-breakdown">
+                                            @if (isCustom)
+                                            {
+                                                <div>₱@customPrice.ToString("N2")</div>
+                                            }
                                             @for (int i = 0; i < itemsList.Count; i++)
                                             {
                                                 var item = itemsList[i];
                                                 var price = item.Product?.Product_Price ?? 0;
                                                 var itemTotal = price * item.Quantity;
                                                 var formattedItemTotal = itemTotal % 1 == 0 ? itemTotal.ToString("N0") : itemTotal.ToString("N2");
-                                                if (i == 0)
+                                                if (i == 0 && !isCustom)
                                                 {
                                                     <div>₱@formattedItemTotal</div>
                                                 }
@@ -97,10 +174,22 @@
                                         </div>
                                     }
                                     <div class="order-total-line">
-                                        Total of @totalQty @(totalQty == 1 ? "item" : "items"): <span class="order-total-price">₱@(totalAmount % 1 == 0 ? totalAmount.ToString("N0") : totalAmount.ToString("N2"))</span>
+                                        @if (order.Order_Type == 'C')
+                                        {
+                                            <span>Total of @totalQty @(totalQty == 1 ? "item" : "items"): </span><span class="order-total-price" style="color: var(--text-light-brown); font-weight: 600;">Pending Quote</span>
+                                        }
+                                        else
+                                        {
+                                            var totalAmount = customPrice + order.Items.Sum(item => (item.Product?.Product_Price ?? 0) * item.Quantity);
+                                            <span>Total of @totalQty @(totalQty == 1 ? "item" : "items"): </span><span class="order-total-price">₱@(totalAmount % 1 == 0 ? totalAmount.ToString("N0") : totalAmount.ToString("N2"))</span>
+                                        }
                                     </div>
                                     <div class="order-card-actions">
-                                        @if (status != "Completed" && status != "Cancelled")
+                                        @if (status == "Payment Pending")
+                                        {
+                                            <a href="/Order/PayOrder/@order.OrderID" class="btn-confirm-received" style="background: var(--accent-green); color: white; border-color: transparent; text-align: center; line-height: 24px;">Pay Order</a>
+                                        }
+                                        else if (order.Order_Type != 'C' && (status == "Pending" || status == "In Progress" || status == "Confirmed"))
                                         {
                                             <button class="btn-confirm-received" onclick="confirmReceipt(@order.OrderID)">Confirm Received</button>
                                         }
@@ -157,7 +246,7 @@
             const cards = document.querySelectorAll(".order-card");
             const paginationContainer = document.querySelector(".pagination-container");
             const emptyState = document.getElementById("empty-state");
-            const ordersPerPage = 10;
+            const ordersPerPage = 3;
             let currentPage = 1;
             let currentTab = "All";
 

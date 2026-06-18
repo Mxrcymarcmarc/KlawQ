@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace KlawQ.Models
 {
@@ -13,6 +13,8 @@ namespace KlawQ.Models
         public required string Product_Image { get; set; } = string.Empty;
         // Type: "Original" (appointment) or "PressOn" (order)
         public required string Product_Type { get; set; } = "Original";
+
+        public bool IsDeleted { get; set; } = false;
     }
 
 }

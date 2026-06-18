@@ -1,0 +1,630 @@
+@model IEnumerable<KlawQ.Models.Scheduler>
+@{
+    ViewData["Title"] = "Admin Appointment History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["NavbarMode"] = "admin";
+}
+
+@section Styles {
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/home-page.css" asp-append-version="true" />
+
+    <style>
+        .home-wrapper {
+            min-height: 80vh;
+            background-color: var(--bg-soft-pink);
+            padding: 2rem 0;
+        }
+
+        .back-dash-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-brown);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .back-dash-link:hover {
+            color: var(--text-dark-brown);
+            transform: translateX(-3px);
+            text-decoration: none;
+        }
+
+        .appointment-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(121, 85, 72, 0.08);
+            border: 1.5px solid var(--border-pink);
+        }
+
+        .appointment-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .appointment-table th {
+            color: var(--text-dark-brown);
+            font-weight: 600;
+            padding: 1rem;
+            border-bottom: 2px solid var(--border-pink);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            background: #ffffff;
+        }
+
+        .appointment-table td {
+            padding: 1.2rem 1rem;
+            color: var(--text-brown);
+            border-bottom: 1px solid #f7ecee;
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            padding-right: 5px;
+        }
+
+        .customer-meta {
+            font-weight: 600;
+            color: var(--text-dark-brown);
+        }
+
+        .customer-subtext {
+            font-size: 0.8rem;
+            color: #9c8a7c;
+            margin: 4px 0 0 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .customer-subtext i {
+            color: var(--text-light-brown);
+            width: 16px;
+            text-align: center;
+        }
+
+        .date-badge {
+            color: var(--text-dark-brown);
+            font-weight: 600;
+            background: #fdf5f6;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-pink);
+            font-size: 0.88rem;
+            white-space: nowrap;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-completed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status-rejected {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .status-cancelled {
+            background-color: #eceff1;
+            color: #455a64;
+            border: 1px solid #cfd8dc;
+        }
+
+        .btn-admin-view {
+            border-color: #9c27b0;
+            color: #9c27b0;
+            background: transparent;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            border: 1px solid #9c27b0;
+            text-decoration: none;
+        }
+
+        .btn-admin-view:hover {
+            background: #9c27b0;
+            color: #ffffff;
+            border-color: transparent;
+        }
+
+        .empty-table-msg {
+            text-align: center;
+            padding: 40px;
+            font-style: italic;
+            color: #9c8a7c;
+        }
+
+        /* DETAILS MODAL LAYOUT & ELEMENT STYLING */
+        .modal-wrapper-card.details-modal-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            max-width: 800px;
+            height: auto !important;
+            min-height: auto !important;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .details-image-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .inspiration-image-wrapper {
+            width: 100%;
+            height: 320px;
+            background: #faf5f6;
+            border-radius: 12px;
+            border: 1px dashed var(--border-pink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .details-info-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .details-display-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px 16px;
+        }
+
+        .info-cell {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cell-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #9c8a7c;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .cell-val {
+            font-size: 0.95rem;
+            color: var(--text-dark-brown);
+            font-weight: 600;
+        }
+
+        @@media (max-width: 768px) {
+            .modal-wrapper-card.details-modal-card {
+                grid-template-columns: 1fr;
+            }
+            .inspiration-image-wrapper {
+                height: 240px;
+            }
+        }
+
+        /* 🕒 POP-UP MODAL ENGINE LAYOUT SCHEMAS */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(121, 85, 72, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-wrapper-card {
+            background: white;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 850px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            border: 2px solid var(--border-pink);
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .modal-close-trigger {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-brown);
+        }
+
+        .modal-calendar-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-dark-brown);
+            margin: 0;
+        }
+    </style>
+}
+
+<div class="home-wrapper">
+    <section class="home-section bookmarks-section" style="padding: 1rem 1rem 3rem 1rem; max-width: 100%;">
+        <div class="container" style="max-width: 1400px; margin: 0 auto; width: 100%;">
+
+            <div style="max-width: 1100px; margin: 0 auto;">
+                <a href="/admin" class="back-dash-link">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-history title-icon-green"></i> Appointment History <i class="fas fa-history title-icon-green"></i></h2>
+                    <p class="section-subtitle">Audit past sessions, completed appointments, cancellations, and rejections.</p>
+                </div>
+            </div>
+
+            <div class="bookmarks-board" style="padding: 2rem 1.5rem;">
+                <div class="appointment-card" style="margin-top: 1.5rem;">
+                    <div class="table-responsive">
+                        <table class="appointment-table" id="appointmentHistoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Contact Info</th>
+                                    <th>Requested Session</th>
+                                    <th>Scheduled Date & Time</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.Any())
+                                {
+                                    <tr><td colspan="6" class="empty-table-msg">No completed or past appointments found.</td></tr>
+                                }
+                                else
+                                {
+                                    foreach (var item in Model)
+                                    {
+                                        var appointment = item.Appointment!;
+                                        string displayAddress = "";
+                                        string displayNotes = appointment.Additional_Notes ?? "";
+
+                                        if (appointment.Appointment_Type == 'H')
+                                        {
+                                            if (displayNotes.StartsWith("Address:", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                int separatorIdx = displayNotes.IndexOf("\n\n");
+                                                if (separatorIdx != -1)
+                                                {
+                                                    displayAddress = displayNotes.Substring(8, separatorIdx - 8).Trim();
+                                                    displayNotes = displayNotes.Substring(separatorIdx + 2).Trim();
+                                                }
+                                                else
+                                                {
+                                                    displayAddress = displayNotes.Substring(8).Trim();
+                                                    displayNotes = "";
+                                                }
+                                            }
+                                        }
+                                        
+                                        string statusClass = appointment.Status switch
+                                        {
+                                            2 => "status-completed",
+                                            3 => "status-rejected",
+                                            4 => "status-cancelled",
+                                            _ => ""
+                                        };
+
+                                        string statusText = appointment.Status switch
+                                        {
+                                            2 => "Completed",
+                                            3 => "Rejected",
+                                            4 => "Cancelled",
+                                            _ => "Unknown"
+                                        };
+
+                                        <tr>
+                                            <td class="customer-meta">@appointment.Full_Name</td>
+                                            <td>
+                                                <p class="customer-subtext"><i class="fas fa-phone"></i> @appointment.Phone</p>
+                                                <p class="customer-subtext"><i class="fas fa-hashtag"></i> @appointment.Social_Account</p>
+                                            </td>
+                                            <td><span class="date-badge">@(appointment.Appointment_Type == 'S' ? "Studio Session" : "Home-Based Session")</span></td>
+                                            <td><span class="date-badge">@item.Appointment_Date.ToString("MMMM dd, yyyy") @item.Time_Slot.ToString("h:mm tt")</span></td>
+                                            <td>
+                                                <span class="status-badge @statusClass">@statusText</span>
+                                            </td>
+                                            <td>
+                                                <button class="btn-admin-view" 
+                                                        data-id="@appointment.AppId"
+                                                        data-name="@appointment.Full_Name"
+                                                        data-phone="@appointment.Phone"
+                                                        data-social="@appointment.Social_Account"
+                                                        data-type="@(appointment.Appointment_Type == 'S' ? "Studio Session" : "Home-Based Session")"
+                                                        data-date="@item.Appointment_Date.ToString("MMMM dd, yyyy")"
+                                                        data-time="@item.Time_Slot.ToString("h:mm tt")"
+                                                        data-notes="@displayNotes"
+                                                        data-address="@displayAddress"
+                                                        data-image="@appointment.Inspiration_Image"
+                                                        data-status="@statusText"
+                                                        data-price="@appointment.Price"
+                                                        data-iscustom="@appointment.IsCustom.ToString().ToLower()"
+                                                        onclick="openDetailsModal(this)"
+                                                        title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Details Modal Overlay -->
+<div class="modal-overlay" id="detailsModalOverlay">
+    <div class="modal-wrapper-card details-modal-card">
+        <span class="modal-close-trigger" onclick="closeDetailsModal()">&times;</span>
+        
+        <!-- Left Side: Design Reference Image -->
+        <div class="details-image-container">
+            <h3 class="modal-calendar-title" style="margin-bottom: 15px;"><i class="fas fa-image"></i> Design Reference</h3>
+            <div class="inspiration-image-wrapper">
+                <img id="detailsInspirationImage" src="" alt="Design Reference" style="width: 100%; height: 100%; object-fit: contain; border-radius: 12px; display: none;" />
+                <div id="imagePlaceholderText" style="text-align: center; color: var(--text-light-brown);">
+                    <i class="far fa-image" style="font-size: 3rem; margin-bottom: 10px; display: block; color: var(--border-pink);"></i>
+                    No Reference Image
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Details Grid -->
+        <div class="details-info-container">
+            <h3 class="modal-calendar-title" style="margin-bottom: 20px;"><i class="fas fa-info-circle"></i> Appointment Details</h3>
+            
+            <div class="details-display-grid">
+                <div class="info-cell">
+                    <span class="cell-label">Reference ID</span>
+                    <span class="cell-val" id="detailsRefId"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Customer Name</span>
+                    <span class="cell-val" id="detailsName"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Phone Number</span>
+                    <span class="cell-val" id="detailsPhone"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Email / Social</span>
+                    <span class="cell-val" id="detailsSocial"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Session Type</span>
+                    <span class="cell-val" id="detailsType"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Date & Time</span>
+                    <span class="cell-val" id="detailsDateTime"></span>
+                </div>
+                <div class="info-cell" id="detailsAddressCell" style="display: none; grid-column: span 2;">
+                    <span class="cell-label">Service Address</span>
+                    <span class="cell-val" id="detailsAddress"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Status</span>
+                    <span class="cell-val" id="detailsStatus"></span>
+                </div>
+                <div class="info-cell">
+                    <span class="cell-label">Price</span>
+                    <span class="cell-val" id="detailsPrice"></span>
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div style="margin-top: 20px;">
+                <span class="cell-label">Notes & Requests</span>
+                <p id="detailsNotes" style="font-size: 0.9rem; color: var(--text-brown); background: #fdf5f6; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-pink); margin: 6px 0 0 0; min-height: 80px; box-sizing: border-box; overflow-y: auto; max-height: 120px; white-space: pre-wrap;"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function openDetailsModal(btn) {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        const phone = btn.getAttribute('data-phone');
+        const social = btn.getAttribute('data-social');
+        const type = btn.getAttribute('data-type');
+        const date = btn.getAttribute('data-date');
+        const time = btn.getAttribute('data-time');
+        const notes = btn.getAttribute('data-notes');
+        const address = btn.getAttribute('data-address');
+        const image = btn.getAttribute('data-image');
+        const status = btn.getAttribute('data-status');
+        const price = btn.getAttribute('data-price');
+        const isCustom = btn.getAttribute('data-iscustom') === 'true';
+
+        document.getElementById('detailsRefId').innerText = `APP-${id}`;
+        document.getElementById('detailsName').innerText = name;
+        document.getElementById('detailsPhone').innerText = phone;
+        document.getElementById('detailsSocial').innerText = social;
+        document.getElementById('detailsType').innerText = type;
+        document.getElementById('detailsDateTime').innerText = `${date} at ${time}`;
+        document.getElementById('detailsStatus').innerText = status;
+        
+        const priceVal = parseFloat(price);
+        if (priceVal > 0) {
+            document.getElementById('detailsPrice').innerText = `₱${priceVal.toFixed(2)}`;
+        } else if (isCustom) {
+            document.getElementById('detailsPrice').innerText = 'Awaiting Quote';
+        } else {
+            document.getElementById('detailsPrice').innerText = '₱0.00';
+        }
+        
+        document.getElementById('detailsNotes').innerText = notes ? notes.trim() : "No special requests or additional notes specified.";
+
+        const addressCell = document.getElementById('detailsAddressCell');
+        const addressVal = document.getElementById('detailsAddress');
+        if (address && address.trim() !== '') {
+            addressVal.innerText = address.trim();
+            addressCell.style.display = 'flex';
+        } else {
+            addressVal.innerText = '';
+            addressCell.style.display = 'none';
+        }
+
+        const imgEl = document.getElementById('detailsInspirationImage');
+        const placeholderEl = document.getElementById('imagePlaceholderText');
+        if (image && image !== 'null' && image !== '') {
+            imgEl.src = image;
+            imgEl.style.display = 'block';
+            placeholderEl.style.display = 'none';
+        } else {
+            imgEl.src = '';
+            imgEl.style.display = 'none';
+            placeholderEl.style.display = 'block';
+        }
+
+        document.getElementById('detailsModalOverlay').classList.add('active');
+    }
+
+    function closeDetailsModal() {
+        document.getElementById('detailsModalOverlay').classList.remove('active');
+    }
+
+    // 📋 Dynamic client-side pagination engine
+    function paginateTable(tableElement, pageSize = 3) {
+        const tbody = tableElement.querySelector('tbody');
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+            return !row.querySelector('.empty-table-msg') && !row.querySelector('[colspan]');
+        });
+        
+        if (rows.length <= pageSize) return;
+        
+        let currentPage = 1;
+        const totalPages = Math.ceil(rows.length / pageSize);
+        
+        const paginationContainer = document.createElement('div');
+        paginationContainer.className = 'pagination-container';
+        paginationContainer.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 1.5rem; width: 100%;';
+        
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'btn-pagination btn-prev';
+        prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i> Prev';
+        prevBtn.style.cssText = 'background: white; border: 1px solid var(--border-pink); color: var(--text-brown); padding: 6px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;';
+        
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'btn-pagination btn-next';
+        nextBtn.innerHTML = 'Next <i class="fas fa-chevron-right"></i>';
+        nextBtn.style.cssText = 'background: white; border: 1px solid var(--border-pink); color: var(--text-brown); padding: 6px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;';
+        
+        const infoSpan = document.createElement('span');
+        infoSpan.className = 'pagination-info';
+        infoSpan.style.cssText = 'font-weight: 600; color: var(--text-brown); font-size: 0.95rem;';
+        
+        paginationContainer.appendChild(prevBtn);
+        paginationContainer.appendChild(infoSpan);
+        paginationContainer.appendChild(nextBtn);
+        
+        const parentContainer = tableElement.parentElement;
+        if (parentContainer.classList.contains('table-responsive')) {
+            parentContainer.parentElement.appendChild(paginationContainer);
+        } else {
+            tableElement.parentElement.appendChild(paginationContainer);
+        }
+        
+        function showPage(page) {
+            currentPage = page;
+            const start = (page - 1) * pageSize;
+            const end = start + pageSize;
+            
+            rows.forEach((row, idx) => {
+                if (idx >= start && idx < end) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            infoSpan.innerHTML = `Page <span class="current-page">${currentPage}</span> of <span class="total-pages">${totalPages}</span>`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+            
+            [prevBtn, nextBtn].forEach(btn => {
+                btn.onmouseover = () => { if (!btn.disabled) { btn.style.background = 'var(--text-brown)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--text-brown)'; } };
+                btn.onmouseout = () => { btn.style.background = 'white'; btn.style.color = 'var(--text-brown)'; btn.style.borderColor = 'var(--border-pink)'; };
+            });
+        }
+        
+        prevBtn.onclick = () => {
+            if (currentPage > 1) showPage(currentPage - 1);
+        };
+        
+        nextBtn.onclick = () => {
+            if (currentPage < totalPages) showPage(currentPage + 1);
+        };
+        
+        showPage(1);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const table = document.getElementById("appointmentHistoryTable");
+        if (table) {
+            paginateTable(table, 3);
+        }
+    });
+</script>
+}

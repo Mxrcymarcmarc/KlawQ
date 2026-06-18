@@ -1,4 +1,4 @@
-﻿using KlawQ.Data;
+using KlawQ.Data;
 using KlawQ.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -79,7 +79,8 @@ namespace KlawQ.Controllers
                 int totalBookingsForDay = monthlyBookings.Count(b =>
                     b.Appointment_Date.Date == loopDate.Date &&
                     b.Appointment != null &&
-                    b.Appointment.Down_Payment_Paid);
+                    b.Appointment.Down_Payment_Paid &&
+                    (b.Appointment.Status == 0 || b.Appointment.Status == 1));
 
                 bool isDayBlockedByAdmin = adminBlocks.Any(o => o.TargetDate.Date == loopDate.Date && o.BlockedHour == null);
 
@@ -146,12 +147,13 @@ namespace KlawQ.Controllers
                     DateTimeStyles.None, out DateTime parsedDate))
                 return BadRequest("Invalid date format. Please use yyyy-MM-dd.");
 
-            // Fetch real customer bookings that have been paid for
+            // Fetch real customer bookings that have been paid for and are pending or active
             var paidBookings = await _context.Schedulers
                 .Include(s => s.Appointment)
                 .Where(s => s.Appointment_Date.Date == parsedDate.Date &&
                             s.Appointment != null &&
-                            s.Appointment.Down_Payment_Paid)
+                            s.Appointment.Down_Payment_Paid &&
+                            (s.Appointment.Status == 0 || s.Appointment.Status == 1))
                 .ToListAsync();
 
             // Fetch existing manual admin configurations/blocks for this date
@@ -198,7 +200,8 @@ namespace KlawQ.Controllers
                     .Include(s => s.Appointment)
                     .AnyAsync(s => s.Time_Slot == exactSlotTime &&
                                    s.Appointment != null &&
-                                   s.Appointment.Down_Payment_Paid);
+                                   s.Appointment.Down_Payment_Paid &&
+                                   (s.Appointment.Status == 0 || s.Appointment.Status == 1));
 
                 if (isAlreadyBooked)
                     return BadRequest("Action Denied: You cannot block a slot that has an active, paid booking!");
@@ -210,7 +213,8 @@ namespace KlawQ.Controllers
                     .Include(s => s.Appointment)
                     .AnyAsync(s => s.Appointment_Date.Date == date.Date &&
                                    s.Appointment != null &&
-                                   s.Appointment.Down_Payment_Paid);
+                                   s.Appointment.Down_Payment_Paid &&
+                                   (s.Appointment.Status == 0 || s.Appointment.Status == 1));
 
                 if (dayHasBookings)
                     return BadRequest("Action Denied: Cannot block this day because it already contains active bookings!");

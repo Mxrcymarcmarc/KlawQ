@@ -13,14 +13,10 @@ namespace KlawQ.Controllers
 {
     [Authorize(Roles = "Admin")]
     [Route("admin")]
-    public class AdminController : Controller
+    public class AdminController(ApplicationDbContext context) : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context = context;
 
-        public AdminController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
 
         // 🖥️ GET: /admin
         [HttpGet("")]
@@ -28,6 +24,7 @@ namespace KlawQ.Controllers
         {
             // 🌟 1. Eagerly load Items and their associated Products to safely access .Price
             decimal totalRevenue = await _context.Orders
+                .IgnoreQueryFilters()
                 .Where(o => o.Status == "Completed")
                 .SelectMany(o => o.Items)
                 .SumAsync(i => (decimal?)i.Quantity * (i.Product != null ? i.Product.Product_Price : 0)) ?? 0;
@@ -45,20 +42,81 @@ namespace KlawQ.Controllers
                 .Where(o => o.Appointment_Date >= now && o.Appointment_Date <= sevenDaysFromNow)
                 .CountAsync();
 
+            // 🌟 Completed Appointment Revenue
+            decimal appointmentRevenue = await _context.Appointments
+                .Where(a => a.Status == 2)
+                .SumAsync(a => (decimal?)a.Price) ?? 0m;
+
+            // 🌟 Appointment metric counts
+            int newRequestsCount = await _context.Appointments
+                .CountAsync(a => a.Status == 0 && a.Down_Payment_Paid);
+
+            int activeSchedulesCount = await _context.Appointments
+                .CountAsync(a => a.Status == 1 && a.Down_Payment_Paid);
+
             var pendingOrdersList = await _context.Orders
                 .Where(o => o.Status == "Pending")
                 .OrderByDescending(o => o.Order_Date)
                 .Take(5) // Restricts length to look clean on your main dashboard layout
                 .ToListAsync();
 
-            // 🌟 4. Pass values to the view using ViewData maps
+            // 🌟 4. Query Top Ordered Press-On Designs (excluding cancelled/rejected/pending-payment states)
+            var topOrderedDesigns = await _context.OrderItems
+                .IgnoreQueryFilters()
+                .Include(oi => oi.Product)
+                .Include(oi => oi.Order)
+                .Where(oi => oi.Product != null && 
+                             oi.Product.Product_Type == "PressOn" && 
+                             oi.Order != null && 
+                             oi.Order.Status != "Cancelled" && 
+                             oi.Order.Status != "Rejected" && 
+                             oi.Order.Status != "Payment Pending")
+                .GroupBy(oi => new { oi.ProductID, ProductName = oi.Product!.Product_Name, ProductPrice = oi.Product.Product_Price, ProductImage = oi.Product.Product_Image })
+                .Select(g => new TopDesignViewModel
+                {
+                    ProductName = g.Key.ProductName,
+                    ProductImage = g.Key.ProductImage,
+                    ProductPrice = g.Key.ProductPrice,
+                    TotalOrdered = g.Sum(oi => oi.Quantity)
+                })
+                .OrderByDescending(x => x.TotalOrdered)
+                .Take(5)
+                .ToListAsync();
+
+            // 🌟 5. Pass values to the view using ViewData maps
             ViewData["TotalRevenue"] = totalRevenue;
             ViewData["TotalOrdersCount"] = totalOrdersCount;
             ViewData["PendingOrdersCount"] = pendingOrdersCount;
             ViewData["CompletedOrdersCount"] = completedOrdersCount;
-            ViewData["ThisWeekBookingsCount"] = thisWeekBookingsCount; // 👈 Injected right here!
-
+            ViewData["ThisWeekBookingsCount"] = thisWeekBookingsCount; 
             ViewData["PendingOrdersList"] = pendingOrdersList;
+            ViewData["TopOrderedDesigns"] = topOrderedDesigns;
+
+            // Appointment Statistics
+            ViewData["AppointmentRevenue"] = appointmentRevenue;
+            ViewData["NewRequestsCount"] = newRequestsCount;
+            ViewData["ActiveSchedulesCount"] = activeSchedulesCount;
+
+            // 🌟 6. Query Top Requested Original Sets (completed appointments, not custom)
+            var topRequestedOriginals = await _context.Appointments
+                .Where(a => a.Status == 2 && !a.IsCustom)
+                .Join(_context.Products, 
+                      a => a.Inspiration_Image, 
+                      p => p.Product_Image, 
+                      (a, p) => new { a, p })
+                .GroupBy(x => new { x.p.ProductID, x.p.Product_Name, x.p.Product_Price, x.p.Product_Image })
+                .Select(g => new TopDesignViewModel
+                {
+                    ProductName = g.Key.Product_Name,
+                    ProductImage = g.Key.Product_Image,
+                    ProductPrice = g.Key.Product_Price,
+                    TotalOrdered = g.Count()
+                })
+                .OrderByDescending(x => x.TotalOrdered)
+                .Take(5)
+                .ToListAsync();
+
+            ViewData["TopRequestedOriginals"] = topRequestedOriginals;
 
             return View();
         }
@@ -74,7 +132,7 @@ namespace KlawQ.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreatePortfolioItem(Products product, IFormFile imageFile)
         {
-            if (imageFile != null && imageFile.Length > 0)
+            if (imageFile?.Length > 0)
             {
                 var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "gallery");
                 Directory.CreateDirectory(uploads);
@@ -111,16 +169,8 @@ namespace KlawQ.Controllers
                 return NotFound();
             }
 
-            if (!string.IsNullOrEmpty(product.Product_Image) && product.Product_Image.StartsWith("/images/gallery/"))
-            {
-                var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", product.Product_Image.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-                if (System.IO.File.Exists(path))
-                {
-                    System.IO.File.Delete(path);
-                }
-            }
-
-            _context.Products.Remove(product);
+            product.IsDeleted = true;
+            _context.Products.Update(product);
             await _context.SaveChangesAsync();
             return RedirectToAction("PortfolioManager");
         }
@@ -153,7 +203,7 @@ namespace KlawQ.Controllers
             existing.Product_Price = product.Product_Price;
             existing.Product_Stock = product.Product_Stock;
 
-            if (imageFile != null && imageFile.Length > 0)
+            if (imageFile?.Length > 0)
             {
                 var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "gallery");
                 Directory.CreateDirectory(uploads);
@@ -194,6 +244,34 @@ namespace KlawQ.Controllers
             return View(schedulersList);
         }
 
+        // 🖥️ GET: /admin/AppointmentHistory
+        [HttpGet("AppointmentHistory")]
+        public async Task<IActionResult> AppointmentHistory()
+        {
+            var schedulersList = await _context.Schedulers
+                .Include(s => s.Appointment)
+                .Where(s => s.Appointment != null && (s.Appointment.Status == 2 || s.Appointment.Status == 3 || s.Appointment.Status == 4))
+                .OrderByDescending(s => s.Appointment_Date)
+                .ToListAsync();
+
+            return View(schedulersList);
+        }
+
+        // 🖥️ GET: /admin/OrderHistory
+        [HttpGet("OrderHistory")]
+        public async Task<IActionResult> OrderHistory()
+        {
+            var ordersList = await _context.Orders
+                .IgnoreQueryFilters()
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+                .Where(o => o.Status == "Completed" || o.Status == "Cancelled" || o.Status == "Rejected")
+                .OrderByDescending(o => o.Order_Date)
+                .ToListAsync();
+
+            return View(ordersList);
+        }
+
         // 🚀 POST: /admin/UpdateAppointmentStatus
         [HttpPost("UpdateAppointmentStatus")]
         [ValidateAntiForgeryToken]
@@ -209,6 +287,25 @@ namespace KlawQ.Controllers
             // Status Mapping Tree Rules: 
             // 0 = Pending, 1 = Approved/Active, 2 = Completed, 3 = Rejected, 4 = Cancelled
             scheduler.Appointment.Status = statusCode;
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        // 🚀 POST: /admin/ApproveCustomAppointment
+        [HttpPost("ApproveCustomAppointment")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveCustomAppointment(int schedulerId, decimal price)
+        {
+            var scheduler = await _context.Schedulers
+                .Include(s => s.Appointment)
+                .FirstOrDefaultAsync(s => s.SchedulerID == schedulerId);
+
+            if (scheduler == null || scheduler.Appointment == null)
+                return NotFound("Appointment records missing.");
+
+            scheduler.Appointment.Price = price;
+            scheduler.Appointment.Status = 1; // Approved/Active
             await _context.SaveChangesAsync();
 
             return Ok();
@@ -242,5 +339,13 @@ namespace KlawQ.Controllers
             // This looks for and loads your Views/Admin/ConfigureSlots.cshtml file
             return View("ConfigureDateTimeSlot");
         }
+    }
+
+    public class TopDesignViewModel
+    {
+        public string ProductName { get; set; } = string.Empty;
+        public string ProductImage { get; set; } = string.Empty;
+        public decimal ProductPrice { get; set; }
+        public int TotalOrdered { get; set; }
     }
 }

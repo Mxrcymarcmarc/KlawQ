@@ -567,14 +567,25 @@
             const inspirationImg = urlParams.get('Inspiration_Image');
             const inspirationTitle = urlParams.get('Inspiration_Title');
 
+            const fileInput = document.getElementById('designImageFile');
+
             if (inspirationImg) {
                 attachedImageSrc = inspirationImg;
                 const displayName = inspirationTitle || inspirationImg.substring(inspirationImg.lastIndexOf('/') + 1);
-                document.getElementById('upload-status-text').innerHTML = `Attached Design: <strong>${displayName}</strong> <span id="clear-image-btn" style="color: #d32f2f; cursor: pointer; margin-left: 8px; font-weight: bold; font-size: 16px;">✕</span>`;
-                document.getElementById('upload-icon').className = 'fas fa-image retro-camera';
+                document.getElementById('upload-status-text').innerHTML = `Locked Gallery Design: <strong>${displayName}</strong>`;
+                document.getElementById('upload-icon').className = 'fas fa-lock retro-camera';
+                if (fileInput) {
+                    fileInput.disabled = true;
+                }
+                const uploadArea = document.getElementById('designImageUploadArea');
+                if (uploadArea) {
+                    uploadArea.style.cursor = 'not-allowed';
+                    uploadArea.style.pointerEvents = 'none';
+                    uploadArea.style.background = '#faf5f6';
+                    uploadArea.style.opacity = '0.85';
+                    uploadArea.style.borderColor = '#e1bdae';
+                }
             }
-
-            const fileInput = document.getElementById('designImageFile');
             fileInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -654,6 +665,11 @@
                 fullNotes = `Address: ${address}\n\n${notes}`;
             }
 
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialImg = urlParams.get('Inspiration_Image');
+            const isCustom = !initialImg || (attachedImageSrc !== initialImg);
+            const price = isCustom ? 0 : (parseFloat(urlParams.get('Price')) || 0);
+
             tempAppointmentData = {
                 Full_Name: fullName,
                 Social_Account: email,
@@ -662,7 +678,9 @@
                 Down_Payment_Paid: false,
                 Appointment_Type: isHome ? 'H' : 'S',
                 Status: 0,
-                Inspiration_Image: attachedImageSrc
+                Inspiration_Image: attachedImageSrc,
+                Price: price,
+                IsCustom: isCustom
             };
 
             return true;
@@ -688,7 +706,7 @@
             }
 
             const json = await res.json();
-            return json.AppId;
+            return json.appId || json.AppId;
         }
 
         // Proceed button: validate form then show calendar (don't save yet)
@@ -868,15 +886,12 @@
                 return;
             }
 
-            const updateRes = await fetch(`/Appointment/UpdateDownPayment?id=${appointmentId}`, { method: 'POST' });
-            if (updateRes.ok) {
-                alert('✓ Downpayment recorded! Your appointment has been confirmed.');
-                document.getElementById('paymentModal').classList.add('hidden');
-                document.body.classList.remove('modal-open');
-                tempAppointmentData = null;
-                location.href = '/Home/Index';
+            const data = await bookingRes.json();
+            const checkoutUrl = data.checkoutUrl || data.CheckoutUrl;
+            if (checkoutUrl) {
+                location.href = checkoutUrl;
             } else {
-                alert('Error recording payment. Please try again.');
+                alert('Error: Payment gateway session URL not returned.');
             }
         });
 

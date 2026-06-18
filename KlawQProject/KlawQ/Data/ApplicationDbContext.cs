@@ -5,12 +5,8 @@ using Microsoft.AspNetCore.Identity;
 
 namespace KlawQ.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<IdentityUser>(options)
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
 
         public DbSet<Scheduler> Schedulers { get; set; }
 
@@ -29,6 +25,15 @@ namespace KlawQ.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<CalendarConfigure> CalendarConfigures { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            base.OnConfiguring(optionsBuilder);
+            optionsBuilder.ConfigureWarnings(w => w.Ignore(
+                new Microsoft.Extensions.Logging.EventId(10622),
+                Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning
+            ));
+        }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -51,10 +56,19 @@ namespace KlawQ.Data
                    .Property(p => p.Product_Price)
                    .HasPrecision(18, 2);
 
+            // Configure Appointment Price precision to avoid truncation warnings
+            builder.Entity<Appointment>()
+                   .Property(a => a.Price)
+                   .HasPrecision(18, 2);
+
             // Product Type default (Original / PressOn)
             builder.Entity<Products>()
                    .Property(p => p.Product_Type)
                    .HasDefaultValue("Original");
+
+            // Global query filter for soft-deleted products
+            builder.Entity<Products>()
+                   .HasQueryFilter(p => !p.IsDeleted);
 
             // Favorites: ensure CreatedAt has default value
             builder.Entity<Favorite>()

@@ -13,6 +13,101 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin-dashboard.css" asp-append-version="true" />
+    <style>
+        .admin-control-sections {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metrics-strip-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .metrics-group-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 2.5rem 0 1.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--accent-pink);
+            padding-bottom: 8px;
+        }
+
+        .section-box {
+            margin-bottom: 2.5rem !important;
+        }
+
+        @@media (max-width: 992px) {
+            .metrics-strip-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .metrics-strip-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .control-group {
+            background: var(--card-bg);
+            padding: 1.2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid #f2ecf0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .group-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0 0 0.2rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1.5px solid var(--accent-pink);
+            padding-bottom: 6px;
+        }
+
+        .group-title i {
+            color: var(--accent-green);
+        }
+
+        .group-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            flex-grow: 1;
+        }
+
+        .action-bar-btn {
+            padding: 0.8rem 1rem !important;
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            justify-content: flex-start !important;
+        }
+
+        @@media (max-width: 992px) {
+            .admin-control-sections {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 }
 
 <div class="container">
@@ -21,28 +116,52 @@
         <p class="page-subtitle">Manage your nail studio at a glance</p>
     </div>
 
-    <div class="admin-control-bar">
-        <button class="action-bar-btn" onclick="location.href='@Url.Action("PortfolioManager", "Admin")'">
-            <i class="fas fa-box"></i> <span>Manage Portfolio</span>
-        </button>
-        <button class="action-bar-btn" onclick="location.href='@Url.Action("ConfigureSlots", "Admin")'">
-            <i class="far fa-clock"></i> <span>Configure Slots</span>
-        </button>
-        <button class="action-bar-btn" onclick="location.href='@Url.Action("ManageAppointments", "Admin")'">
-            <i class="far fa-calendar-check"></i> <span>Manage Appointments</span>
-        </button>
-        <button class="action-bar-btn" onclick="location.href='/AdminOrders?status=All'">
-            <i class="fas fa-receipt"></i> <span>Manage Orders</span>
-        </button>
-        <button class="action-bar-btn" onclick="location.href='@Url.Action("Index", "AdminCancellations", "Admin")'">
-            <i class="far fa-calendar-times"></i> <span>Cancellations</span>
-        </button>
-        <button class="action-bar-btn" onclick="location.href='@Url.Action("ViewPortfolio", "Admin")'">
-            <i class="far fa-eye"></i> <span>Public Gallery</span>
-        </button>
+    <div class="admin-control-sections">
+        <!-- Gallery Group -->
+        <div class="control-group">
+            <h3 class="group-title"><i class="fas fa-images"></i> Gallery</h3>
+            <div class="group-buttons">
+                <button class="action-bar-btn" onclick="location.href='@Url.Action("PortfolioManager", "Admin")'">
+                    <i class="fas fa-box"></i> <span>Manage Portfolio</span>
+                </button>
+                <button class="action-bar-btn" onclick="location.href='@Url.Action("Index", "Gallery")'">
+                    <i class="far fa-eye"></i> <span>View Public Gallery</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Appointment Group -->
+        <div class="control-group">
+            <h3 class="group-title"><i class="far fa-calendar-check"></i> Appointment</h3>
+            <div class="group-buttons">
+                <button class="action-bar-btn" onclick="location.href='@Url.Action("ManageAppointments", "Admin")'">
+                    <i class="far fa-calendar-check"></i> <span>Manage Appointment</span>
+                </button>
+                <button class="action-bar-btn" onclick="location.href='@Url.Action("ConfigureSlots", "Admin")'">
+                    <i class="far fa-clock"></i> <span>Configure Slots</span>
+                </button>
+                <button class="action-bar-btn" onclick="location.href='@Url.Action("AppointmentHistory", "Admin")'">
+                    <i class="fas fa-history"></i> <span>Appointment History</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Order Group -->
+        <div class="control-group">
+            <h3 class="group-title"><i class="fas fa-receipt"></i> Order</h3>
+            <div class="group-buttons">
+                <button class="action-bar-btn" onclick="location.href='/AdminOrders?status=All'">
+                    <i class="fas fa-receipt"></i> <span>Manage Orders</span>
+                </button>
+                <button class="action-bar-btn" onclick="location.href='@Url.Action("OrderHistory", "Admin")'">
+                    <i class="fas fa-history"></i> <span>Order History</span>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="metrics-strip">
+    <h3 class="metrics-group-title"><i class="fas fa-shopping-bag"></i> Order Statistics</h3>
+    <div class="metrics-strip-4">
         <div class="metric-strip-card revenue-card">
             <span class="card-label">TOTAL REVENUE</span>
             <h2 class="metric-val">₱@(((decimal)(ViewData["TotalRevenue"] ?? 0m)).ToString("N2"))</h2>
@@ -72,6 +191,31 @@
             </div>
             <h2 class="metric-val">@(ViewData["CompletedOrdersCount"] ?? 0)</h2>
         </div>
+    </div>
+
+    <h3 class="metrics-group-title" style="margin-top: 2.5rem;"><i class="far fa-calendar-check"></i> Appointment Statistics</h3>
+    <div class="metrics-strip-4">
+        <div class="metric-strip-card revenue-card" style="background: #7a5046;">
+            <span class="card-label" style="color: #f6eeec;">TOTAL REVENUE</span>
+            <h2 class="metric-val" style="color: #fff;">₱@(((decimal)(ViewData["AppointmentRevenue"] ?? 0m)).ToString("N2"))</h2>
+            <span class="card-subtext" style="color: #f6eeec;">Completed appointments</span>
+        </div>
+
+        <div class="metric-strip-card clickable-metric" onclick="location.href='/admin/ManageAppointments?tab=NewRequests'">
+            <div class="metric-strip-header">
+                <i class="far fa-clock text-yellow"></i>
+                <span class="card-label">NEW REQUESTS</span>
+            </div>
+            <h2 class="metric-val">@(ViewData["NewRequestsCount"] ?? 0)</h2>
+        </div>
+
+        <div class="metric-strip-card clickable-metric" onclick="location.href='/admin/ManageAppointments?tab=ActiveSchedules'">
+            <div class="metric-strip-header">
+                <i class="far fa-check-circle text-green"></i>
+                <span class="card-label">ACTIVE SCHEDULES</span>
+            </div>
+            <h2 class="metric-val">@(ViewData["ActiveSchedulesCount"] ?? 0)</h2>
+        </div>
 
         <div class="metric-strip-card">
             <div class="metric-strip-header">
@@ -82,100 +226,84 @@
         </div>
     </div>
 
+    <hr style="border: 0; border-top: 2px solid var(--accent-pink); margin: 2rem 0 2rem 0;" />
+
     <div class="section-box">
         <div class="section-header">
-            <h2><i class="fas fa-star"></i> Top Services</h2>
+            <h2><i class="fas fa-star"></i> Top Ordered Press-On Designs</h2>
         </div>
 
         <div class="services-grid">
-            <div class="service-row">
-                <div class="rank-badge">#1</div>
-                <h4 class="service-name">Custom Nail Art Design</h4>
-                <span class="service-bookings">2 bookings</span>
-                <p class="service-price">₱1,020.00</p>
-            </div>
+            @{
+                var topDesignsList = ViewData["TopOrderedDesigns"] as List<KlawQ.Controllers.TopDesignViewModel> ?? new List<KlawQ.Controllers.TopDesignViewModel>();
+                var rank = 1;
+            }
+            @if (!topDesignsList.Any())
+            {
+                <div style="text-align: center; color: var(--text-muted); font-style: italic; padding: 15px 0;">
+                    No press-on orders recorded yet!
+                </div>
+            }
+            else
+            {
+                foreach (var design in topDesignsList)
+                {
+                    var img = design.ProductImage;
+                    if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
+                    else if (img.StartsWith("~")) img = Url.Content(img);
+                    else if (!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
+                    else img = Url.Content(img);
 
-            <div class="service-row">
-                <div class="rank-badge">#2</div>
-                <h4 class="service-name">Gel Manicure</h4>
-                <span class="service-bookings">8 bookings</span>
-                <p class="service-price">₱900.00</p>
-            </div>
+                    <div class="service-row" style="grid-template-columns: auto auto 1fr auto auto;">
+                        <div class="rank-badge">#@rank</div>
+                        <img src="@img" alt="@design.ProductName" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px; border: 1.5px solid var(--accent-pink);" />
+                        <h4 class="service-name" style="margin: 0;">@design.ProductName</h4>
+                        <span class="service-bookings">@design.TotalOrdered ordered</span>
+                        <p class="service-price">₱@design.ProductPrice.ToString("N2")</p>
+                    </div>
+                    rank++;
+                }
+            }
         </div>
     </div>
 
     <div class="section-box">
         <div class="section-header">
-            <h2><i class="fas fa-user-friends"></i> Recent Orders</h2>
-            <span class="badge-total">@(((List<KlawQ.Models.Order>)(ViewData["PendingOrdersList"] ?? new List<KlawQ.Models.Order>())).Count) pending</span>
+            <h2><i class="fas fa-magic"></i> Top Requested Original Sets</h2>
         </div>
 
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Order #</th>
-                        <th>Customer</th>
-                        <th>Delivery Method</th>
-                        <th>Payment Method</th>
-                        <th>Contact Number</th>
-                        <th>Type</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{
-                        var pendingOrders = ViewData["PendingOrdersList"] as List<KlawQ.Models.Order> ?? new List<KlawQ.Models.Order>();
-                    }
-                    @if (!pendingOrders.Any())
-                    {
-                        <tr>
-                            <td colspan="9" style="text-align: center; color: #9c8a7c; font-style: italic; padding: 25px;">
-                                🎉 No pending orders currently require review!
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        foreach (var order in pendingOrders)
-                        {
-                            <tr>
-                                <td>D-@order.OrderID</td>
-                                <td class="customer-info">
-                                    @order.Full_Name
-                                    <p style="font-size: 0.78rem; color: #9c8a7c; margin: 2px 0 0 0;">@order.Social_Account</p>
-                                </td>
-                                <td>@order.Delivery_Method</td>
-                                <td>@order.Payment_Method</td>
-                                <td>@order.Contact_Number</td>
-                                <td>
-                                    @if (order.Order_Type == 'C' || order.Order_Type == 'c')
-                                    {
-                                        <span class="badge" style="background: #fce4ec; color: #ba68c8;">✨ Custom Set</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge" style="background: #fdf5f6; color: #d88c9a;">💅 Press-On</span>
-                                    }
-                                </td>
-                                <td>@order.Order_Date.ToString("yyyy-MM-dd")</td>
-                                <td>
-                                    <span class="status status-pending">
-                                        <i class="far fa-clock"></i> @order.Status
-                                    </span>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn-action" onclick="location.href='/AdminOrders?status=Pending'">
-                                        <i class="fas fa-pencil-alt"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
+        <div class="services-grid">
+            @{
+                var topOriginalsList = ViewData["TopRequestedOriginals"] as List<KlawQ.Controllers.TopDesignViewModel> ?? new List<KlawQ.Controllers.TopDesignViewModel>();
+                var origRank = 1;
+            }
+            @if (!topOriginalsList.Any())
+            {
+                <div style="text-align: center; color: var(--text-muted); font-style: italic; padding: 15px 0;">
+                    No completed original set appointments recorded yet!
+                </div>
+            }
+            else
+            {
+                foreach (var design in topOriginalsList)
+                {
+                    var img = design.ProductImage;
+                    if (string.IsNullOrWhiteSpace(img)) img = Url.Content("~/images/placeholder.png");
+                    else if (img.StartsWith("~")) img = Url.Content(img);
+                    else if (!img.StartsWith("/")) img = Url.Content("~/" + img.TrimStart('/'));
+                    else img = Url.Content(img);
+
+                    <div class="service-row" style="grid-template-columns: auto auto 1fr auto auto;">
+                        <div class="rank-badge" style="background: var(--accent-pink-dark);">#@origRank</div>
+                        <img src="@img" alt="@design.ProductName" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px; border: 1.5px solid var(--accent-pink);" />
+                        <h4 class="service-name" style="margin: 0;">@design.ProductName</h4>
+                        <span class="service-bookings">@design.TotalOrdered requested</span>
+                        <p class="service-price">₱@design.ProductPrice.ToString("N2")</p>
+                    </div>
+                    origRank++;
+                }
+            }
         </div>
     </div>
+
 </div>
