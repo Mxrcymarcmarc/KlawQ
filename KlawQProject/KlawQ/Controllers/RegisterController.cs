@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using MimeKit;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
@@ -20,7 +21,6 @@ namespace KlawQ.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IConfiguration _configuration;
 
-        // Constructor cleanly handles dependency injection for everything you need
         public RegisterController(
             ApplicationDbContext context,
             SignInManager<IdentityUser> signInManager,
@@ -43,7 +43,7 @@ namespace KlawQ.Controllers
         // Process Details & Send Verification Code
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -59,11 +59,26 @@ namespace KlawQ.Controllers
 
             try
             {
+                // 🌟 FIX 1: Run password through Identity's validator upfront BEFORE sending an email or moving forward
+                var temporaryUser = new IdentityUser { UserName = model.Email, Email = model.Email };
+                foreach (var validator in _userManager.PasswordValidators)
+                {
+                    var validationResult = await validator.ValidateAsync(_userManager, temporaryUser, model.Password);
+                    if (!validationResult.Succeeded)
+                    {
+                        // If password rules fail (like missing a non-alphanumeric char), trap it here on the Register page!
+                        foreach (var error in validationResult.Errors)
+                        {
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
+                        return View("~/Views/Account/Register.cshtml", model);
+                    }
+                }
+
                 // Generate a random 6-digit verification code
                 string verificationCode = new Random().Next(100000, 999999).ToString();
 
-                // Store the plain password briefly in session for account creation after verification.
-                // Session is server-side and will be cleared immediately after use.
+                // Store registration data safely in Server Session
                 HttpContext.Session.SetString("Reg_FullName", model.FullName);
                 HttpContext.Session.SetString("Reg_Email", model.Email);
                 HttpContext.Session.SetString("Reg_Password", model.Password);
@@ -72,7 +87,6 @@ namespace KlawQ.Controllers
                 // Send the email code 
                 SendEmailCode(model.Email, verificationCode);
 
-                // Redirect to the verification entry screen
                 return RedirectToAction("VerifyEmail", new { email = model.Email });
             }
             catch (Exception ex)
@@ -95,7 +109,10 @@ namespace KlawQ.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> VerifyEmail(VerifyCodeViewModel model)
         {
-            if (!ModelState.IsValid)
+            // 🌟 FIX 2: Wipes lingering validation states so code processing is 100% clean
+            ModelState.Clear();
+
+            if (!TryValidateModel(model))
             {
                 return View("~/Views/Account/VerifyEmail.cshtml", model);
             }
@@ -105,7 +122,6 @@ namespace KlawQ.Controllers
             string? cachedEmail = HttpContext.Session.GetString("Reg_Email");
             string? cachedFullName = HttpContext.Session.GetString("Reg_FullName");
 
-            // Ensure session hasn't expired and email matches
             if (string.IsNullOrEmpty(cachedCode) || cachedEmail != model.Email)
             {
                 ModelState.AddModelError(string.Empty, "Verification session expired. Please register again.");
@@ -115,13 +131,12 @@ namespace KlawQ.Controllers
             // Check if the user entered the correct code
             if (model.Code != cachedCode)
             {
-                ModelState.AddModelError("Code", "Invalid verification code.");
-                return View("~/Views/Account/VerifyEmail.cshtml", model);
+                // Returns a direct 400 Bad Request error if code is wrong so the AJAX handler in your View knows NOT to show the success popup!
+                return BadRequest("Invalid verification code.");
             }
 
             try
             {
-                // Create Identity user using UserManager so password and security stamps are handled
                 var identityUser = new IdentityUser
                 {
                     UserName = cachedEmail,
@@ -129,19 +144,16 @@ namespace KlawQ.Controllers
                     EmailConfirmed = true
                 };
 
-                // Retrieve plain password stored in session
                 string? plainPassword = HttpContext.Session.GetString("Reg_Password");
                 if (string.IsNullOrEmpty(plainPassword))
                 {
-                    ModelState.AddModelError(string.Empty, "Registration session expired. Please register again.");
-                    return View("~/Views/Account/VerifyEmail.cshtml", model);
+                    return BadRequest("Registration session expired. Please register again.");
                 }
 
                 var createResult = await _userManager.CreateAsync(identityUser, plainPassword);
                 if (!createResult.Succeeded)
                 {
-                    foreach (var err in createResult.Errors) ModelState.AddModelError(string.Empty, err.Description);
-                    return View("~/Views/Account/VerifyEmail.cshtml", model);
+                    return BadRequest(createResult.Errors.First().Description);
                 }
 
                 // Assign default role
@@ -160,7 +172,6 @@ namespace KlawQ.Controllers
                     IdentityUserId = createdUser?.Id
                 };
 
-                // Save the custom profile to its specific table
                 _context.UserProfiles.Add(customUserProfile);
                 await _context.SaveChangesAsync();
 
@@ -172,19 +183,18 @@ namespace KlawQ.Controllers
 
                 TempData["SuccessMessage"] = "Email verified! Registration successful.";
 
-                return RedirectToAction("Login", "Account");
+                // Return redirect target back to the fetch pipeline smoothly
+                return Ok(new { redirectUrl = Url.Action("Login", "Account") });
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, "Error finalizing your account database entry.");
-                return View("~/Views/Account/VerifyEmail.cshtml", model);
+                return StatusCode(500, "Error finalizing your account database entry.");
             }
         }
 
-        // Real functional method for sending emails via MailKit
+        // Method for sending emails via MailKit
         private void SendEmailCode(string email, string code)
         {
-
             string Gmail = "klawqwebapp@gmail.com";
             string AppPassword = "tqwc jyao ujds bedm";
 
@@ -245,7 +255,6 @@ namespace KlawQ.Controllers
 
             try
             {
-                // Generate a fresh code and overwrite the old one in session
                 string newCode = new Random().Next(100000, 999999).ToString();
                 HttpContext.Session.SetString("Reg_VerificationCode", newCode);
 

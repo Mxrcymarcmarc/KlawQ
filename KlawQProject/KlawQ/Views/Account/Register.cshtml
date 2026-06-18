@@ -4,33 +4,55 @@
     ViewData["NavbarMode"] = "none";
 }
 @section styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/register.css" />
 }
 
 <div class="register-container">
     <div class="left">
-        <h1>Create Account</h1>
-        <p>Join us and book your appointment!</p>
+        <p class="heading">Create Account</p>
+        <p class="description">Join us and book your appointment!</p>
+
         <form asp-controller="Register" asp-action="Register" method="post">
             @Html.AntiForgeryToken()
-            <input asp-for="FullName" class="input-field" type="text" placeholder="Username" />
-            <span asp-validation-for="FullName" class="text-danger"></span>
 
-            <input asp-for="Email" class="input-field" type="email" placeholder="Email" />
-            <span asp-validation-for="Email" class="text-danger"></span>
+            <!-- 🌟 FORCED INLINE SPACING FOR USERNAME -->
+            <div style="margin-bottom: 14px; width: 100%;">
+                <input asp-for="FullName" class="input-field" type="text" placeholder="Username" style="margin: 0;" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
 
-            <input asp-for="Password" class="input-field" placeholder="Password" type="password" />
+            <!-- 🌟 FORCED INLINE SPACING FOR EMAIL -->
+            <div style="margin-bottom: 14px; width: 100%;">
+                <input asp-for="Email" class="input-field" type="email" placeholder="Email" style="margin: 0;" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <!-- Password Box Container -->
+            <div style="position: relative; width: 100%; display: block; margin-bottom: 14px;">
+                <input id="passwordField" asp-for="Password" class="input-field" placeholder="Password" type="password" style="padding-right: 45px; margin: 0;" />
+                <span style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--brand-brown); z-index: 5; display: flex; align-items: center; justify-content: center;" onclick="togglePassword('passwordField', 'passwordEyeIcon')">
+                    <i id="passwordEyeIcon" class="fas fa-eye"></i>
+                </span>
+            </div>
             <span asp-validation-for="Password" class="text-danger"></span>
 
-            <input asp-for="ConfirmPassword" class="input-field" placeholder="Confirm Password" type="password" />
+            <!-- Confirm Password Box Container -->
+            <div style="position: relative; width: 100%; display: block; margin-bottom: 14px;">
+                <input id="confirmPasswordField" asp-for="ConfirmPassword" class="input-field" placeholder="Confirm Password" type="password" style="padding-right: 45px; margin: 0;" />
+                <span style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--brand-brown); z-index: 5; display: flex; align-items: center; justify-content: center;" onclick="togglePassword('confirmPasswordField', 'confirmPasswordEyeIcon')">
+                    <i id="confirmPasswordEyeIcon" class="fas fa-eye"></i>
+                </span>
+            </div>
             <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
 
-            <button class="btn" type="submit">Register</button>
+            <button class="btn" type="submit" style="margin-top: 8px;">Register</button>
 
-            <div asp-validation-summary="All" class="text-danger"></div>
+            <div asp-validation-summary="All" class="text-danger" style="margin-top: 12px; font-weight: 500; font-size: 0.9rem;"></div>
         </form>
-        <p style="justify-content: space-between">Already have an account? <a href="/Account/Login">Log In</a></p>
+        <p style="justify-content: space-between; margin-top: 16px;">Already have an account? <a href="/Account/Login">Log In</a></p>
     </div>
+
     <div class="right">
         <div style="text-align:center;">
             <div style="display:flex; align-items:center; justify-content:center; gap:12px;">
@@ -41,3 +63,20 @@
         </div>
     </div>
 </div>
+
+<script>
+    function togglePassword(inputId, iconId) {
+        const inputField = document.getElementById(inputId);
+        const eyeIcon = document.getElementById(iconId);
+
+        if (inputField.type === "password") {
+            inputField.type = "text";
+            eyeIcon.classList.remove("fa-eye");
+            eyeIcon.classList.add("fa-eye-slash");
+        } else {
+            inputField.type = "password";
+            eyeIcon.classList.remove("fa-eye-slash");
+            eyeIcon.classList.add("fa-eye");
+        }
+    }
+</script>

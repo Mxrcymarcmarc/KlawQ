@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Klaw By Krys</title>
-    <link rel="icon" type="image/png" href="~/images/gallery/logoklawqicon.png" />
+    <link rel="icon" type="image/png" href="~/images/gallery/IconLogoKlawQ3.png" />
     <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&family=Indie+Flower&family=Caveat:wght@400;700&family=Kalam:wght@300;400&display=swap">
     <link href="https://fonts.googleapis.com/css2?family=Shadows+Into+Light+Two&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -13,20 +13,20 @@
 </head>
 <body>
     @{
-    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
-    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
-    var navbarMode = ViewData["NavbarMode"]?.ToString();
-    if (string.IsNullOrEmpty(navbarMode))
-    {
-        if (currentController.StartsWith("Admin", StringComparison.OrdinalIgnoreCase))
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+        var navbarMode = ViewData["NavbarMode"]?.ToString();
+        if (string.IsNullOrEmpty(navbarMode))
         {
-            navbarMode = "admin";
+            if (currentController.StartsWith("Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                navbarMode = "admin";
+            }
+            else
+            {
+                navbarMode = "full";
+            }
         }
-        else
-        {
-            navbarMode = "full";
-        }
-    }
     }
 
     <nav class="sticky-nav">
@@ -43,14 +43,14 @@
                     @if (navbarMode == "admin")
                     {
                         <a class="nav-brand" href="/admin">
-                            <img src="~/images/gallery/logoklawqicon.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
+                            <img src="~/images/gallery/IconLogoKlawQ3.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
                             Klaw By Krys
                         </a>
                     }
                     else
                     {
                         <a class="nav-brand" asp-controller="Home" asp-action="Index">
-                            <img src="~/images/gallery/logoklawqicon.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
+                            <img src="~/images/gallery/IconLogoKlawQ3.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
                             Klaw By Krys
                         </a>
                     }
@@ -58,7 +58,7 @@
                 else
                 {
                     <span class="nav-brand" style="cursor: default;">
-                        <img src="~/images/gallery/logoklawqicon.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
+                        <img src="~/images/gallery/IconLogoKlawQ3.png" alt="Klaw By Krys Logo" style="height: 28px; width: auto; vertical-align: middle; margin-right: 6px;" />
                         Klaw By Krys
                     </span>
                 }
@@ -82,8 +82,7 @@
             {
                 <ul class="nav-links">
                     <li>
-                        <a href="/Account/Logout"
-                           onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">
+                        <a href="#" onclick="triggerLogoutConfirmation(event)">
                             Logout
                         </a>
                     </li>
@@ -91,7 +90,7 @@
             }
             else if (navbarMode == "none")
             {
-                <!-- NO NAVBAR (Login/Register/Verification pages) -->
+                <!-- NO NAVBAR -->
             }
         </div>
     </nav>
@@ -134,7 +133,7 @@
                 </ul>
                 <ul class="drawer-menu drawer-menu-bottom">
                     <li>
-                        <a href="/Account/Logout" class="drawer-item" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();">
+                        <a href="#" class="drawer-item" onclick="triggerLogoutConfirmation(event)">
                             <i class="fa-solid fa-right-from-bracket menu-icon"></i>
                             <span class="menu-text">Logout</span>
                         </a>
@@ -145,40 +144,55 @@
         <div id="drawerOverlay" class="drawer-overlay"></div>
 
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const gearBtn = document.getElementById("navGearBtn");
-                const closeBtn = document.getElementById("closeDrawerBtn");
-                const drawer = document.getElementById("sideSettingsDrawer");
-                const overlay = document.getElementById("drawerOverlay");
+                document.addEventListener("DOMContentLoaded", function () {
+                    const gearBtn = document.getElementById("navGearBtn");
+                    const closeBtn = document.getElementById("closeDrawerBtn");
+                    const drawer = document.getElementById("sideSettingsDrawer");
+                    const overlay = document.getElementById("drawerOverlay");
 
-                if (gearBtn && drawer && overlay) {
-                    const openDrawer = function () {
-                        drawer.classList.add("open");
-                        overlay.classList.add("open");
-                        document.body.style.overflow = "hidden";
-                    };
+                    if (gearBtn && drawer && overlay) {
+                        const openDrawer = function () {
+                            drawer.classList.add("open");
+                            overlay.classList.add("open");
+                            document.body.style.overflow = "hidden";
+                        };
 
-                    const closeDrawer = function () {
-                        drawer.classList.remove("open");
-                        overlay.classList.remove("open");
-                        document.body.style.overflow = "";
-                    };
+                        const closeDrawer = function () {
+                            drawer.classList.remove("open");
+                            overlay.classList.remove("open");
+                            document.body.style.overflow = "";
+                        };
 
-                    gearBtn.addEventListener("click", openDrawer);
-                    if (closeBtn) {
-                        closeBtn.addEventListener("click", closeDrawer);
-                    }
-                    overlay.addEventListener("click", closeDrawer);
-
-                    document.addEventListener("keydown", function (e) {
-                        if (e.key === "Escape" && drawer.classList.contains("open")) {
-                            closeDrawer();
+                        gearBtn.addEventListener("click", openDrawer);
+                        if (closeBtn) {
+                            closeBtn.addEventListener("click", closeDrawer);
                         }
-                    });
-                }
-            });
+                        overlay.addEventListener("click", closeDrawer);
+
+                        document.addEventListener("keydown", function (e) {
+                            if (e.key === "Escape" && drawer.classList.contains("open")) {
+                                closeDrawer();
+                            }
+                        });
+                    }
+                });
         </script>
     }
+
+    <!-- POPUP CONTAINER FRAME -->
+    <div id="globalLogoutModalBox" class="logout-modal-overlay">
+        <div class="logout-modal-card">
+            <div class="logout-modal-icon">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <p class="logout-modal-title">Logging Out?</p>
+            <p class="logout-modal-text">Are you sure you want to log out?</p>
+            <div class="logout-modal-actions">
+                <button class="logout-btn-action logout-btn-cancel" onclick="dismissLogoutModal()">Cancel</button>
+                <button class="logout-btn-action logout-btn-confirm" onclick="confirmLogoutPostback()">Log Out</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -205,8 +219,31 @@
         </div>
     </footer>
 
+    <script>
+        function triggerLogoutConfirmation(event) {
+        event.preventDefault();
+
+        const drawer = document.getElementById("sideSettingsDrawer");
+        const overlay = document.getElementById("drawerOverlay");
+        if(drawer && drawer.classList.contains("open")) {
+        drawer.classList.remove("open");
+        overlay.classList.remove("open");
+        document.body.style.overflow = "";
+        }
+
+        document.getElementById("globalLogoutModalBox").classList.add("show");
+        }
+
+        function dismissLogoutModal() {
+        document.getElementById("globalLogoutModalBox").classList.remove("show");
+        }
+
+        function confirmLogoutPostback() {
+        document.getElementById("logoutForm").submit();
+        }
+    </script>
+
     <script src="~/js/cart-popup.js"></script>
     @RenderSection("Scripts", required: false)
-  
 </body>
 </html>
