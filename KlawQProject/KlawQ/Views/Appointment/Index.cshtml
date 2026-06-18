@@ -141,10 +141,10 @@
         margin-top: 8px;
     }
 
-    .upload-area:hover {
-        background-color: var(--panel-pink);
-        border-color: var(--brand-brown);
-    }
+        .upload-area:hover {
+            background-color: var(--panel-pink);
+            border-color: var(--brand-brown);
+        }
 
     .retro-camera {
         font-size: 32px;
@@ -171,6 +171,7 @@
         box-shadow: 0 6px 12px rgba(136,176,75,0.18);
         transition: all 0.25s ease;
     }
+
         .btn-proceed:hover {
             background: #6fa03f !important;
             color: white !important;
@@ -178,7 +179,7 @@
             box-shadow: 0 6px 16px rgba(0,0,0,0.15);
         }
 
-    /* Modal */
+    /* Modal Styling */
     .modal.hidden {
         display: none !important;
     }
@@ -222,7 +223,7 @@
             margin-bottom: 16px;
         }
 
-    /* Back button — inside top-left of the left card */
+    /* Back button */
     .btn-back {
         background: none;
         border: none;
@@ -242,14 +243,14 @@
             opacity: 1;
         }
 
-    /* Calendar */
+    /* Calendar Display Layouts */
     .calendar-month {
         text-align: center;
         color: var(--brand-brown);
         font-weight: 600;
         margin-bottom: 12px;
     }
-    /* Always 6 rows × 7 cols — height never changes between months */
+
     .calendar-grid {
         display: grid;
         grid-template-columns: repeat(7,1fr);
@@ -292,7 +293,6 @@
             pointer-events: none;
         }
 
-    /* Time slots */
     .slot-btn {
         display: block;
         width: 100%;
@@ -329,7 +329,6 @@
         margin: 0 4px;
     }
 
-    /* Day-of-week header labels */
     .dow-header {
         display: grid;
         grid-template-columns: repeat(7,1fr);
@@ -346,7 +345,6 @@
             text-transform: uppercase;
         }
 
-    /* Right panel: flex column so button stays pinned to bottom */
     .time-panel {
         display: flex;
         flex-direction: column;
@@ -375,12 +373,15 @@
         cursor: pointer;
     }
 
-    /* Prevent background scroll when modal is open */
     body.modal-open {
         overflow: hidden;
     }
 
-    @@media(max-width:1000px) {
+    .sticky-nav.nav-hidden {
+        display: none !important;
+    }
+
+    @@media(max - width:1000px) {
         .modal-box {
             flex-direction: column;
         }
@@ -453,14 +454,13 @@
                 <div class="input">
                     <label>Address *</label>
                     <input id="h-address" type="text" placeholder="123 Main St" />
-                </div>  
+                </div>
                 <div class="input" style="grid-column:1 / -1">
                     <label>Special Requests</label>
                     <textarea id="h-notes" placeholder="Tell me about your dream nail design ..."></textarea>
                 </div>
             </div>
 
-            <!-- Unified Design Reference Image Upload Area -->
             <div class="form-group" style="margin-top:20px;">
                 <label style="font-size: 13px; color: #7a5046; margin-bottom: 6px; display: block; font-weight: 600;">Design Reference (Image) *</label>
                 <div class="upload-area" id="designImageUploadArea">
@@ -477,18 +477,14 @@
     </form>
 </div>
 
-<!-- Modal: Date & Time Selection -->
 <div id="bookingModal" class="modal hidden">
     <div class="overlay">
         <div class="modal-box">
-            <!-- Left: Calendar -->
             <div class="modal-frame">
-                <!-- Back button inside the card, top left -->
                 <button type="button" class="btn-back" id="closeBookingModal">&#8592; Back</button>
                 <h4>1. Select Date</h4>
                 <p>Select a specific date on the calendar slot to reserve appointment schedule.</p>
                 <div class="calendar-month" id="calendarMonthLabel">June 2026</div>
-                <!-- Day-of-week labels -->
                 <div class="dow-header">
                     <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
                     <span>Thu</span><span>Fri</span><span>Sat</span>
@@ -500,7 +496,6 @@
                 </div>
             </div>
 
-            <!-- Right: Time Slots — flex column keeps button pinned at bottom -->
             <div class="modal-frame time-panel">
                 <h4>2. Appointment Time</h4>
                 <p id="selectedDateDisplay">Available time slot as of mm/dd/yyyy (Current Date)</p>
@@ -514,8 +509,6 @@
     </div>
 </div>
 
-
-<!-- Modal: Payment Confirmation -->
 <div id="paymentModal" class="modal hidden">
     <div class="overlay">
         <div class="modal-box" style="max-width:500px;">
@@ -539,18 +532,18 @@
     <script>
         // Service box toggle
         document.getElementById('box-studio').addEventListener('click', () => {
-        document.getElementById('box-studio').classList.add('selected');
-        document.getElementById('box-home').classList.remove('selected');
-        document.getElementById('studioFields').style.display = 'grid';
-        document.getElementById('homeFields').style.display = 'none';
-    });
+            document.getElementById('box-studio').classList.add('selected');
+            document.getElementById('box-home').classList.remove('selected');
+            document.getElementById('studioFields').style.display = 'grid';
+            document.getElementById('homeFields').style.display = 'none';
+        });
 
         document.getElementById('box-home').addEventListener('click', () => {
-        document.getElementById('box-home').classList.add('selected');
-        document.getElementById('box-studio').classList.remove('selected');
-        document.getElementById('studioFields').style.display = 'none';
-        document.getElementById('homeFields').style.display = 'grid';
-    });
+            document.getElementById('box-home').classList.add('selected');
+            document.getElementById('box-studio').classList.remove('selected');
+            document.getElementById('studioFields').style.display = 'none';
+            document.getElementById('homeFields').style.display = 'grid';
+        });
 
         let selectedDate = null;
         let selectedSlotHour = null;
@@ -561,12 +554,10 @@
         let tempAppointmentData = null;
         let attachedImageSrc = null;
 
-        // On page load: parse URL parameters and handle image upload elements
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const inspirationImg = urlParams.get('Inspiration_Image');
             const inspirationTitle = urlParams.get('Inspiration_Title');
-
             const fileInput = document.getElementById('designImageFile');
 
             if (inspirationImg) {
@@ -586,6 +577,7 @@
                     uploadArea.style.borderColor = '#e1bdae';
                 }
             }
+
             fileInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -623,7 +615,6 @@
                 }
             });
 
-            // Handle inline clear button click
             document.getElementById('upload-status-text').addEventListener('click', (e) => {
                 if (e.target.id === 'clear-image-btn') {
                     e.preventDefault();
@@ -636,7 +627,6 @@
             });
         });
 
-        // Store form data temporarily (don't save yet)
         async function validateAndStoreFormData() {
             const isHome = document.getElementById('box-home').classList.contains('selected');
 
@@ -686,7 +676,6 @@
             return true;
         }
 
-        // Create appointment in database (called only after payment confirmation)
         async function createAppointment() {
             if (!tempAppointmentData) {
                 alert('Form data not found. Please try again.');
@@ -709,17 +698,18 @@
             return json.appId || json.AppId;
         }
 
-        // Proceed button: validate form then show calendar (don't save yet)
         document.getElementById('proceedBtn').addEventListener('click', async () => {
             const isValid = await validateAndStoreFormData();
             if (!isValid) return;
 
             document.getElementById('bookingModal').classList.remove('hidden');
-            document.body.classList.add('modal-open'); // lock background scroll
+            document.body.classList.add('modal-open');
 
-            // Reset currentMonth to a fresh Date object (not mutated)
+            const navbar = document.querySelector('.sticky-nav');
+            if (navbar) navbar.classList.add('nav-hidden');
+
             currentMonth = new Date();
-            currentMonth.setDate(1); // Normalize to 1st to avoid month-overflow issues
+            currentMonth.setDate(1);
 
             await loadCalendar();
         });
@@ -735,21 +725,20 @@
             grid.innerHTML = '';
 
             const year  = currentMonth.getFullYear();
-            const month = currentMonth.getMonth(); // 0-based
+            const month = currentMonth.getMonth();
 
             document.getElementById('calendarMonthLabel').innerText =
                 currentMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
             const firstDayOfWeek = new Date(year, month, 1).getDay();
             const daysInMonth    = new Date(year, month + 1, 0).getDate();
-            const TOTAL_CELLS    = 42; // always 6 rows × 7 cols — fixed height
+            const TOTAL_CELLS    = 42;
 
             for (let cell = 0; cell < TOTAL_CELLS; cell++) {
                 const dayNumber = cell - firstDayOfWeek + 1;
                 const el = document.createElement('div');
 
                 if (dayNumber < 1 || dayNumber > daysInMonth) {
-                    // Empty filler cell — takes space but shows nothing
                     el.className = 'day empty';
                 } else {
                     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
@@ -764,20 +753,16 @@
                         selectDate(dateStr, el);
                     });
                 }
-
                 grid.appendChild(el);
             }
 
-            // Collect all valid month keys (e.g. "2026-06") from allDays, ignoring undefined entries
             const validDays = allDays.filter(d => d && (d.DateString || d.dateString));
             const monthKeys = [...new Set(validDays.map(d => (d.DateString || d.dateString).substring(0, 7)))].sort();
             const currentKey = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-            // Disable Prev if we are already on the earliest available month
             document.getElementById('prevMonth').disabled =
                 monthKeys.length === 0 || monthKeys[0] === currentKey;
 
-            // Disable Next if we are already on the latest available month
             document.getElementById('nextMonth').disabled =
                 monthKeys.length === 0 || monthKeys[monthKeys.length - 1] === currentKey;
         }
@@ -790,9 +775,8 @@
             selectedSlotHour = null;
             document.getElementById('confirmBooking').disabled = true;
 
-            // Parse date parts manually to avoid UTC-midnight timezone shift
             const [y, m, d] = dateStr.split('-').map(Number);
-            const localDate = new Date(y, m - 1, d); // Local time, no UTC offset issue
+            const localDate = new Date(y, m - 1, d);
             document.getElementById('selectedDateDisplay').innerText =
                 `Available time slot as of ${localDate.toLocaleDateString()} (Current Date)`;
 
@@ -811,10 +795,9 @@
                 const btn = document.createElement('button');
                 btn.className = 'slot-btn';
                 btn.type      = 'button';
-                // Support both PascalCase and camelCase from the API
                 const formattedTime = s.FormattedTime ?? s.formattedTime;
                 const isAvailable   = s.IsAvailable   ?? s.isAvailable   ?? false;
-                const slotHour      = s.SlotHour       ?? s.slotHour;
+                const slotHour      = s.SlotHour      ?? s.slotHour;
                 btn.innerText = formattedTime;
 
                 if (!isAvailable) {
@@ -827,7 +810,6 @@
                         document.getElementById('confirmBooking').disabled = false;
                     });
                 }
-
                 container.appendChild(btn);
             });
         }
@@ -864,7 +846,6 @@
             const appointmentId = await createAppointment();
             if (!appointmentId) return;
 
-            // Send explicit +08:00 offset so the server always receives PH time correctly
             const dateISO = selectedSlotDate + 'T00:00:00+08:00';
             const timeISO = selectedSlotDate + 'T' + String(selectedSlotTime).padStart(2, '0') + ':00:00+08:00';
 
@@ -902,7 +883,10 @@
 
         document.getElementById('closeBookingModal').addEventListener('click', () => {
             document.getElementById('bookingModal').classList.add('hidden');
-            document.body.classList.remove('modal-open'); // restore background scroll
+            document.body.classList.remove('modal-open');
+
+            const navbar = document.querySelector('.sticky-nav');
+            if (navbar) navbar.classList.remove('nav-hidden');
         });
     </script>
 }

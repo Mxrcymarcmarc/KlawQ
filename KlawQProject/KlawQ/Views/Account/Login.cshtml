@@ -1,5 +1,6 @@
 @model KlawQ.Models.LoginViewModel
 @section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/login.css" />
 }
 @{
@@ -10,11 +11,24 @@
     <div class="left">
         <p class="heading">Welcome Back!</p>
         <p class="description">Enter your Username & Password</p>
-        <form asp-action="Login" method="post">
+        <form id="loginActionForm" asp-action="Login" method="post">
             @Html.AntiForgeryToken()
+
+            <div id="serverErrorSummary" class="text-danger mb-3" style="font-weight: 600; font-size: 0.88rem; text-align: left; min-height: 20px;">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            </div>
+
             <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
-            <input asp-for="Email" class="input-field" type="email" placeholder="Email" />
-            <input asp-for="Password" class="input-field" placeholder="Password" type="password" />
+
+            <input asp-for="Email" class="input-field" type="email" placeholder="Email" required />
+
+            <div class="password-wrapper">
+                <input id="passwordInputField" asp-for="Password" class="input-field" placeholder="Password" type="password" required />
+                <span class="password-toggle-eye" onclick="togglePasswordVisibility()">
+                    <i id="eyeIconGlyph" class="fas fa-eye"></i>
+                </span>
+            </div>
+
             <div>
                 <label><input asp-for="RememberMe" /> Remember me</label>
             </div>
@@ -32,3 +46,87 @@
         </div>
     </div>
 </div>
+
+<div id="loginLoadingOverlay" class="login-popup-overlay">
+    <div class="login-popup-card">
+        <div class="popup-icon-box">
+            <i class="fas fa-circle-check"></i>
+        </div>
+        <p class="popup-title">Welcome Back!</p>
+        <p class="popup-text">
+            Redirecting
+            <span class="spinner-dot-flow">
+                <span class="spinner-dot"></span>
+                <span class="spinner-dot"></span>
+                <span class="spinner-dot"></span>
+            </span>
+        </p>
+    </div>
+</div>
+
+<script>
+    // Toggle Password Visibility
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById("passwordInputField");
+        const eyeIcon = document.getElementById("eyeIconGlyph");
+
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            eyeIcon.classList.remove("fa-eye");
+            eyeIcon.classList.add("fa-eye-slash");
+        } else {
+            passwordInput.type = "password";
+            eyeIcon.classList.remove("fa-eye-slash");
+            eyeIcon.classList.add("fa-eye");
+        }
+    }
+
+    // 🌟 FIXED: Submits via fetch pipeline to verify user details BEFORE animating the popup
+    document.getElementById("loginActionForm").addEventListener("submit", async function (e) {
+        if (this.checkValidity()) {
+            e.preventDefault(); // Pause standard submit sequence
+
+            const errorSummary = document.getElementById("serverErrorSummary");
+            errorSummary.innerHTML = ""; // Clear out previous strings
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch(this.action, {
+                    method: "POST",
+                    body: formData
+                });
+
+                // If login succeeds, the controller returns a redirect target URL (either to /admin or Home/Index)
+                if (response.redirected) {
+                    // 1. Fire up the success animation popup overlay!
+                    const overlay = document.getElementById("loginLoadingOverlay");
+                    overlay.classList.add("active");
+
+                    // 2. Perform smooth redirect following the brief visualization delay window
+                    setTimeout(() => {
+                        window.location.href = response.url;
+                    }, 1200);
+                } else {
+                    // If the server returns page HTML instead of redirecting, it means validation/login failed!
+                    const htmlResult = await response.text();
+
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlResult, "text/html");
+
+                    // Pull out the "Invalid login attempt." message generated inside AccountController
+                    const extractedSummary = doc.querySelector("[asp-validation-summary], .text-danger, .validation-summary-errors");
+
+                    if (extractedSummary && extractedSummary.innerText.trim() !== "") {
+                        errorSummary.innerHTML = extractedSummary.innerHTML;
+                    } else {
+                        errorSummary.innerText = "Invalid login attempt. Please check your credentials.";
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                errorSummary.innerText = "A network error occurred. Please try again.";
+            }
+        }
+    });
+</script>

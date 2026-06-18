@@ -1,5 +1,7 @@
 ﻿@model KlawQ.Models.VerifyCodeViewModel
 @section Styles {
+    <!-- Font Awesome CDN for the success check icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="~/css/verify.css" />
 }
 
@@ -12,19 +14,26 @@
         <p class="heading">Verify Email</p>
         <p class="description">We sent a 6-digit code to <strong>@Model.Email</strong>. Enter it below to complete registration.</p>
 
-        <form class="verify-email" asp-action="VerifyEmail" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-            <input type="hidden" asp-for="Email" />
+        <form id="verifyEmailForm" class="verify-email" asp-action="VerifyEmail" method="post" novalidate>
+            @Html.AntiForgeryToken()
 
-            <input asp-for="Code" class="input-field text-center"
+            <div id="serverErrorSummary" class="text-danger mb-3" style="font-weight: 600; font-size: 0.9rem; text-align: center; min-height: 20px;">
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                }
+            </div>
+
+            <input type="hidden" asp-for="Email" id="verifyEmailHidden" />
+
+            <input id="verificationCodeInput" asp-for="Code" type="text" inputmode="numeric" pattern="[0-9]*" class="input-field text-center"
                    placeholder="123456" maxlength="6" autocomplete="off" required />
-            <span asp-validation-for="Code" class="text-danger"></span>
 
             <button type="submit" class="btn">Verify & Register</button>
 
             <p>
-              Didn’t receive a code?
-              <a href="#" id="resendLink">Resend</a>
+                Didn’t receive a code?
+                <a href="#" id="resendLink">Resend</a>
             </p>
 
             <p id="statusMsg"></p>
@@ -34,20 +43,37 @@
     </div>
 </div>
 
+<!-- SUCCESS REGISTRATION POPUP MODAL OVERLAY -->
+<div id="verifySuccessOverlay" class="verify-popup-overlay">
+    <div class="verify-popup-card">
+        <div class="popup-icon-box">
+            <i class="fas fa-circle-check"></i>
+        </div>
+        <p class="popup-title">Registration Successful!</p>
+        <p class="popup-text">
+            Redirecting to login page
+            <span class="spinner-dot-flow">
+                <span class="spinner-dot"></span>
+                <span class="spinner-dot"></span>
+                <span class="spinner-dot"></span>
+            </span>
+        </p>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-    let cooldown = 60; // seconds
-    let canResend = false;
+        let cooldown = 60;
+        let canResend = false;
 
-    const resendLink = document.getElementById("resendLink");
-    const statusMsg = document.getElementById("statusMsg");
+        const resendLink = document.getElementById("resendLink");
+        const statusMsg = document.getElementById("statusMsg");
 
         resendLink.style.pointerEvents = "none";
         let timeLeft = cooldown;
 
         const initialInterval = setInterval(() => {
             resendLink.innerText = `Resend (${timeLeft}s)`;
-
             timeLeft--;
 
             if (timeLeft < 0) {
@@ -58,54 +84,83 @@
             }
         }, 1000);
 
-    resendLink.addEventListener("click", async function (e) {
-        e.preventDefault();
+        resendLink.addEventListener("click", async function (e) {
+            e.preventDefault();
+            if (!canResend) return;
 
-        if (!canResend) return;
+            canResend = false;
+            resendLink.style.pointerEvents = "none";
+            statusMsg.innerText = "Sending new code...";
 
-        canResend = false;
-        resendLink.style.pointerEvents = "none";
+            try {
+                const response = await fetch("/Account/ResendCode", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" }
+                });
 
-        statusMsg.innerText = "Sending new code...";
-
-        try {
-            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-            // Call backend API (change URL depending on your setup)
-            const response = await fetch("/Account/ResendCode", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            });
-
-            if (response.ok) {
-                statusMsg.innerText = "New code sent!";
-            } else {
+                if (response.ok) {
+                    statusMsg.innerText = "New code sent!";
+                } else {
                     const errText = await response.text();
-                statusMsg.innerText = "Failed to resend code." + errText;
+                    statusMsg.innerText = "Failed to resend code. " + errText;
+                }
+            } catch (err) {
+                statusMsg.innerText = "Error sending request. " + err.message;
             }
 
-        } catch (err) {
-            statusMsg.innerText = "Error sending request." + err.message;
-        }
+            let timeLeft = cooldown;
+            const interval = setInterval(() => {
+                resendLink.innerText = `Resend (${timeLeft}s)`;
+                timeLeft--;
 
-        // Start cooldown timer
-        let timeLeft = cooldown;
+                if (timeLeft < 0) {
+                    clearInterval(interval);
+                    canResend = true;
+                    resendLink.style.pointerEvents = "auto";
+                    resendLink.innerText = "Resend";
+                    statusMsg.innerText = "";
+                }
+            }, 1000);
+        });
 
-        const interval = setInterval(() => {
-            resendLink.innerText = `Resend (${timeLeft}s)`;
+        document.getElementById("verifyEmailForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
 
-            timeLeft--;
+            const errorSummary = document.getElementById("serverErrorSummary");
+            errorSummary.innerHTML = "";
 
-            if (timeLeft < 0) {
-                clearInterval(interval);
-                canResend = true;
-                resendLink.style.pointerEvents = "auto";
-                resendLink.innerText = "Resend";
-                statusMsg.innerText = "";
+            const codeField = document.getElementById("verificationCodeInput");
+            if (codeField.value.trim().length !== 6) {
+                errorSummary.innerText = "The verification code must be exactly 6 digits.";
+                return;
             }
-        }, 1000);
-    });
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch(this.action, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (response.ok) {
+                    errorSummary.innerHTML = "";
+
+                    const overlay = document.getElementById("verifySuccessOverlay");
+                    overlay.classList.add("active");
+
+                    setTimeout(() => {
+                        window.location.href = "/Account/Login";
+                    }, 1500);
+                } else {
+                    const errorText = await response.text();
+                    errorSummary.innerText = errorText || "Invalid verification code. Please try again.";
+                }
+            } catch (err) {
+                console.error(err);
+                errorSummary.innerText = "A network error occurred. Please try again.";
+            }
+        });
     </script>
 
     @{

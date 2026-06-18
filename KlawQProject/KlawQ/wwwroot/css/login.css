@@ -16,7 +16,7 @@ body {
 }
 
 .login-container {
-    max-width: clamp(600px, 85vw, 1100px); /* grows/shrinks with viewport */
+    max-width: clamp(600px, 85vw, 1100px);
     width: 90%;
     margin: 40px auto;
     display: flex;
@@ -78,12 +78,14 @@ body {
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(0,0,0,0.15);
     }
+
 .right .logo-circle {
-    width: 120px;
-    height: 120px;
+    width: 60px;
+    height: 60px;
     background: var(--accent-pink);
     border-radius: 50%;
-    margin: 0 auto 12px;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .right h2 {
@@ -97,21 +99,12 @@ body {
     max-width: 240px;
 }
 
-.right .logo-circle {
-    width: 60px;
-    height: 60px;
-    background: var(--accent-pink);
-    border-radius: 50%;
-    margin: 0;
-    flex-shrink: 0;
-}
-
 .heading {
     font-family: 'Shadows Into Light Two', cursive;
     color: var(--brand-brown);
-    font-size: clamp(36px, 5vw, 80px); /* never too big or too small */
+    font-size: clamp(36px, 5vw, 80px);
     margin: 0 0 16px;
-    white-space: nowrap; /* keeps it on one line */
+    white-space: nowrap;
 }
 
 .description {
@@ -124,7 +117,7 @@ body {
 .brand-name {
     font-family: 'Shadows Into Light Two', cursive;
     color: var(--brand-brown);
-    font-size: clamp(24px, 3.5vw, 50px); /* never too big or too small */
+    font-size: clamp(24px, 3.5vw, 50px);
     margin: 0 0 16px;
     white-space: nowrap;
 }
@@ -136,8 +129,149 @@ body {
     white-space: nowrap;
 }
 
+/* 👁️ PASSWORD WRAPPER & TOGGLE EYE */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+    .password-wrapper .input-field {
+        padding-right: 45px; 
+    }
+
+.password-toggle-eye {
+    position: absolute;
+    right: 16px;
+    cursor: pointer;
+    color: var(--brand-brown);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: calc(50% - 3px); 
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    z-index: 5;
+}
+
+.login-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(139, 75, 59, 0.25);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+    .login-popup-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+.login-popup-card {
+    background-color: #ffffff;
+    padding: 2.5rem 3.5rem;
+    border-radius: 24px;
+    border: 2px solid var(--panel-pink);
+    box-shadow: 0 12px 32px rgba(139, 75, 59, 0.12);
+    text-align: center;
+    transform: scale(0.85);
+    transition: transform 0.3s ease;
+    max-width: 420px;
+    width: 90%;
+}
+
+.login-popup-overlay.active .login-popup-card {
+    transform: scale(1);
+}
+
+.popup-icon-box {
+    color: var(--cta-green);
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.popup-title {
+    font-family: 'Shadows Into Light Two', cursive;
+    font-size: 2.5rem;
+    color: var(--brand-brown);
+    margin: 0 0 0.5rem 0;
+}
+
+.popup-text {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--font-brown);
+    margin: 0;
+    font-size: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* DOT SPINNER FLOW */
+.spinner-dot-flow {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.spinner-dot {
+    width: 5px;
+    height: 5px;
+    background-color: var(--font-brown);
+    border-radius: 50%;
+    animation: dotPulse 1.4s infinite ease-in-out both;
+}
+
+    .spinner-dot:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .spinner-dot:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    70% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes dotPulse {
+    0%, 80%, 100% {
+        transform: scale(0);
+    }
+
+    40% {
+        transform: scale(1);
+    }
+}
+
 @media (max-width: 768px) {
-    .register-container {
+    .login-container { 
         flex-direction: column;
         width: 95%;
     }
@@ -153,7 +287,7 @@ body {
     }
 
     .heading {
-        font-size: 40px; /* prevent overflow on small screens */
+        font-size: 40px;
     }
 
     .description {

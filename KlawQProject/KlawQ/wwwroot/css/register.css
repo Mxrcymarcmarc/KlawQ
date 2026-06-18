@@ -16,7 +16,7 @@ body {
 }
 
 .register-container {
-    max-width: clamp(600px, 85vw, 1100px); /* grows/shrinks with viewport */
+    max-width: clamp(600px, 85vw, 1100px);
     width: 90%;
     margin: 40px auto;
     display: flex;
@@ -53,6 +53,7 @@ body {
     padding: clamp(10px, 1.5vw, 14px) 16px;
     font-size: clamp(13px, 1.5vw, 16px);
     width: 100%;
+    /* 🌟 FIXED: Restored the default vertical margins for standard open inputs */
     margin: 6px 0 12px;
     border-radius: 14px;
     border: none;
@@ -79,40 +80,13 @@ body {
         box-shadow: 0 6px 16px rgba(0,0,0,0.15);
     }
 
-.google-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 11px 16px;
-    margin-top: 16px;
-    border: 1px solid #ddd;
-    border-radius: 25px;
-    background: white;
-    color: #444;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-    .google-btn img {
-        width: 18px;
-        height: 18px;
-    }
-
-    .google-btn:hover {
-        background: #f7f7f7;
-        border-color: #ccc;
-        transform: translateY(-1px);
-    }
 .right .logo-circle {
-    width: 120px;
-    height: 120px;
+    width: 60px;
+    height: 60px;
     background: var(--accent-pink);
     border-radius: 50%;
-    margin: 0 auto 12px;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .right h2 {
@@ -126,21 +100,12 @@ body {
     max-width: 240px;
 }
 
-.right .logo-circle {
-    width: 60px;
-    height: 60px;
-    background: var(--accent-pink);
-    border-radius: 50%;
-    margin: 0;
-    flex-shrink: 0;
-}
-
 .heading {
     font-family: 'Shadows Into Light Two', cursive;
     color: var(--brand-brown);
     font-size: clamp(36px, 5vw, 80px);
     margin: 0 0 16px;
-    white-space: nowrap; /* keeps it on one line */
+    white-space: nowrap;
 }
 
 .description {
@@ -148,12 +113,13 @@ body {
     color: var(--font-brown);
     font-size: clamp(14px, 2vw, 25px);
     white-space: nowrap;
+    margin-bottom: 12px;
 }
 
 .brand-name {
     font-family: 'Shadows Into Light Two', cursive;
     color: var(--brand-brown);
-    font-size: clamp(24px, 3.5vw, 50px); /* never too big or too small */
+    font-size: clamp(24px, 3.5vw, 50px);
     margin: 0 0 16px;
     white-space: nowrap;
 }
@@ -165,6 +131,35 @@ body {
     white-space: nowrap;
 }
 
+.password-wrapper {
+    position: relative;
+    width: 100%;
+    display: block;
+    margin: 6px 0 12px;
+}
+
+    .password-wrapper .input-field {
+        padding-right: 45px;
+    }
+
+.password-toggle-eye {
+    position: absolute;
+    right: 16px;
+    cursor: pointer;
+    color: var(--brand-brown);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    z-index: 5;
+    transition: color 0.2s;
+}
+
+    .password-toggle-eye:hover {
+        color: var(--font-brown);
+    }
 
 @media (max-width: 768px) {
     .register-container {
@@ -183,7 +178,7 @@ body {
     }
 
     .heading {
-        font-size: 40px; /* prevent overflow on small screens */
+        font-size: 40px;
     }
 
     .description {
