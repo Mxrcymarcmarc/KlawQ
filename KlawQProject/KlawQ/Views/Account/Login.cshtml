@@ -11,6 +11,15 @@
     <div class="left">
         <p class="heading">Welcome Back!</p>
         <p class="description">Enter your Username & Password</p>
+
+        @if (TempData["LoggedOutMessage"] != null)
+        {
+            <div class="logout-alert-box" style="display: flex; align-items: center; gap: 10px; background-color: #eef7e4 !important; border: 1px solid #88b04b; color: #4b6b28; padding: 12px 16px; border-radius: 14px; margin-bottom: 16px; font-family: 'Montserrat', sans-serif; font-size: 0.9rem; font-weight: 500; width: 100%; box-sizing: border-box;">
+                <i class="fas fa-circle-check" style="color: #88b04b; font-size: 1.1rem; flex-shrink: 0;"></i>
+                <span>@TempData["LoggedOutMessage"]</span>
+            </div>
+        }
+
         <form id="loginActionForm" asp-action="Login" method="post">
             @Html.AntiForgeryToken()
 
@@ -65,7 +74,6 @@
 </div>
 
 <script>
-    // Toggle Password Visibility
     function togglePasswordVisibility() {
         const passwordInput = document.getElementById("passwordInputField");
         const eyeIcon = document.getElementById("eyeIconGlyph");
@@ -81,13 +89,15 @@
         }
     }
 
-    // 🌟 FIXED: Submits via fetch pipeline to verify user details BEFORE animating the popup
     document.getElementById("loginActionForm").addEventListener("submit", async function (e) {
         if (this.checkValidity()) {
-            e.preventDefault(); // Pause standard submit sequence
+            e.preventDefault();
+
+            const logoutBox = document.querySelector(".logout-alert-box");
+            if (logoutBox) logoutBox.style.display = "none";
 
             const errorSummary = document.getElementById("serverErrorSummary");
-            errorSummary.innerHTML = ""; // Clear out previous strings
+            errorSummary.innerHTML = "";
 
             const formData = new FormData(this);
 
@@ -97,24 +107,19 @@
                     body: formData
                 });
 
-                // If login succeeds, the controller returns a redirect target URL (either to /admin or Home/Index)
                 if (response.redirected) {
-                    // 1. Fire up the success animation popup overlay!
                     const overlay = document.getElementById("loginLoadingOverlay");
                     overlay.classList.add("active");
 
-                    // 2. Perform smooth redirect following the brief visualization delay window
                     setTimeout(() => {
                         window.location.href = response.url;
                     }, 1200);
                 } else {
-                    // If the server returns page HTML instead of redirecting, it means validation/login failed!
                     const htmlResult = await response.text();
 
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlResult, "text/html");
 
-                    // Pull out the "Invalid login attempt." message generated inside AccountController
                     const extractedSummary = doc.querySelector("[asp-validation-summary], .text-danger, .validation-summary-errors");
 
                     if (extractedSummary && extractedSummary.innerText.trim() !== "") {
