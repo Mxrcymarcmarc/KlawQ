@@ -138,7 +138,7 @@ body {
 }
 
     .password-wrapper .input-field {
-        padding-right: 45px; 
+        padding-right: 45px;
     }
 
 .password-toggle-eye {
@@ -149,12 +149,13 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    top: calc(50% - 3px); 
+    top: calc(50% - 3px);
     transform: translateY(-50%);
     font-size: 1.1rem;
     z-index: 5;
 }
 
+/* 🔔 REDIRECT MODAL SCREEN LAYOUT OVERLAYS */
 .login-popup-overlay {
     position: fixed;
     top: 0;
@@ -188,6 +189,7 @@ body {
     transition: transform 0.3s ease;
     max-width: 420px;
     width: 90%;
+    box-sizing: border-box;
 }
 
 .login-popup-overlay.active .login-popup-card {
@@ -218,7 +220,7 @@ body {
     gap: 8px;
 }
 
-/* DOT SPINNER FLOW */
+/* DOT SPINNER FLOW ANIMATION PACKET */
 .spinner-dot-flow {
     display: inline-flex;
     gap: 4px;
@@ -271,7 +273,7 @@ body {
 }
 
 @media (max-width: 768px) {
-    .login-container { 
+    .login-container {
         flex-direction: column;
         width: 95%;
     }
@@ -292,5 +294,41 @@ body {
 
     .description {
         font-size: 16px;
+    }
+}
+
+.logout-alert-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #eef7e4 !important; 
+    border: 1px solid var(--cta-green); 
+    color: #4b6b28; 
+    padding: 12px 16px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    width: 100%;
+    box-sizing: border-box;
+    animation: alertFadeIn 0.3s ease;
+}
+
+    .logout-alert-box i {
+        color: var(--cta-green);
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+@keyframes alertFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

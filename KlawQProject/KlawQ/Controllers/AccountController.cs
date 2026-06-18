@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KlawQ.Data;
+using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
@@ -39,15 +40,11 @@ namespace KlawQ.Controllers
 
             if (result.Succeeded)
             {
-                // Assign "User" role by default
                 await _userManager.AddToRoleAsync(user, "User");
-
-                // Sign in the new user
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 return RedirectToAction("Index", "Home");
             }
 
-            // Add errors to ModelState
             foreach (var error in result.Errors)
             {
                 ModelState.AddModelError(string.Empty, error.Description);
@@ -91,6 +88,10 @@ namespace KlawQ.Controllers
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
+
+            // 🌟 ADDED: TempData string assignment tracking state
+            TempData["LoggedOutMessage"] = "You have been successfully logged out. See you again soon!";
+
             return RedirectToAction("Login", "Account");
         }
 
@@ -118,6 +119,10 @@ namespace KlawQ.Controllers
         public async Task<IActionResult> LogoutGet()
         {
             await _signInManager.SignOutAsync();
+
+            // 🌟 ADDED: Fallback security parameter tracking for GET link triggers
+            TempData["LoggedOutMessage"] = "You have been successfully logged out. See you again soon!";
+
             return RedirectToAction("Login", "Account");
         }
 
