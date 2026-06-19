@@ -205,6 +205,24 @@ namespace KlawQ.Controllers
             }
             vm.ProductQuantities = quantities;
 
+            // Enforce stock warning check
+            foreach (var p in products)
+            {
+                var isPressOn = string.Equals(p.Product_Type, "PressOn", StringComparison.OrdinalIgnoreCase);
+                if (isPressOn)
+                {
+                    int requestedQty = quantities.TryGetValue(p.ProductID, out var q) ? q : 1;
+                    if (p.Product_Stock <= 0)
+                    {
+                        ModelState.AddModelError("", $"The product '{p.Product_Name}' is currently out of stock. Please remove it from your cart before checking out.");
+                    }
+                    else if (requestedQty > p.Product_Stock)
+                    {
+                        ModelState.AddModelError("", $"The product '{p.Product_Name}' only has {p.Product_Stock} item(s) in stock, but {requestedQty} was requested.");
+                    }
+                }
+            }
+
             return View(vm);
         }
 
@@ -223,7 +241,31 @@ namespace KlawQ.Controllers
                     return View("CheckoutStandard", new OrderStartViewModel { Products = [], Submit = model });
                 }
 
-                if (!ModelState.IsValid) return View("CheckoutStandard", new OrderStartViewModel { Products = await _context.Products.Where(p => model.ProductIds.Contains(p.ProductID)).ToListAsync(), Submit = model });
+                var selectedProducts = await _context.Products.Where(p => model.ProductIds.Contains(p.ProductID)).ToListAsync();
+
+                // Enforce stock validations
+                for (int i = 0; i < model.ProductIds.Length; i++)
+                {
+                    var matchingProduct = selectedProducts.FirstOrDefault(p => p.ProductID == model.ProductIds[i]);
+                    if (matchingProduct != null)
+                    {
+                        var isPressOn = string.Equals(matchingProduct.Product_Type, "PressOn", StringComparison.OrdinalIgnoreCase);
+                        if (isPressOn)
+                        {
+                            int targetQty = (model.Quantities != null && model.Quantities.Length > i && model.Quantities[i] > 0) ? model.Quantities[i] : 1;
+                            if (matchingProduct.Product_Stock <= 0)
+                            {
+                                ModelState.AddModelError("", $"The product '{matchingProduct.Product_Name}' is currently out of stock.");
+                            }
+                            else if (targetQty > matchingProduct.Product_Stock)
+                            {
+                                ModelState.AddModelError("", $"The product '{matchingProduct.Product_Name}' only has {matchingProduct.Product_Stock} item(s) in stock, but {targetQty} was requested.");
+                            }
+                        }
+                    }
+                }
+
+                if (!ModelState.IsValid) return View("CheckoutStandard", new OrderStartViewModel { Products = selectedProducts, Submit = model });
 
                 var handFile = Request.Form.Files.GetFile("HandPhoto") ?? (Request.Form.Files.Count > 0 ? Request.Form.Files[0] : null);
                 if (handFile != null)
@@ -235,7 +277,7 @@ namespace KlawQ.Controllers
                     }
                 }
 
-                if (!ModelState.IsValid) return View("CheckoutStandard", new OrderStartViewModel { Products = await _context.Products.Where(p => model.ProductIds.Contains(p.ProductID)).ToListAsync(), Submit = model });
+                if (!ModelState.IsValid) return View("CheckoutStandard", new OrderStartViewModel { Products = selectedProducts, Submit = model });
 
                 string? handBase64 = null;
                 if (handFile != null && ModelState.IsValid)
@@ -246,7 +288,6 @@ namespace KlawQ.Controllers
                 }
 
                 // Calculate cumulative checkout price
-                var selectedProducts = await _context.Products.Where(p => model.ProductIds.Contains(p.ProductID)).ToListAsync();
                 decimal calculatedBillTotal = 0;
                 for (int i = 0; i < model.ProductIds.Length; i++)
                 {

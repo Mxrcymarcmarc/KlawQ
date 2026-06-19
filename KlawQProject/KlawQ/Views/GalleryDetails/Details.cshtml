@@ -320,12 +320,37 @@
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
-            .info-card {
-                padding: 24px;
-                min-height: auto;
+            .out-of-stock-container {
+                width: 100%;
+                background: #fff0f2;
+                border: 1.5px solid #f9d5dc;
+                padding: 16px 20px;
+                border-radius: 12px;
+                text-align: center;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                margin-bottom: 10px;
             }
-            .product-title {
-                font-size: 2.4rem;
+            .out-of-stock-text {
+                color: #d81b60;
+                font-weight: 700;
+                font-family: var(--secondary-font);
+                font-size: 1.1rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .out-of-stock-subtext {
+                color: #8b686f;
+                font-size: 0.9rem;
+                font-family: var(--secondary-font);
+                margin: 0;
             }
         }
     </style>
@@ -358,6 +383,23 @@
             <div class="price-section">
                 <span class="price-label">Price</span>
                 <span class="price-amount">₱@Model.Product_Price</span>
+                @if (Model.Product_Type != null && Model.Product_Type.ToLower().Contains("press"))
+                {
+                    <div class="stock-status-wrapper" style="margin-top: 10px; display: flex; justify-content: center; align-items: center;">
+                        @if (Model.Product_Stock > 0)
+                        {
+                            <span class="stock-badge in-stock" style="display: inline-flex; align-items: center; gap: 6px; background-color: #eef7e8; color: #528038; padding: 6px 14px; border-radius: 20px; font-family: var(--secondary-font); font-size: 0.9rem; font-weight: 600; border: 1px solid #d6ebd0;">
+                                <i class="fas fa-check-circle"></i> Stock: @Model.Product_Stock sets available
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="stock-badge out-of-stock" style="display: inline-flex; align-items: center; gap: 6px; background-color: #fff0f2; color: #d81b60; padding: 6px 14px; border-radius: 20px; font-family: var(--secondary-font); font-size: 0.9rem; font-weight: 600; border: 1px solid #f9d5dc;">
+                                <i class="fas fa-exclamation-circle"></i> Out of stock
+                            </span>
+                        }
+                    </div>
+                }
             </div>
 
             <hr class="divider" />
@@ -376,30 +418,46 @@
                 }
                 else if (Model.Product_Type != null && Model.Product_Type.ToLower().Contains("press"))
                 {
-                    <div class="btn-action-row">
-                        <a href="/Order/CheckoutStandard?productId=@Model.ProductID" class="btn-details-primary">Buy Now</a>
-
-                        <button type="button" class="favorite-btn btn-heart @(((ViewData["IsFavorited"] as bool?)==true) ? "favorited" : "")" data-id="@Model.ProductID" aria-label="Toggle favorite">
-                            <i class="fa-regular fa-heart heart-hollow"></i>
-                            <i class="fa-solid fa-heart heart-filled"></i>
-                        </button>
-                    </div>
-
-                    <div class="btn-action-row">
-                        <button class="btn-details-primary" data-id="@Model.ProductID" id="addCartBtn">
-                            <i class="fas fa-cart-plus"></i> Add to Cart
-                        </button>
-
-                        <div class="qty-controller">
-                            <button type="button" class="qty-control-btn" id="qty-minus" aria-label="Decrease quantity">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                            <input type="number" id="addQty" min="1" value="1" readonly class="qty-display" />
-                            <button type="button" class="qty-control-btn" id="qty-plus" aria-label="Increase quantity">
-                                <i class="fas fa-plus"></i>
+                    if (Model.Product_Stock <= 0)
+                    {
+                        <div class="out-of-stock-container">
+                            <h3 class="out-of-stock-text"><i class="fas fa-exclamation-circle"></i> Out of Stock</h3>
+                            <p class="out-of-stock-subtext">This press-on set is currently sold out. Mark it as a favorite to save it for later!</p>
+                        </div>
+                        <div class="btn-action-row" style="justify-content: center;">
+                            <button type="button" class="favorite-btn btn-heart @(((ViewData["IsFavorited"] as bool?)==true) ? "favorited" : "")" data-id="@Model.ProductID" aria-label="Toggle favorite">
+                                <i class="fa-regular fa-heart heart-hollow"></i>
+                                <i class="fa-solid fa-heart heart-filled"></i>
                             </button>
                         </div>
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="btn-action-row">
+                            <a href="/Order/CheckoutStandard?productId=@Model.ProductID" class="btn-details-primary">Buy Now</a>
+
+                            <button type="button" class="favorite-btn btn-heart @(((ViewData["IsFavorited"] as bool?)==true) ? "favorited" : "")" data-id="@Model.ProductID" aria-label="Toggle favorite">
+                                <i class="fa-regular fa-heart heart-hollow"></i>
+                                <i class="fa-solid fa-heart heart-filled"></i>
+                            </button>
+                        </div>
+
+                        <div class="btn-action-row">
+                            <button class="btn-details-primary" data-id="@Model.ProductID" id="addCartBtn">
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
+
+                            <div class="qty-controller">
+                                <button type="button" class="qty-control-btn" id="qty-minus" aria-label="Decrease quantity">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" id="addQty" min="1" max="@Model.Product_Stock" value="1" readonly class="qty-display" />
+                                <button type="button" class="qty-control-btn" id="qty-plus" aria-label="Increase quantity">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
                 }
                 else
                 {
@@ -464,7 +522,10 @@
 
                 qtyPlus.addEventListener("click", function () {
                     let val = parseInt(qtyInput.value) || 1;
-                    qtyInput.value = val + 1;
+                    let maxStock = parseInt(qtyInput.getAttribute("max")) || 9999;
+                    if (val < maxStock) {
+                        qtyInput.value = val + 1;
+                    }
                 });
             }
         });

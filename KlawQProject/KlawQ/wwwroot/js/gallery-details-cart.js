@@ -26,6 +26,18 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         const json = await res.json();
         if (json && json.success) {
+          // ensure the newly added item defaults to checked by removing it from unchecked storage
+          try {
+            const val = sessionStorage.getItem("cart_unchecked_products");
+            if (val) {
+              let unchecked = JSON.parse(val);
+              unchecked = unchecked.filter(pId => String(pId) !== String(id));
+              sessionStorage.setItem("cart_unchecked_products", JSON.stringify(unchecked));
+            }
+          } catch (e) {
+            console.error(e);
+          }
+
           // update cart count in header if present
           const cc = document.getElementById("cartCount");
           if (cc) cc.textContent = json.count;

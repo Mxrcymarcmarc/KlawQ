@@ -86,6 +86,12 @@ namespace KlawQ.Controllers
                 var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductID == id);
                 if (product == null) return NotFound(new { success = false, error = "Product not found" });
 
+                var isPressOn = string.Equals(product.Product_Type, "PressOn", StringComparison.OrdinalIgnoreCase);
+                if (isPressOn && product.Product_Stock <= 0)
+                {
+                    return BadRequest(new { success = false, error = "This item is currently out of stock." });
+                }
+
                 var cart = await GetOrCreateCart();
 
                 // determine quantity from form or querystring (default 1)
@@ -94,9 +100,20 @@ namespace KlawQ.Controllers
                 if (!string.IsNullOrWhiteSpace(qtyStr) && int.TryParse(qtyStr, out var q) && q > 0) qty = q;
 
                 var existing = await _context.CartItems.FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.ProductID == id);
+                int targetQty = qty;
                 if (existing != null)
                 {
-                    existing.Quantity += qty;
+                    targetQty += existing.Quantity;
+                }
+
+                if (isPressOn && targetQty > product.Product_Stock)
+                {
+                    return BadRequest(new { success = false, error = $"Only {product.Product_Stock} item(s) are available in stock. You currently have {existing?.Quantity ?? 0} in your cart." });
+                }
+
+                if (existing != null)
+                {
+                    existing.Quantity = targetQty;
                 }
                 else
                 {

@@ -44,6 +44,10 @@
     .gallery-card, .gallery-card.image-card, .custom-request-card{aspect-ratio:1;min-height:260px;max-height:400px;width:100%}
     .gallery-card.image-card{border-color:#fde6ea}
     .gallery-card.image-card img{width:100%;height:100%;object-fit:cover;display:block}
+    .card-link {display:block; height:100%; width:100%;}
+    .gallery-card.out-of-stock img {filter: grayscale(40%) blur(0.5px); opacity: 0.8;}
+    .out-of-stock-overlay {position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.6); display: flex; align-items: center; justify-content: center; z-index: 2; pointer-events: none;}
+    .out-of-stock-badge {background: #e2557a; color: white; padding: 6px 14px; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 0.85rem; border-radius: 20px; box-shadow: 0 4px 8px rgba(226, 85, 122, 0.3); letter-spacing: 0.5px; text-transform: uppercase; pointer-events: none;}
     /* center custom request content */
     .gallery-card.custom-request-card{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0;border:2px dashed #d9a6b2}
     .custom-request-content{text-align:center;padding:20px}
@@ -113,7 +117,14 @@
                 var isPressOn = (p.Product_Type ?? "").ToLower() == "presson";
                 var dataType = isPressOn ? "presson" : "original";
                 var detailsLink = "/Gallery/Details/" + p.ProductID;
-            <div class="gallery-card image-card" data-type="@dataType">
+                var isOutOfStock = isPressOn && p.Product_Stock <= 0;
+            <div class="gallery-card image-card @(isOutOfStock ? "out-of-stock" : "")" data-type="@dataType">
+                @if (isOutOfStock)
+                {
+                    <div class="out-of-stock-overlay">
+                        <span class="out-of-stock-badge">Out of Stock</span>
+                    </div>
+                }
                 @if (!(User.Identity?.IsAuthenticated == true && User.IsInRole("Admin")))
                 {
                     <button class="favorite-btn btn-heart @(favIds.Contains(p.ProductID) ? "favorited" : "")" data-id="@p.ProductID" aria-label="Favorite this set">
@@ -121,7 +132,7 @@
                         <i class="fa-solid fa-heart heart-filled"></i>
                     </button>
                 }
-                <a class="card-link" href="@detailsLink" style="display:block">
+                <a class="card-link" href="@detailsLink" style="display:block; height:100%; width:100%;">
                     @{
                         // Robustly obtain a title for the alt attribute in case the model property name differs
                         var titleObj = p.GetType().GetProperty("Product_Title")?.GetValue(p)

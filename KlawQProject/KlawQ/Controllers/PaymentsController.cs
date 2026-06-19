@@ -1,9 +1,9 @@
-using KlawQ.Data;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using System.Collections.Concurrent;
 using System.Net.Http.Json;
 using System.Text.Json;
+using KlawQ.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace KlawQ.Controllers
 {
@@ -125,7 +125,7 @@ namespace KlawQ.Controllers
 
         // Polling endpoint for client to check payment status.
         // Covers Abstraction: Uses the thread-safe ConcurrentDictionary class to lookup state values without exposing underlying thread synchronization locks.
-        [HttpGet("status")] 
+        [HttpGet("status")]
         public IActionResult Status([FromQuery] string paymentId)
         {
             if (string.IsNullOrWhiteSpace(paymentId)) return BadRequest(new { success = false, error = "missing paymentId" });

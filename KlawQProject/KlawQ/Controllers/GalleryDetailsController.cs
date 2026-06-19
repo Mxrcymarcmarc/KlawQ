@@ -33,7 +33,7 @@ namespace KlawQ.Controllers
 
                 // load related products for thumbnails (exclude current) and match the same product type
                 var related = await _context.Products
-                    .Where(p => p.ProductID != id && string.Equals(p.Product_Type, product.Product_Type, StringComparison.OrdinalIgnoreCase))
+                    .Where(p => p.ProductID != id && p.Product_Type == product.Product_Type)
                     .OrderByDescending(p => p.ProductID)
                     .Take(12)
                     .ToListAsync();

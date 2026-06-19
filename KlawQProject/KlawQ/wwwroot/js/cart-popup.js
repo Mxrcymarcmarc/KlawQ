@@ -2,6 +2,32 @@ document.addEventListener("DOMContentLoaded", function () {
   const cartLink = document.querySelector(".cart-button a");
   const cartCountEl = document.getElementById("cartCount");
 
+  function getUncheckedProductIds() {
+    try {
+      const val = sessionStorage.getItem("cart_unchecked_products");
+      return val ? JSON.parse(val) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function setProductUnchecked(productId, isUnchecked) {
+    try {
+      let unchecked = getUncheckedProductIds();
+      productId = String(productId);
+      if (isUnchecked) {
+        if (!unchecked.includes(productId)) {
+          unchecked.push(productId);
+        }
+      } else {
+        unchecked = unchecked.filter(id => id !== productId);
+      }
+      sessionStorage.setItem("cart_unchecked_products", JSON.stringify(unchecked));
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   // create modal container
   const modal = document.createElement("div");
   modal.id = "cartModal";
@@ -65,7 +91,10 @@ document.addEventListener("DOMContentLoaded", function () {
           itemEl.setAttribute("data-cartitemid", it.id);
           itemEl.setAttribute("data-price", it.price);
           itemEl.setAttribute("data-qty", it.qty);
-          itemEl.setAttribute("data-selected", "true");
+
+          const uncheckedList = getUncheckedProductIds();
+          const isInitiallySelected = !uncheckedList.includes(String(it.productId));
+          itemEl.setAttribute("data-selected", isInitiallySelected ? "true" : "false");
 
           // Image container with checkbox overlay
           const imgContainer = document.createElement("div");
@@ -81,25 +110,37 @@ document.addEventListener("DOMContentLoaded", function () {
           const checkbox = document.createElement("button");
           checkbox.className = "cart-include-toggle";
           checkbox.style.cssText =
-            "position:absolute;bottom:4px;right:4px;width:28px;height:28px;border-radius:4px;border:2px solid #88b04b;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;padding:0;font-weight:bold;color:#88b04b;transition:all 0.2s ease";
-          checkbox.innerHTML = "✓";
+            "position:absolute;bottom:4px;right:4px;width:28px;height:28px;border-radius:4px;border:2px solid #88b04b;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;padding:0;font-weight:bold;transition:all 0.2s ease";
           checkbox.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
+
+          // Set initial checkmark state styling (match Checked state color if initially selected)
+          if (isInitiallySelected) {
+            checkbox.innerHTML = "✓";
+            checkbox.style.background = "#88b04b";
+            checkbox.style.color = "#fff";
+          } else {
+            checkbox.innerHTML = "";
+            checkbox.style.background = "#fff";
+            checkbox.style.color = "#88b04b";
+          }
 
           checkbox.addEventListener("click", (e) => {
             e.preventDefault();
             e.stopPropagation();
             const isSelected = itemEl.getAttribute("data-selected") === "true";
-            itemEl.setAttribute("data-selected", isSelected ? "false" : "true");
+            const nextSelected = !isSelected;
+            itemEl.setAttribute("data-selected", nextSelected ? "true" : "false");
+            setProductUnchecked(it.productId, !nextSelected);
 
-            if (isSelected) {
-              // Unchecked - show hollow box
-              checkbox.innerHTML = "";
-              checkbox.style.background = "#fff";
-            } else {
-              // Checked - show checkmark
+            if (nextSelected) {
+              // Checked - show checkmark (green background, white checkmark)
               checkbox.innerHTML = "✓";
               checkbox.style.background = "#88b04b";
               checkbox.style.color = "#fff";
+            } else {
+              // Unchecked - show hollow box (white background)
+              checkbox.innerHTML = "";
+              checkbox.style.background = "#fff";
             }
             updateTotal();
           });
@@ -129,6 +170,7 @@ document.addEventListener("DOMContentLoaded", function () {
               method: "POST",
               headers: token ? { RequestVerificationToken: token } : {},
             });
+            setProductUnchecked(it.productId, false); // clear unchecked state since it's removed
             await refresh();
           });
 
