@@ -12,24 +12,31 @@ using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
+    /// <summary>
+    /// Controller for managing calendar-related operations.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class CalendarController : ControllerBase
     {
+        // Dependencies for database access and payment processing
         private readonly ApplicationDbContext _context;
+        // Service for handling PayMongo payment processing related to bookings
         private readonly PayMongoService _payMongoService;
-
+        // Time zone information for Philippine Time, used for all date and time operations to ensure consistency across the application
         private static readonly TimeZoneInfo PhilippineTimeZone =
             TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
 
         private const int ALMOST_FULL_THRESHOLD = 5;
 
+        // Constructor to initialize the CalendarController with the necessary dependencies, including the database context for accessing booking and appointment data, and the PayMongoService for handling payment processing related to bookings.
         public CalendarController(ApplicationDbContext context, PayMongoService payMongoService)
         {
             _context = context;
             _payMongoService = payMongoService;
         }
 
+        // Determines the maximum number of booking slots available for a given day of the week.
         private static int GetMaxSlotsForDay(DayOfWeek day) => day switch
         {
             DayOfWeek.Tuesday => 0,
@@ -38,6 +45,7 @@ namespace KlawQ.Controllers
             _ => 4
         };
 
+        // Returns the business hours available for booking on a specific day of the week.
         private static int[] GetBusinessHoursForDay(DayOfWeek day) => day switch
         {
             DayOfWeek.Tuesday => Array.Empty<int>(),
@@ -46,15 +54,19 @@ namespace KlawQ.Controllers
             _ => new[] { 10, 14, 18, 21 }
         };
 
+        // Formats an hour into a human-readable time string (e.g., "10:00 AM").
         private static string GetFormattedTime(int hour) =>
             new DateTime(2000, 1, 1, hour, 0, 0)
                 .ToString("h:mm tt", CultureInfo.InvariantCulture);
 
+        // Returns the current date and time in Philippine Time.
         private static DateTime NowInPH() =>
             TimeZoneInfo.ConvertTime(DateTime.UtcNow, PhilippineTimeZone);
 
+        // Returns the current date (without time) in Philippine Time.
         private static DateTime TodayInPH() => NowInPH().Date;
 
+        // Normalizes a given DateTime to Philippine Time, ensuring consistent date comparisons and storage.
         private static DateTime NormalizeToPH(DateTime dt)
         {
             if (dt.Kind == DateTimeKind.Utc)
@@ -62,23 +74,30 @@ namespace KlawQ.Controllers
             return DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
         }
 
-        // 🌟 FIXED: Accurately tracks Admin Blocks using TodayInPH to trigger the 3rd-month look-ahead seamlessly
+        // Provides the current availability status for each day in the calendar view, factoring in both existing bookings and admin-configured blocks.
         [HttpGet("current-view-status")]
         public async Task<IActionResult> GetCurrentCalendarView()
         {
             DateTime todayPH = TodayInPH(); // Base look-ahead logic completely on PH localized time coordinates
 
+            // Always include the current month in the response to ensure the calendar view can render at least one month of data, even if it is fully booked or blocked
             var currentMonthDays = await GetDaysStatusForMonth(todayPH.Year, todayPH.Month);
             var finalResponse = new List<CalendarDayStatus>(currentMonthDays);
 
+            // Proactively include the next month in the response if the current month is almost fully booked, to allow users to see and plan for upcoming availability without needing to click "next month" in the UI
             DateTime nextMonthDate = todayPH.AddMonths(1);
             var nextMonthDays = await GetDaysStatusForMonth(nextMonthDate.Year, nextMonthDate.Month);
             finalResponse.AddRange(nextMonthDays);
 
-            // 🌟 Evaluates IsAvailable (which already factors in Admin Blocks) using the exact same PH Date boundary line
+            /*DateTime nextnextMonthDate = todayPH.AddMonths(2);
+            var nextnextMonthDays = await GetDaysStatusForMonth(nextnextMonthDate.Year, nextnextMonthDate.Month);
+            finalResponse.AddRange(nextnextMonthDays);*/ // For testing only: force show 2nd month in the calendar view regardless of availability status
+
+            // Evaluates IsAvailable (which already factors in Admin Blocks) using the exact same PH Date boundary line
             int availableDaysLeft = currentMonthDays
                 .Count(d => d.IsAvailable && DateTime.ParseExact(d.DateString, "yyyy-MM-dd", CultureInfo.InvariantCulture) >= todayPH);
 
+            // If the current month is almost fully booked, also include the month after next in the response to give users more visibility into future availability without needing to click "next month" multiple times in the UI
             if (availableDaysLeft <= ALMOST_FULL_THRESHOLD)
             {
                 DateTime nextNextMonthDate = todayPH.AddMonths(2);
@@ -93,16 +112,24 @@ namespace KlawQ.Controllers
         [HttpGet("day-slots-status")]
         public async Task<IActionResult> GetDaySlotsStatus([FromQuery] string chosenDate)
         {
+            // Validate the date format and ensure it is in the correct "yyyy-MM-dd" format
             if (!DateTime.TryParseExact(chosenDate, "yyyy-MM-dd", CultureInfo.InvariantCulture,
                     DateTimeStyles.None, out DateTime parsedDate))
                 return BadRequest("Invalid date format. Please use yyyy-MM-dd.");
 
+            // Enforce the same PH date boundary logic for slot availability as used in the month view, to prevent any discrepancies between what users see in the calendar and what they can actually book when they select a specific date
             if (parsedDate.Date <= TodayInPH())
                 return Ok(new List<object>());
 
+            // Prevent any bookings for the next day as well, to maintain a consistent buffer period and avoid last-minute bookings that could disrupt scheduling and operations
             if (parsedDate.Date == TodayInPH().AddDays(1))
                 return Ok(new List<object>());
 
+            // Prevent any bookings on Tuesdays, as the shop is closed on that day
+            if (parsedDate.DayOfWeek == DayOfWeek.Tuesday)
+                return Ok(new List<object>());
+
+            // Fetch all existing bookings for the specified date, including their associated appointment details
             var bookingsForDay = await _context.Schedulers
                 .Include(s => s.Appointment)
                 .Where(s => s.Appointment_Date.Date == parsedDate.Date)
@@ -113,14 +140,18 @@ namespace KlawQ.Controllers
                 .Where(o => o.TargetDate.Date == parsedDate.Date)
                 .ToListAsync();
 
+            // Determine the valid business hours for the specified day of the week, based on the shop's operational schedule
             int[] businessHours = GetBusinessHoursForDay(parsedDate.DayOfWeek);
             DateTime nowPH = NowInPH();
             var hourlySlots = new List<object>();
 
+            // Iterate through each valid business hour and determine its availability status based on existing bookings, admin blocks, and whether the slot is in the past
             foreach (int hour in businessHours)
             {
+                // Construct the exact DateTime for the current hour slot on the specified date
                 DateTime exactSlotTime = parsedDate.Date.AddHours(hour);
 
+                // Check if this specific hour slot has already been booked and paid for, considering only appointments that are either pending or confirmed
                 bool isAlreadyBooked = bookingsForDay.Any(b =>
                     b.Time_Slot == exactSlotTime &&
                     b.Appointment != null &&
@@ -130,6 +161,7 @@ namespace KlawQ.Controllers
                 // Check if admin blocked either the entire day (null) or this specific business hour slot
                 bool isSlotBlockedByAdmin = adminHourlyBlocks.Any(o => o.BlockedHour == null || o.BlockedHour == hour);
 
+                // Determine the availability of the slot based on whether it is already booked, blocked by admin, or in the past relative to the current Philippine time
                 hourlySlots.Add(new
                 {
                     SlotHour = hour,
@@ -142,12 +174,15 @@ namespace KlawQ.Controllers
             return Ok(hourlySlots);
         }
 
+        // Endpoint to handle booking requests, with comprehensive validation guards and integration with PayMongo for payment processing
         [HttpPost("booking")]
         public async Task<IActionResult> BookSlot([FromBody] BookingRequest request)
         {
+            // Validate the incoming booking request to ensure it contains a valid appointment reference (AppId) and that the requested date and time slot are in the future and not on restricted days
             if (request == null || request.AppId <= 0)
                 return BadRequest("Booking failed: Invalid appointment reference data!");
 
+            // Normalize the incoming date and time slot to Philippine Time to ensure consistent comparisons and storage
             request.Appointment_Date = NormalizeToPH(request.Appointment_Date);
             request.Time_Slot = NormalizeToPH(request.Time_Slot);
 
@@ -161,6 +196,7 @@ namespace KlawQ.Controllers
             if (request.Appointment_Date.Date == TodayInPH().AddDays(1))
                 return BadRequest("Booking failed: You cannot book a time slot for tomorrow!");
 
+            
             var pendingAppointment = await _context.Appointments.FindAsync(request.AppId);
             if (pendingAppointment == null)
                 return BadRequest("Booking failed: Appointment reference not found!");
@@ -176,6 +212,7 @@ namespace KlawQ.Controllers
             if (!validHours.Contains(request.Time_Slot.Hour))
                 return BadRequest("Booking failed: The submitted time slot is not a valid business hour for this day!");
 
+            // Check if the exact time slot has already been booked and paid for, considering only appointments that are either pending or confirmed
             bool isExactSlotTaken = await _context.Schedulers
                 .Include(s => s.Appointment)
                 .AnyAsync(s =>
@@ -185,9 +222,11 @@ namespace KlawQ.Controllers
                     s.Appointment.Down_Payment_Paid &&
                     (s.Appointment.Status == 0 || s.Appointment.Status == 1));
 
+            // If the exact time slot is already taken, return a bad request response indicating that the booking cannot proceed
             if (isExactSlotTaken)
                 return BadRequest("Booking failed: This specific time slot has already been reserved and paid for!");
 
+            // Check if the total number of bookings for the day has reached the maximum operational capacity, based on the shop's schedule and any admin-configured blocks
             int maxSlotsForThisDay = GetMaxSlotsForDay(dayOfWeek);
             int totalBookingsForDay = await _context.Schedulers
                 .Include(s => s.Appointment)
@@ -197,10 +236,12 @@ namespace KlawQ.Controllers
                     s.Appointment.Down_Payment_Paid &&
                     (s.Appointment.Status == 0 || s.Appointment.Status == 1));
 
+            // If the total bookings for the day have reached or exceeded the maximum slots, return a bad request response indicating that the booking cannot proceed
             if (totalBookingsForDay >= maxSlotsForThisDay)
                 return BadRequest("Booking failed: This date has reached full operational capacity!");
             // --- End of Validation Guards ---
 
+            // Create a new Scheduler record to track the booking attempt, associating it with the pending appointment and the requested date and time slot
             var scheduler = new Scheduler
             {
                 AppId = pendingAppointment.AppId,
@@ -208,15 +249,18 @@ namespace KlawQ.Controllers
                 Time_Slot = request.Time_Slot
             };
 
+            // Save the scheduler record to the database to generate a unique SchedulerID, which will be used for tracking the payment process
             _context.Schedulers.Add(scheduler);
             await _context.SaveChangesAsync(); // generates SchedulerID
 
+            // Construct the success and cancel URLs for PayMongo to redirect to after payment processing, including the SchedulerID as a query parameter for tracking
             string domain = $"{Request.Scheme}://{Request.Host}";
             string successUrl = $"{domain}/api/Calendar/payment-success?schedulerId={scheduler.SchedulerID}";
             string cancelUrl = $"{domain}/api/Calendar/payment-cancelled?schedulerId={scheduler.SchedulerID}";
 
             try
             {
+                //
                 string checkoutUrl = await _payMongoService.CreateCheckoutSessionAsync(
                     amountInPhp: 150.00m,
                     description: $"₱150 Reservation Deposit for {pendingAppointment.Full_Name}",
@@ -224,8 +268,11 @@ namespace KlawQ.Controllers
                     cancelUrl: cancelUrl
                 );
 
+                // Return the checkout URL to the client so they can proceed with the payment process
                 return Ok(new { CheckoutUrl = checkoutUrl, Message = "Reservation down-payment initiated." });
             }
+
+            // If there is an exception during the communication with PayMongo, perform a clean-up by removing the scheduler record and the pending appointment (if it hasn't been paid for) to prevent orphaned records and ensure data integrity. Then return a 500 status code with an error message indicating that the payment gateway communication failed.
             catch (Exception ex)
             {
                 _context.Schedulers.Remove(scheduler);
@@ -239,19 +286,23 @@ namespace KlawQ.Controllers
         [HttpGet("payment-success")]
         public async Task<IActionResult> HandlePaymentSuccess([FromQuery] int schedulerId)
         {
+            // Retrieve the scheduler record associated with the provided SchedulerID, including its related appointment details
             var schedulerRecord = await _context.Schedulers
                 .Include(s => s.Appointment)
                 .FirstOrDefaultAsync(s => s.SchedulerID == schedulerId);
 
+            // If the scheduler record is not found, return a 404 Not Found response indicating that the reservation reference records are missing
             if (schedulerRecord == null)
                 return NotFound("Reservation reference records are missing.");
 
+            // If the scheduler record is found and it has an associated appointment, mark the appointment as paid by setting the Down_Payment_Paid property to true and save the changes to the database
             if (schedulerRecord.Appointment != null)
             {
                 schedulerRecord.Appointment.Down_Payment_Paid = true;
                 await _context.SaveChangesAsync();
             }
 
+            // Return a success HTML page to the client, indicating that the payment has been received and the appointment slot is secured. The page includes a redirect script that automatically navigates the user back to the home page after 5 seconds, as well as a button for immediate return.
             string htmlContent = @"
             <!DOCTYPE html>
             <html>
@@ -347,19 +398,23 @@ namespace KlawQ.Controllers
             return Content(htmlContent, "text/html; charset=utf-8");
         }
 
+        // Payment cancelled by PayMongo : clean up scheduler and appointment records if necessary
         [HttpGet("payment-cancelled")]
         public async Task<IActionResult> HandlePaymentCancelled([FromQuery] int schedulerId)
         {
+            // Retrieve the scheduler record associated with the provided SchedulerID, including its related appointment details
             var schedulerRecord = await _context.Schedulers
                 .Include(s => s.Appointment)
                 .FirstOrDefaultAsync(s => s.SchedulerID == schedulerId);
 
+            // If the scheduler record is found, remove it from the database. Additionally, if there is an associated appointment that has not been paid for, also remove that appointment to prevent orphaned records and ensure data integrity. Save the changes to the database after performing the clean-up operations.
             if (schedulerRecord != null)
             {
                 var pendingAppointment = schedulerRecord.Appointment;
 
                 _context.Schedulers.Remove(schedulerRecord);
 
+                // If the associated appointment exists and has not been paid for, remove it from the database to prevent orphaned records and ensure data integrity.
                 if (pendingAppointment != null && !pendingAppointment.Down_Payment_Paid)
                 {
                     _context.Appointments.Remove(pendingAppointment);
@@ -375,12 +430,14 @@ namespace KlawQ.Controllers
                 }
             }
 
+            // Return a simple HTML response indicating that the payment was cancelled and the reservation attempt was not processed. This provides clear feedback to the user about the status of their booking attempt.
             return Content("<h3>Payment was cancelled. Your reservation attempt was not processed.</h3>", "text/html");
         }
 
         // Syncs month grid views with active table override rules
         private async Task<List<CalendarDayStatus>> GetDaysStatusForMonth(int year, int month)
         {
+            // Fetch all existing bookings for the specified month, including their associated appointment details, to determine how many slots have been booked for each day
             var monthlyBookings = await _context.Schedulers
                 .Include(s => s.Appointment)
                 .Where(s => s.Appointment_Date.Year == year && s.Appointment_Date.Month == month)
@@ -391,15 +448,19 @@ namespace KlawQ.Controllers
                 .Where(o => o.TargetDate.Year == year && o.TargetDate.Month == month)
                 .ToListAsync();
 
+            // Get the current date in Philippine Time to ensure that availability status is determined based on the correct local date, preventing any discrepancies for users accessing the system from different time zones
             DateTime todayPH = TodayInPH();
             int daysInMonth = DateTime.DaysInMonth(year, month);
             var daysList = new List<CalendarDayStatus>(daysInMonth);
 
+            // Iterate through each day of the specified month and determine its availability status based on existing bookings, admin blocks, and whether the day is in the past relative to the current Philippine date
             for (int day = 1; day <= daysInMonth; day++)
             {
+                // Construct the exact DateTime for the current day in the loop, using the provided year and month parameters. This will be used for accurate comparisons against booking records and admin blocks, ensuring that the availability status is determined based on the correct local date.
                 var loopDate = new DateTime(year, month, day);
                 int maxSlotsForThisDay = GetMaxSlotsForDay(loopDate.DayOfWeek);
 
+                // Count the total number of bookings for this specific day that have been paid for, considering only appointments that are either pending or confirmed. This will help determine if the day has reached its maximum booking capacity.
                 int totalBookingsForDay = monthlyBookings.Count(b =>
                     b.Appointment_Date.Date == loopDate.Date &&
                     b.Appointment != null &&
@@ -409,15 +470,17 @@ namespace KlawQ.Controllers
                 // Identify if an admin profile explicitly blocked out this entire date row (BlockedHour is null)
                 bool isDayBlockedByAdmin = adminBlocks.Any(o => o.TargetDate.Date == loopDate.Date && o.BlockedHour == null);
 
+                // Determine the availability of the day based on whether it is in the past, if it is a Tuesday (shop closed), if it has been blocked by an admin rule, or if it has reached its maximum booking capacity. This logic ensures that the calendar view accurately reflects the true availability of each day for users when they are planning their appointments.
                 bool isAvailable;
                 if (loopDate.Date < todayPH) isAvailable = false;
                 else if (loopDate.Date == todayPH) isAvailable = false;
                 else if (loopDate.Date == todayPH.AddDays(1)) isAvailable = false;
                 else if (loopDate.DayOfWeek == DayOfWeek.Tuesday) isAvailable = false;
-                else if (isDayBlockedByAdmin) isAvailable = false; // 🌟 Successfully sets availability false when blocked by an admin rule
+                else if (isDayBlockedByAdmin) isAvailable = false; // Successfully sets availability false when blocked by an admin rule
                 else if (totalBookingsForDay >= maxSlotsForThisDay) isAvailable = false;
                 else isAvailable = true;
 
+                // Add the day's availability status to the list that will be returned to the client, ensuring that the date is formatted as "yyyy-MM-dd" for consistency and ease of parsing on the client side.
                 daysList.Add(new CalendarDayStatus
                 {
                     DateString = loopDate.ToString("yyyy-MM-dd"),
@@ -428,12 +491,15 @@ namespace KlawQ.Controllers
             return daysList;
         }
 
+        // Endpoint to retrieve the availability status for each day in a specific month, allowing the calendar view to display accurate availability information based on existing bookings, admin blocks, and the current date in Philippine Time.
         [HttpGet("month-status")]
         public async Task<IActionResult> GetMonthStatus([FromQuery] int year, [FromQuery] int month)
         {
+            // Validate the year and month parameters to ensure they represent a valid date. This prevents any potential errors or exceptions that could arise from invalid date inputs, ensuring that the endpoint can reliably return availability information for valid month and year combinations.
             if (year <= 0 || month < 1 || month > 12)
                 return BadRequest("Invalid year or month");
 
+            // Retrieve the availability status for each day in the specified month by calling the GetDaysStatusForMonth method, which factors in existing bookings, admin blocks, and the current date in Philippine Time to determine the true availability of each day. This allows the calendar view on the client side to accurately reflect which days are available for booking appointments.
             var days = await GetDaysStatusForMonth(year, month);
             return Ok(days);
         }

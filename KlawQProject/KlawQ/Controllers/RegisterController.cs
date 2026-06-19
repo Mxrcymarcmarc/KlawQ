@@ -59,7 +59,7 @@ namespace KlawQ.Controllers
 
             try
             {
-                // 🌟 FIX 1: Run password through Identity's validator upfront BEFORE sending an email or moving forward
+                // Pre-validate the password against Identity's configured rules before sending the email to avoid unnecessary email dispatches for invalid passwords
                 var temporaryUser = new IdentityUser { UserName = model.Email, Email = model.Email };
                 foreach (var validator in _userManager.PasswordValidators)
                 {
@@ -109,7 +109,7 @@ namespace KlawQ.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> VerifyEmail(VerifyCodeViewModel model)
         {
-            // 🌟 FIX 2: Wipes lingering validation states so code processing is 100% clean
+            // Wipes lingering validation states so code processing is 100% clean
             ModelState.Clear();
 
             if (!TryValidateModel(model))
@@ -137,6 +137,7 @@ namespace KlawQ.Controllers
 
             try
             {
+                // Create the IdentityUser account first to leverage Identity's password hashing and user management features. This ensures that the password is stored securely and that the user can log in immediately after verification without needing a separate login step.
                 var identityUser = new IdentityUser
                 {
                     UserName = cachedEmail,
@@ -144,6 +145,7 @@ namespace KlawQ.Controllers
                     EmailConfirmed = true
                 };
 
+                // Retrieve the plain password from session to create the IdentityUser. This is necessary because Identity needs the plain password to generate the PasswordHash and store it securely.
                 string? plainPassword = HttpContext.Session.GetString("Reg_Password");
                 if (string.IsNullOrEmpty(plainPassword))
                 {
@@ -172,6 +174,7 @@ namespace KlawQ.Controllers
                     IdentityUserId = createdUser?.Id
                 };
 
+                // Save the custom user profile to your application's database
                 _context.UserProfiles.Add(customUserProfile);
                 await _context.SaveChangesAsync();
 
@@ -195,14 +198,17 @@ namespace KlawQ.Controllers
         // Method for sending emails via MailKit
         private void SendEmailCode(string email, string code)
         {
+            // NOTE: For production use, it's critical to store email credentials securely (e.g., in environment variables or a secrets manager) rather than hardcoding them. This example uses hardcoded values for demonstration purposes only.
             string Gmail = "klawqwebapp@gmail.com";
             string AppPassword = "tqwc jyao ujds bedm";
 
+            // Construct the email message with a visually appealing HTML template
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress("Klaw By Krys", Gmail));
             message.To.Add(new MailboxAddress("", email));
             message.Subject = "Your KlawQ Verification Code";
 
+            // The HTML body includes a clean design with clear instructions and a prominently displayed verification code. It also has a note about the code's expiration and a disclaimer for unintended recipients.
             var bodyBuilder = new BodyBuilder
             {
                 HtmlBody = $@"
@@ -217,12 +223,16 @@ namespace KlawQ.Controllers
                         <p style='font-size: 11px; color: #999; text-align: center;'>If you did not request this code, you can safely ignore this email.</p>
                     </div>"
             };
+            // The BodyBuilder allows us to easily construct a rich HTML email with inline styles for better presentation. The verification code is prominently displayed in a styled box to ensure it catches the user's attention.
             message.Body = bodyBuilder.ToMessageBody();
 
+            // Send the email using MailKit's SmtpClient. We connect to Gmail's SMTP server with STARTTLS for security, authenticate with the provided credentials, and send the message. If any errors occur during this process, we catch the exception and log it for debugging while also providing a user-friendly error message.
             using (var client = new SmtpClient())
             {
+                // For development/testing, you might want to use a service like Mailtrap or Ethereal Email to avoid sending real emails. In that case, you would change the SMTP server and credentials accordingly.
                 try
                 {
+                    // Connect to Gmail's SMTP server with STARTTLS for secure email transmission
                     client.Connect("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
                     client.Authenticate(Gmail, AppPassword);
                     client.Send(message);
@@ -236,23 +246,27 @@ namespace KlawQ.Controllers
             }
         }
 
+        // Display Login Page (for redirect after successful registration)
         [HttpGet]
         public IActionResult Login()
         {
             return View("~/Views/Account/Login.cshtml");
         }
 
+        // Endpoint to handle AJAX request for resending the verification code. It generates a new code, updates the session, and sends a new email. If the session has expired, it returns a 400 Bad Request error so the frontend can prompt the user to restart the registration process.
         [HttpPost]
         [Route("Account/ResendCode")]
         public IActionResult ResendCode()
         {
+            // Retrieve the email from session to resend the code. If the email is missing, it means the session has expired or the user navigated away, so we return an error.
             string? cachedEmail = HttpContext.Session.GetString("Reg_Email");
 
+            // If the email is not found in session, it indicates that the registration session has expired or the user has navigated away from the registration flow. In this case, we return a 400 Bad Request response with a message prompting the user to start the registration process again. This allows the frontend to handle this scenario gracefully, such as by showing a notification and redirecting the user back to the registration page.
             if (string.IsNullOrEmpty(cachedEmail))
             {
                 return BadRequest("Session expired. Please register again.");
             }
-
+            // If the email is found, we proceed to generate a new verification code, update the session with the new code, and send the email. If any errors occur during this process, we catch the exception and return a 500 Internal Server Error response with the error message.
             try
             {
                 string newCode = new Random().Next(100000, 999999).ToString();
