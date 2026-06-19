@@ -75,6 +75,10 @@ namespace KlawQ.Controllers
             var nextMonthDays = await GetDaysStatusForMonth(nextMonthDate.Year, nextMonthDate.Month);
             finalResponse.AddRange(nextMonthDays);
 
+            /*DateTime nextnextMonthDate = todayPH.AddMonths(2);
+            var nextnextMonthDays = await GetDaysStatusForMonth(nextnextMonthDate.Year, nextnextMonthDate.Month);
+            finalResponse.AddRange(nextnextMonthDays);*/ // For testing only: force show 2nd month in the calendar view regardless of availability status
+
             // 🌟 Evaluates IsAvailable (which already factors in Admin Blocks) using the exact same PH Date boundary line
             int availableDaysLeft = currentMonthDays
                 .Count(d => d.IsAvailable && DateTime.ParseExact(d.DateString, "yyyy-MM-dd", CultureInfo.InvariantCulture) >= todayPH);
