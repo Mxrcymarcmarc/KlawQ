@@ -10,19 +10,19 @@ using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
+    /// <summary>
+    /// API Controller managing calendar allocations and slots for administrators.
+    /// Covers Inheritance: Inherits from ControllerBase, providing RESTful API response wrappers (Ok, BadRequest, NotFound).
+    /// Covers Abstraction: Uses ApplicationDbContext to abstract query logic and update calendar configurations.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    public class AdminCalendarController : ControllerBase
+    public class AdminCalendarController(ApplicationDbContext context) : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context = context;
 
         private static readonly TimeZoneInfo PhilippineTimeZone =
             TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
-
-        public AdminCalendarController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
 
         private static int GetMaxSlotsForDay(DayOfWeek day) => day switch
         {
@@ -34,10 +34,10 @@ namespace KlawQ.Controllers
 
         private static int[] GetBusinessHoursForDay(DayOfWeek day) => day switch
         {
-            DayOfWeek.Tuesday => Array.Empty<int>(),
-            DayOfWeek.Wednesday => new[] { 10, 14, 22 },
-            DayOfWeek.Saturday => new[] { 18 },
-            _ => new[] { 10, 14, 18, 21 }
+            DayOfWeek.Tuesday => [],
+            DayOfWeek.Wednesday => [ 10, 14, 22 ],
+            DayOfWeek.Saturday => [ 18 ],
+            _ => [ 10, 14, 18, 21 ]
         };
 
         private static string GetFormattedTime(int hour) =>
@@ -51,7 +51,8 @@ namespace KlawQ.Controllers
 
 
         // Fetches an entire month status grid for the Admin layout view.
-        // It strictly follows the User Calendar rules for IsAvailable, but allows infinite month browsing.
+        // Covers Abstraction: Hides the complexity of building the month grid based on scheduling rules and calendar config database state.
+        // Covers Polymorphism: Returns IActionResult, allowing dynamic API response variants.
         [HttpGet("month-admin-status")]
         public async Task<IActionResult> GetMonthAdminStatus([FromQuery] int year, [FromQuery] int month)
         {
@@ -78,9 +79,8 @@ namespace KlawQ.Controllers
 
                 int totalBookingsForDay = monthlyBookings.Count(b =>
                     b.Appointment_Date.Date == loopDate.Date &&
-                    b.Appointment != null &&
-                    b.Appointment.Down_Payment_Paid &&
-                    (b.Appointment.Status == 0 || b.Appointment.Status == 1));
+                    b.Appointment?.Down_Payment_Paid is true &&
+                    (b.Appointment?.Status == 0 || b.Appointment?.Status == 1));
 
                 bool isDayBlockedByAdmin = adminBlocks.Any(o => o.TargetDate.Date == loopDate.Date && o.BlockedHour == null);
 
@@ -139,13 +139,16 @@ namespace KlawQ.Controllers
         }
 
 
-        // Gives the admin a specialized view of time slots for a selected date
+        // Gives the admin a specialized view of time slots for a selected date.
+        // Covers Abstraction: Hides slot-level validation and lookup mapping details behind a single REST query.
         [HttpGet("day-slots-admin-status")]
         public async Task<IActionResult> GetDaySlotsAdminStatus([FromQuery] string chosenDate)
         {
             if (!DateTime.TryParseExact(chosenDate, "yyyy-MM-dd", CultureInfo.InvariantCulture,
                     DateTimeStyles.None, out DateTime parsedDate))
+            {
                 return BadRequest("Invalid date format. Please use yyyy-MM-dd.");
+            }
 
             // Fetch real customer bookings that have been paid for and are pending or active
             var paidBookings = await _context.Schedulers
@@ -188,7 +191,8 @@ namespace KlawQ.Controllers
         }
 
 
-        // Block a slot (with a guard to prevent blocking a real booking)
+        // Block a slot (with a guard to prevent blocking a real booking).
+        // Covers Encapsulation: Validates input constraints and current slot state (denies blocking an already booked slot) before saving block configuration changes.
         [HttpPost("block-slot")]
         public async Task<IActionResult> BlockSlot([FromQuery] DateTime date, [FromQuery] int? hour)
         {
@@ -239,7 +243,8 @@ namespace KlawQ.Controllers
         }
 
 
-        // Undo a block (Make it available again)
+        // Undo a block (Make it available again).
+        // Covers Encapsulation: Ensures that database updates are safely validated (matching block existence) before mutating calendar configuration data.
         [HttpDelete("unblock-slot")]
         public async Task<IActionResult> UnblockSlot([FromQuery] DateTime date, [FromQuery] int? hour)
         {

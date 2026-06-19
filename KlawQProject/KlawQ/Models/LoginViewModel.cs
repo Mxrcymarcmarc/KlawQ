@@ -2,6 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KlawQ.Models
 {
+    /// <summary>
+    /// ViewModel representing user credentials for authentication.
+    /// Covers Encapsulation: Validates user identity properties with declarative validation rules (EmailAddress, Required, Password type constraints).
+    /// </summary>
     public class LoginViewModel
     {
         [Required]

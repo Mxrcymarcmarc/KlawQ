@@ -82,10 +82,9 @@ body {
 .right .logo-circle {
     width: 60px;
     height: 60px;
-    background: var(--accent-pink);
-    border-radius: 50%;
     margin: 0;
     flex-shrink: 0;
+    object-fit: contain;
 }
 
 .right h2 {

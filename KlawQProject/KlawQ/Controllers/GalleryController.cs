@@ -6,11 +6,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KlawQ.Controllers
 {
+    /// <summary>
+    /// Controller managing public gallery listings and favorite toggling.
+    /// Covers Inheritance: Inherits from the base Controller class.
+    /// Covers Abstraction: Uses database context dependencies to retrieve product lists and manage favorite records.
+    /// </summary>
     [Route("[controller]")]
     public class GalleryController(ApplicationDbContext context) : Controller
     {
         private readonly ApplicationDbContext _context = context;
 
+        // WEB VIEW ENDPOINT: Renders the product gallery list, highlighting items the user has favorited.
+        // Covers Abstraction: Aggregates products and favorites list records from underlying storage asynchronously.
+        // Covers Polymorphism: Returns IActionResult (ViewResult).
         [HttpGet("")]
         [AllowAnonymous]
         public async Task<IActionResult> Index()
@@ -33,6 +41,8 @@ namespace KlawQ.Controllers
             return View(products);
         }
 
+        // POST ACTION: Toggles favorite state of a product for the authenticated user.
+        // Covers Encapsulation: Protects model integrity by checking user existence and validating if a favorite relation already exists before changing state.
         [HttpPost("toggle-favorite/{id}")]
         [Authorize]
         public async Task<IActionResult> ToggleFavorite(int id)

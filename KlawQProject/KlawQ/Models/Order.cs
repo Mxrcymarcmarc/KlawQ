@@ -2,6 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KlawQ.Models
 {
+    /// <summary>
+    /// Model representing a customer's product order or custom nail design request.
+    /// Covers Encapsulation: Bundles shipping, payment, contact parameters, and aggregates child line items (Items list).
+    /// </summary>
     public class Order
     {
         public int OrderID { get; set; }
@@ -22,6 +26,10 @@ namespace KlawQ.Models
         public List<OrderItem> Items { get; set; } = [];
     }
 
+    /// <summary>
+    /// Model representing an individual line item linked to a parent Order.
+    /// Covers Encapsulation: Controls raw item specifications and holds navigation reference properties.
+    /// </summary>
     public class OrderItem
     {
         public int OrderItemID { get; set; }

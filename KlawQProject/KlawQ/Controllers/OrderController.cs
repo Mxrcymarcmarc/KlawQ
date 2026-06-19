@@ -6,20 +6,24 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using KlawQ.Data;
 using KlawQ.Models;
-using KlawQ.Services; // 🌟 Injected to reference your PayMongo service mappings
+using KlawQ.Services; // Injected to reference your PayMongo service mappings
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace KlawQ.Controllers
 {
+    /// <summary>
+    /// Controller managing client orders and transaction checkouts.
+    /// Covers Inheritance: Inherits from base Controller class to share basic action rendering behaviors.
+    /// Covers Abstraction: Interfaces with the PayMongoService and ApplicationDbContext abstractions.
+    /// </summary>
     [Route("[controller]")]
     [Authorize]
-    public class OrderController(ApplicationDbContext context, IWebHostEnvironment env, PayMongoService payMongoService) : Controller
+    public class OrderController(ApplicationDbContext context, PayMongoService payMongoService) : Controller
     {
         private readonly ApplicationDbContext _context = context;
-        private readonly IWebHostEnvironment _env = env;
-        private readonly PayMongoService _payMongoService = payMongoService; // 🌟 Private tracking reference descriptor
+        private readonly PayMongoService _payMongoService = payMongoService; // Private tracking reference descriptor
         private static readonly char[] SplitChars = [ ',', '&' ];
 
 
@@ -73,11 +77,33 @@ namespace KlawQ.Controllers
                 {
                     var handFile = Request.Form.Files.GetFile("HandPhoto");
                     var thumbFile = Request.Form.Files.GetFile("ThumbPhoto");
-                    if (handFile != null) { await using var ms = new MemoryStream(); await handFile.CopyToAsync(ms); handBase64 = "data:" + handFile.ContentType + ";base64," + Convert.ToBase64String(ms.ToArray()); }
-                    if (thumbFile != null) { await using var ms2 = new MemoryStream(); await thumbFile.CopyToAsync(ms2); thumbBase64 = "data:" + thumbFile.ContentType + ";base64," + Convert.ToBase64String(ms2.ToArray()); }
+                    if (handFile != null)
+                    {
+                        var ext = Path.GetExtension(handFile.FileName).ToLowerInvariant();
+                        if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+                        {
+                            ModelState.AddModelError("", "Only .png, .jpg, and .jpeg files are allowed for hand photo.");
+                        }
+                    }
+                    if (thumbFile != null)
+                    {
+                        var ext = Path.GetExtension(thumbFile.FileName).ToLowerInvariant();
+                        if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+                        {
+                            ModelState.AddModelError("", "Only .png, .jpg, and .jpeg files are allowed for thumb photo.");
+                        }
+                    }
                 }
 
                 if (!ModelState.IsValid) return View("Start", new OrderStartViewModel { Products = await _context.Products.Where(p => ids.Contains(p.ProductID)).ToListAsync(), Submit = model });
+
+                if (Request.Form.Files?.Count > 0 && ModelState.IsValid)
+                {
+                    var handFile = Request.Form.Files.GetFile("HandPhoto");
+                    var thumbFile = Request.Form.Files.GetFile("ThumbPhoto");
+                    if (handFile != null) { await using var ms = new MemoryStream(); await handFile.CopyToAsync(ms); handBase64 = "data:" + handFile.ContentType + ";base64," + Convert.ToBase64String(ms.ToArray()); }
+                    if (thumbFile != null) { await using var ms2 = new MemoryStream(); await thumbFile.CopyToAsync(ms2); thumbBase64 = "data:" + thumbFile.ContentType + ";base64," + Convert.ToBase64String(ms2.ToArray()); }
+                }
 
                 // Calculate complete purchase cost matrix fields to pass over onto the PayMongo API gateway
                 var selectedProducts = await _context.Products.Where(p => ids.Contains(p.ProductID)).ToListAsync();
@@ -131,7 +157,7 @@ namespace KlawQ.Controllers
                 }
                 await _context.SaveChangesAsync();
 
-                // 🚀 PAYMONGO REDIRECT INITIATION ROUTE GENERATOR
+                // PayMongo redirect initiation route generator
                 string domain = $"{Request.Scheme}://{Request.Host}";
                 string successUrl = $"{domain}/Order/OrderSuccess?orderId={order.OrderID}";
                 string cancelUrl = $"{domain}/Order/OrderCancelled?orderId={order.OrderID}";
@@ -199,9 +225,20 @@ namespace KlawQ.Controllers
 
                 if (!ModelState.IsValid) return View("CheckoutStandard", new OrderStartViewModel { Products = await _context.Products.Where(p => model.ProductIds.Contains(p.ProductID)).ToListAsync(), Submit = model });
 
-                string? handBase64 = null;
                 var handFile = Request.Form.Files.GetFile("HandPhoto") ?? (Request.Form.Files.Count > 0 ? Request.Form.Files[0] : null);
                 if (handFile != null)
+                {
+                    var ext = Path.GetExtension(handFile.FileName).ToLowerInvariant();
+                    if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+                    {
+                        ModelState.AddModelError("", "Only .png, .jpg, and .jpeg files are allowed.");
+                    }
+                }
+
+                if (!ModelState.IsValid) return View("CheckoutStandard", new OrderStartViewModel { Products = await _context.Products.Where(p => model.ProductIds.Contains(p.ProductID)).ToListAsync(), Submit = model });
+
+                string? handBase64 = null;
+                if (handFile != null && ModelState.IsValid)
                 {
                     await using var ms = new MemoryStream();
                     await handFile.CopyToAsync(ms);
@@ -253,7 +290,7 @@ namespace KlawQ.Controllers
                 }
                 await _context.SaveChangesAsync();
 
-                // 🚀 PAYMONGO REDIRECT INITIATION ROUTE GENERATOR
+                // PayMongo redirect initiation route generator
                 string domain = $"{Request.Scheme}://{Request.Host}";
                 string successUrl = $"{domain}/Order/OrderSuccess?orderId={order.OrderID}";
                 string cancelUrl = $"{domain}/Order/OrderCancelled?orderId={order.OrderID}";
@@ -300,9 +337,30 @@ namespace KlawQ.Controllers
 
                 if (!ModelState.IsValid) return View("CheckoutCustom", new OrderStartViewModel { Products = await _context.Products.Where(p => selectedProductIds.Contains(p.ProductID)).ToListAsync(), Submit = model });
 
-                string? handBase64 = null;
                 var handFile = Request.Form.Files.GetFile("HandPhoto") ?? (Request.Form.Files.Count > 0 ? Request.Form.Files[0] : null);
                 if (handFile != null)
+                {
+                    var ext = Path.GetExtension(handFile.FileName).ToLowerInvariant();
+                    if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+                    {
+                        ModelState.AddModelError("", "Only .png, .jpg, and .jpeg files are allowed for hand photo.");
+                    }
+                }
+
+                var inspFiles = Request.Form.Files.Where(f => f.Name == "InspirationImages").ToList();
+                foreach (var f in inspFiles)
+                {
+                    var ext = Path.GetExtension(f.FileName).ToLowerInvariant();
+                    if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+                    {
+                        ModelState.AddModelError("", $"Only .png, .jpg, and .jpeg files are allowed for inspiration images. Invalid file: {f.FileName}");
+                    }
+                }
+
+                if (!ModelState.IsValid) return View("CheckoutCustom", new OrderStartViewModel { Products = await _context.Products.Where(p => selectedProductIds.Contains(p.ProductID)).ToListAsync(), Submit = model });
+
+                string? handBase64 = null;
+                if (handFile != null && ModelState.IsValid)
                 {
                     await using var ms = new MemoryStream();
                     await handFile.CopyToAsync(ms);
@@ -310,15 +368,17 @@ namespace KlawQ.Controllers
                 }
 
                 var inspirations = new List<string>();
-                var inspFiles = Request.Form.Files.Where(f => f.Name == "InspirationImages").ToList();
-                foreach (var f in inspFiles)
+                if (ModelState.IsValid)
                 {
-                    await using var ms2 = new MemoryStream();
-                    await f.CopyToAsync(ms2);
-                    inspirations.Add("data:" + f.ContentType + ";base64," + Convert.ToBase64String(ms2.ToArray()));
+                    foreach (var f in inspFiles)
+                    {
+                        await using var ms2 = new MemoryStream();
+                        await f.CopyToAsync(ms2);
+                        inspirations.Add("data:" + f.ContentType + ";base64," + Convert.ToBase64String(ms2.ToArray()));
+                    }
                 }
 
-                var payload = new { designNotes = model.DesignNotes, inspirations = inspirations };
+                var payload = new { designNotes = model.DesignNotes, inspirations };
                 var inspJson = JsonSerializer.Serialize(payload);
 
                 var order = new Order
@@ -478,7 +538,7 @@ namespace KlawQ.Controllers
             return Content(htmlContent, "text/html; charset=utf-8");
         }
 
-        // 🌟 NEW WEB-HOOK ENDPOINT: TRANSACTION SUCCESS VERIFICATION CARD
+        // Web-hook endpoint: transaction success verification card
         [HttpGet("OrderSuccess")]
         public async Task<IActionResult> OrderSuccess([FromQuery] int orderId)
         {
@@ -601,7 +661,7 @@ namespace KlawQ.Controllers
             return Content(htmlContent, "text/html; charset=utf-8");
         }
 
-        // 🌟 NEW WEB-HOOK ENDPOINT: CASCADING TRANSACTION CLEAN-UP ON FAILURE
+        // Web-hook endpoint: cascading transaction clean-up on failure
         [HttpGet("OrderCancelled")]
         public async Task<IActionResult> OrderCancelled([FromQuery] int orderId)
         {

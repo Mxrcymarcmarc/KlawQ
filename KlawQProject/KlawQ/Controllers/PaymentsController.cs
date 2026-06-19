@@ -7,6 +7,11 @@ using System.Text.Json;
 
 namespace KlawQ.Controllers
 {
+    /// <summary>
+    /// API Controller managing GCash integration, mock local payment confirmation, and status polling.
+    /// Covers Inheritance: Inherits from base ControllerBase class.
+    /// Covers Abstraction: Interfaces with IConfiguration settings and database contexts to abstract payment details.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class PaymentsController : ControllerBase
@@ -36,7 +41,9 @@ namespace KlawQ.Controllers
             public string? Error { get; set; }
         }
 
-        // Create payment: uses real GCash endpoint if configured, otherwise falls back to mock
+        // Create payment: uses real GCash endpoint if configured, otherwise falls back to mock.
+        // Covers Abstraction: Hides GCash integration endpoints and fallback mechanisms from the client.
+        // Covers Polymorphism: Returns different standard HTTP responses polymorphically.
         [HttpPost("create")]
         public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentRequest req)
         {
@@ -98,7 +105,8 @@ namespace KlawQ.Controllers
             }
         }
 
-        // Mock confirm endpoint for local dev/testing
+        // Mock confirm endpoint for local dev/testing.
+        // Covers Encapsulation: Validates the request identifier inputs and updates the corresponding Appointment database entity's paid status.
         [HttpGet("mock-confirm")]
         public async Task<IActionResult> MockConfirm([FromQuery] string paymentId, [FromQuery] int appointmentId)
         {
@@ -115,7 +123,8 @@ namespace KlawQ.Controllers
             return Ok(new { success = true, paymentId });
         }
 
-        // Polling endpoint for client to check payment status
+        // Polling endpoint for client to check payment status.
+        // Covers Abstraction: Uses the thread-safe ConcurrentDictionary class to lookup state values without exposing underlying thread synchronization locks.
         [HttpGet("status")] 
         public IActionResult Status([FromQuery] string paymentId)
         {
@@ -124,7 +133,8 @@ namespace KlawQ.Controllers
             return Ok(new { success = true, paid });
         }
 
-        // Webhook endpoint for real GCash to POST payment notifications
+        // Webhook endpoint for real GCash to POST payment notifications.
+        // Covers Encapsulation: Ensures correct parsing validation checks of raw GCash payloads before mutating the database context.
         [HttpPost("notify")]
         public async Task<IActionResult> Notify([FromBody] JsonElement payload)
         {

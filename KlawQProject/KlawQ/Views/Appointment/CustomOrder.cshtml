@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Custom Order";
 }
 
@@ -120,11 +120,11 @@
 
                     <div class="form-group">
                         <label>Upload Your Inspiration Images <span class="required">*</span></label>
-                        <div class="upload-area">
-                            <img src="~/images/retro-camera-icon.png" alt="Camera Icon" class="retro-camera-img">
-                            <h4>Click to upload inspiration images</h4>
+                        <div class="upload-area" id="inspUploadArea">
+                            <img src="~/images/retro-camera-icon.png" alt="Camera Icon" class="retro-camera-img" id="inspUploadIcon">
+                            <h4 id="inspUploadStatus">Click to upload inspiration images</h4>
                             <p>PNG, JPG up to 10MB (You can upload multiple images)</p>
-                            <input type="file" id="inspirationImages" name="inspirationImages" accept="image/png, image/jpeg" multiple required>
+                            <input type="file" id="inspirationImages" name="inspirationImages" accept="image/png, image/jpeg, image/jpg" multiple required>
                         </div>
                     </div>
 
@@ -144,3 +144,63 @@
         </div>
     </div>
 </form>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inspInput = document.getElementById('inspirationImages');
+            const inspStatus = document.getElementById('inspUploadStatus');
+            const uploadArea = document.getElementById('inspUploadArea');
+            const allowedExtensions = /(\.png|\.jpg|\.jpeg)$/i;
+
+            inspInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+
+                for (let i = 0; i < files.length; i++) {
+                    if (!allowedExtensions.exec(files[i].name)) {
+                        alert('Only .png, .jpg, and .jpeg files are allowed. Invalid file: ' + files[i].name);
+                        inspInput.value = '';
+                        inspStatus.innerHTML = "Click to upload inspiration images";
+                        return;
+                    }
+                    if (files[i].size > 10 * 1024 * 1024) {
+                        alert('Files must be smaller than 10MB. File too large: ' + files[i].name);
+                        inspInput.value = '';
+                        inspStatus.innerHTML = "Click to upload inspiration images";
+                        return;
+                    }
+                }
+
+                let displayName = files.length === 1 ? files[0].name : `${files.length} images`;
+                inspStatus.innerHTML = `Attached: <strong>${displayName}</strong> <span id="clear-insp-btn" style="color: #d32f2f; cursor: pointer; margin-left: 8px; font-weight: bold; font-size: 16px;">✕</span>`;
+            });
+
+            inspStatus.addEventListener('click', (e) => {
+                if (e.target.id === 'clear-insp-btn') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    inspInput.value = '';
+                    inspStatus.innerHTML = "Click to upload inspiration images";
+                }
+            });
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = '#fde6ea';
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.backgroundColor = '';
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.backgroundColor = '';
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    inspInput.files = files;
+                    inspInput.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+    </script>
+}

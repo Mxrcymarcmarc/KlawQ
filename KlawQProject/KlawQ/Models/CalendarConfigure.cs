@@ -1,5 +1,9 @@
-﻿namespace KlawQ.Models
+namespace KlawQ.Models
 {
+    /// <summary>
+    /// Model capturing administration blocks and calendar override configurations.
+    /// Covers Encapsulation: Controls access to calendar rules, specifying target dates and blocked hourly slots.
+    /// </summary>
     public class CalendarConfigure
     {
         public int Id { get; set; }

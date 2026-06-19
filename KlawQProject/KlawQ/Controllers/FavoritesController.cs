@@ -5,6 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KlawQ.Controllers
 {
+    /// <summary>
+    /// Controller managing user favorite products.
+    /// Covers Inheritance: Inherits from the base Controller class.
+    /// Covers Abstraction: Interfaces with ApplicationDbContext to query favorite items.
+    /// </summary>
     [Route("[controller]")]
     [Authorize]
     public class FavoritesController : Controller
@@ -15,6 +20,9 @@ namespace KlawQ.Controllers
             _context = context;
         }
 
+        // WEB VIEW ENDPOINT: Renders the user's favorite products list.
+        // Covers Abstraction: Retrieves user profile and queries relational favorites database records asynchronously.
+        // Covers Polymorphism: Returns IActionResult, resolving dynamically to ViewResult or UnauthorizedResult.
         [HttpGet("")]
         public async Task<IActionResult> Index()
         {

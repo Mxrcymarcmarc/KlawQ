@@ -1,5 +1,9 @@
-﻿namespace KlawQ.Models
+namespace KlawQ.Models
 {
+    /// <summary>
+    /// Model representing a compound booking request carrying both scheduling context and custom customer parameters.
+    /// Covers Encapsulation: Bundles scheduling coordinates (date, slot) and customer identifiers (name, contact details, notes) into a single entity layout.
+    /// </summary>
     public class BookingWithAppointmentRequest
     {
         // Schedule fields

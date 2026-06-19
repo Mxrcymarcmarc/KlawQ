@@ -2,6 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KlawQ.Models
 {
+    /// <summary>
+    /// ViewModel representing user input properties during signup registration.
+    /// Covers Encapsulation: Restricts field criteria using property validation checks (Compare, EmailAddress, Password length constraint).
+    /// </summary>
     public class RegisterViewModel
     {
         [Required]
@@ -26,6 +30,10 @@ namespace KlawQ.Models
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 
+    /// <summary>
+    /// ViewModel representing email verification code validation input parameters.
+    /// Covers Encapsulation: Restricts the verification code format rules to a 6-digit check before processing requests.
+    /// </summary>
     public class VerifyCodeViewModel
     {
         [Required]

@@ -466,7 +466,7 @@
                 <div class="upload-area" id="designImageUploadArea">
                     <i class="fas fa-upload retro-camera" id="upload-icon"></i>
                     <h4 id="upload-status-text">Click or drag to upload design reference image</h4>
-                    <input type="file" id="designImageFile" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                    <input type="file" id="designImageFile" accept="image/png, image/jpeg, image/jpg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
                 </div>
             </div>
         </div>
@@ -581,6 +581,15 @@
             fileInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
+
+                const allowedExtensions = /(\.png|\.jpg|\.jpeg)$/i;
+                if (!allowedExtensions.exec(file.name)) {
+                    alert('Only .png, .jpg, and .jpeg files are allowed.');
+                    fileInput.value = '';
+                    document.getElementById('upload-status-text').innerHTML = "Click or drag to upload design reference image";
+                    document.getElementById('upload-icon').className = 'fas fa-upload retro-camera';
+                    return;
+                }
 
                 if (file.size > 2 * 1024 * 1024) {
                     alert('Image must be smaller than 2MB.');

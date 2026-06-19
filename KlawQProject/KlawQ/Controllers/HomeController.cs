@@ -6,11 +6,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KlawQ.Controllers
 {
+    /// <summary>
+    /// Controller managing user landing page, order history, appointment history, and other static pages.
+    /// Covers Inheritance: Inherits from the base Controller class.
+    /// Covers Abstraction: Integrates with database services to pull user dashboard stats and histories.
+    /// </summary>
     [Authorize(Roles = "User")]
     public class HomeController(KlawQ.Data.ApplicationDbContext context) : Controller
     {
         private readonly KlawQ.Data.ApplicationDbContext _context = context;
 
+        // WEB VIEW ENDPOINT: Renders the user home landing page with featured items.
+        // Covers Abstraction: Hides database aggregation, sorting, grouping, and fallback algorithms behind simple entity queries.
         public async Task<IActionResult> Index()
         {
             var since = DateTime.UtcNow.AddDays(-7);
@@ -99,6 +106,8 @@ namespace KlawQ.Controllers
             return View();
         }
 
+        // WEB VIEW ENDPOINT: Renders the user's historical order transactions.
+        // Covers Abstraction: Hides the complex relation joining and sorting behavior of EF queries.
         [Authorize(Roles = "User")]
         [HttpGet("Home/OrderHistory")]
         public async Task<IActionResult> OrderHistory()
@@ -122,6 +131,8 @@ namespace KlawQ.Controllers
             return View(orders);
         }
 
+        // WEB VIEW ENDPOINT: Renders the user's booking appointment schedules.
+        // Covers Abstraction: Asynchronously queries database entities filtered by user profiles.
         [Authorize(Roles = "User")]
         [HttpGet("Home/AppointmentHistory")]
         public async Task<IActionResult> AppointmentHistory()
@@ -143,6 +154,8 @@ namespace KlawQ.Controllers
             return View(appointments);
         }
 
+        // WEB VIEW ENDPOINT: Renders static FAQ information.
+        // Covers Polymorphism: Returns IActionResult (resolving to ViewResult).
         [AllowAnonymous]
         [HttpGet("Home/FAQ")]
         public IActionResult FAQ()
@@ -156,6 +169,8 @@ namespace KlawQ.Controllers
             return View();
         }
 
+        // WEB VIEW ENDPOINT: Standard error page.
+        // Covers Abstraction: Encapsulates runtime diagnostics within the returned ErrorViewModel model context.
         [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

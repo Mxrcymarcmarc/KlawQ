@@ -97,7 +97,7 @@
                         <div class="upload-area sizing-upload">
                             <i class="fas fa-upload retro-camera" id="upload-icon-hand"></i>
                             <h4 id="upload-status-text-hand">Click to upload sizing photo</h4>
-                            <input type="file" name="HandPhoto" accept="image/*" required>
+                            <input type="file" name="HandPhoto" accept="image/png, image/jpeg, image/jpg" required>
                         </div>
                     </div>
                 </div>
@@ -121,6 +121,15 @@
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
+
+                const allowedExtensions = /(\.png|\.jpg|\.jpeg)$/i;
+                if (!allowedExtensions.exec(file.name)) {
+                    alert('Only .png, .jpg, and .jpeg files are allowed.');
+                    fileInput.value = '';
+                    statusText.innerHTML = "Click to upload sizing photo";
+                    uploadIcon.className = 'fas fa-upload retro-camera';
+                    return;
+                }
 
                 statusText.innerHTML = `Attached: <strong>${file.name}</strong> <span id="clear-hand-btn" style="color: #d32f2f; cursor: pointer; margin-left: 8px; font-weight: bold; font-size: 16px;">✕</span>`;
                 uploadIcon.className = 'fas fa-image retro-camera';

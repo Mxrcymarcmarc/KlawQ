@@ -1,16 +1,22 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using KlawQ.Data;
 using KlawQ.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
+    /// <summary>
+    /// Controller managing administrative operations and dashboard reporting.
+    /// Covers Inheritance: Inherits from base Controller class to share view and routing behaviors.
+    /// Covers Encapsulation: Access-restricted specifically to the 'Admin' role via Auth attributes.
+    /// Covers Abstraction: Utilizes the DB context mapping layer to abstract database transactions.
+    /// </summary>
     [Authorize(Roles = "Admin")]
     [Route("admin")]
     public class AdminController(ApplicationDbContext context) : Controller
@@ -18,23 +24,23 @@ namespace KlawQ.Controllers
         private readonly ApplicationDbContext _context = context;
 
 
-        // 🖥️ GET: /admin
+        // GET: /admin
         [HttpGet("")]
         public async Task<IActionResult> Index()
         {
-            // 🌟 1. Eagerly load Items and their associated Products to safely access .Price
+            // 1. Eagerly load Items and their associated Products to safely access .Price
             decimal totalRevenue = await _context.Orders
                 .IgnoreQueryFilters()
                 .Where(o => o.Status == "Completed")
                 .SelectMany(o => o.Items)
                 .SumAsync(i => (decimal?)i.Quantity * (i.Product != null ? i.Product.Product_Price : 0)) ?? 0;
 
-            // 🌟 2. Query dynamic metrics counts from the Orders table
+            // 2. Query dynamic metrics counts from the Orders table
             int totalOrdersCount = await _context.Orders.CountAsync();
             int pendingOrdersCount = await _context.Orders.CountAsync(o => o.Status == "Pending");
             int completedOrdersCount = await _context.Orders.CountAsync(o => o.Status == "Completed");
 
-            // 🌟 3. NEW: Count bookings scheduled within the NEXT 7 days
+            // 3. NEW: Count bookings scheduled within the NEXT 7 days
             var now = DateTime.UtcNow;
             var sevenDaysFromNow = now.AddDays(7);
 
@@ -42,12 +48,12 @@ namespace KlawQ.Controllers
                 .Where(o => o.Appointment_Date >= now && o.Appointment_Date <= sevenDaysFromNow)
                 .CountAsync();
 
-            // 🌟 Completed Appointment Revenue
+            // Completed Appointment Revenue
             decimal appointmentRevenue = await _context.Appointments
                 .Where(a => a.Status == 2)
                 .SumAsync(a => (decimal?)a.Price) ?? 0m;
 
-            // 🌟 Appointment metric counts
+            // Appointment metric counts
             int newRequestsCount = await _context.Appointments
                 .CountAsync(a => a.Status == 0 && a.Down_Payment_Paid);
 
@@ -60,16 +66,16 @@ namespace KlawQ.Controllers
                 .Take(5) // Restricts length to look clean on your main dashboard layout
                 .ToListAsync();
 
-            // 🌟 4. Query Top Ordered Press-On Designs (excluding cancelled/rejected/pending-payment states)
+            // 4. Query Top Ordered Press-On Designs (excluding cancelled/rejected/pending-payment states)
             var topOrderedDesigns = await _context.OrderItems
                 .IgnoreQueryFilters()
                 .Include(oi => oi.Product)
                 .Include(oi => oi.Order)
-                .Where(oi => oi.Product != null && 
-                             oi.Product.Product_Type == "PressOn" && 
-                             oi.Order != null && 
-                             oi.Order.Status != "Cancelled" && 
-                             oi.Order.Status != "Rejected" && 
+                .Where(oi => oi.Product != null &&
+                             oi.Product.Product_Type == "PressOn" &&
+                             oi.Order != null &&
+                             oi.Order.Status != "Cancelled" &&
+                             oi.Order.Status != "Rejected" &&
                              oi.Order.Status != "Payment Pending")
                 .GroupBy(oi => new { oi.ProductID, ProductName = oi.Product!.Product_Name, ProductPrice = oi.Product.Product_Price, ProductImage = oi.Product.Product_Image })
                 .Select(g => new TopDesignViewModel
@@ -83,12 +89,12 @@ namespace KlawQ.Controllers
                 .Take(5)
                 .ToListAsync();
 
-            // 🌟 5. Pass values to the view using ViewData maps
+            // 5. Pass values to the view using ViewData maps
             ViewData["TotalRevenue"] = totalRevenue;
             ViewData["TotalOrdersCount"] = totalOrdersCount;
             ViewData["PendingOrdersCount"] = pendingOrdersCount;
             ViewData["CompletedOrdersCount"] = completedOrdersCount;
-            ViewData["ThisWeekBookingsCount"] = thisWeekBookingsCount; 
+            ViewData["ThisWeekBookingsCount"] = thisWeekBookingsCount;
             ViewData["PendingOrdersList"] = pendingOrdersList;
             ViewData["TopOrderedDesigns"] = topOrderedDesigns;
 
@@ -97,12 +103,12 @@ namespace KlawQ.Controllers
             ViewData["NewRequestsCount"] = newRequestsCount;
             ViewData["ActiveSchedulesCount"] = activeSchedulesCount;
 
-            // 🌟 6. Query Top Requested Original Sets (completed appointments, not custom)
+            // 6. Query Top Requested Original Sets (completed appointments, not custom)
             var topRequestedOriginals = await _context.Appointments
                 .Where(a => a.Status == 2 && !a.IsCustom)
-                .Join(_context.Products, 
-                      a => a.Inspiration_Image, 
-                      p => p.Product_Image, 
+                .Join(_context.Products,
+                      a => a.Inspiration_Image,
+                      p => p.Product_Image,
                       (a, p) => new { a, p })
                 .GroupBy(x => new { x.p.ProductID, x.p.Product_Name, x.p.Product_Price, x.p.Product_Image })
                 .Select(g => new TopDesignViewModel
@@ -124,15 +130,26 @@ namespace KlawQ.Controllers
         [HttpGet("PortfolioManager")]
         public async Task<IActionResult> PortfolioManager()
         {
-            var products = await _context.Products.OrderBy(p => p.ProductID).ToListAsync();
+            var products = await _context.Products.OrderByDescending(p => p.ProductID).ToListAsync();
             return View(products);
         }
 
         [HttpPost("PortfolioManager/create")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePortfolioItem(Products product, IFormFile imageFile)
+        public async Task<IActionResult> CreatePortfolioItem(Products product, IFormFile? imageFile)
         {
+            ModelState.Remove(nameof(Products.Product_Image));
+
             if (imageFile?.Length > 0)
+            {
+                var ext = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+                if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+                {
+                    ModelState.AddModelError("imageFile", "Only .png, .jpg, and .jpeg files are allowed.");
+                }
+            }
+
+            if (imageFile?.Length > 0 && ModelState.IsValid)
             {
                 var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "gallery");
                 Directory.CreateDirectory(uploads);
@@ -141,7 +158,6 @@ namespace KlawQ.Controllers
                 await using var fs = new FileStream(filePath, FileMode.Create);
                 await imageFile.CopyToAsync(fs);
                 product.Product_Image = "/images/gallery/" + fileName;
-                ModelState.Remove(nameof(Products.Product_Image));
             }
             else
             {
@@ -150,7 +166,7 @@ namespace KlawQ.Controllers
 
             if (!ModelState.IsValid)
             {
-                var currentProducts = await _context.Products.OrderBy(p => p.ProductID).ToListAsync();
+                var currentProducts = await _context.Products.OrderByDescending(p => p.ProductID).ToListAsync();
                 return View("PortfolioManager", currentProducts);
             }
 
@@ -177,8 +193,10 @@ namespace KlawQ.Controllers
 
         [HttpPost("PortfolioManager/edit/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditPortfolioItem(int id, Products product, IFormFile imageFile)
+        public async Task<IActionResult> EditPortfolioItem(int id, Products product, IFormFile? imageFile)
         {
+            ModelState.Remove(nameof(Products.Product_Image));
+
             if (id != product.ProductID)
             {
                 return BadRequest();
@@ -193,7 +211,29 @@ namespace KlawQ.Controllers
             if (string.IsNullOrWhiteSpace(product.Product_Name) || string.IsNullOrWhiteSpace(product.Product_Description))
             {
                 ModelState.AddModelError("", "Title and Description are required.");
-                var currentProducts = await _context.Products.OrderBy(p => p.ProductID).ToListAsync();
+                var currentProducts = await _context.Products.OrderByDescending(p => p.ProductID).ToListAsync();
+                return View("PortfolioManager", currentProducts);
+            }
+
+            if (imageFile?.Length > 0)
+            {
+                var ext = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+                if (ext != ".png" && ext != ".jpg" && ext != ".jpeg")
+                {
+                    ModelState.AddModelError("", "Only .png, .jpg, and .jpeg files are allowed.");
+                }
+            }
+
+            if (!ModelState.IsValid)
+            {
+                foreach (var state in ModelState)
+                {
+                    foreach (var error in state.Value.Errors)
+                    {
+                        System.Console.WriteLine($"[MODELSTATE ERROR] Key: {state.Key}, Error: {error.ErrorMessage}");
+                    }
+                }
+                var currentProducts = await _context.Products.OrderByDescending(p => p.ProductID).ToListAsync();
                 return View("PortfolioManager", currentProducts);
             }
 
@@ -231,7 +271,7 @@ namespace KlawQ.Controllers
         }
 
 
-        // 🖥️ GET: /admin/ManageAppointments
+        // GET: /admin/ManageAppointments
         [HttpGet("ManageAppointments")]
         public async Task<IActionResult> ManageAppointments()
         {
@@ -244,7 +284,7 @@ namespace KlawQ.Controllers
             return View(schedulersList);
         }
 
-        // 🖥️ GET: /admin/AppointmentHistory
+        // GET: /admin/AppointmentHistory
         [HttpGet("AppointmentHistory")]
         public async Task<IActionResult> AppointmentHistory()
         {
@@ -257,7 +297,7 @@ namespace KlawQ.Controllers
             return View(schedulersList);
         }
 
-        // 🖥️ GET: /admin/OrderHistory
+        // GET: /admin/OrderHistory
         [HttpGet("OrderHistory")]
         public async Task<IActionResult> OrderHistory()
         {
@@ -272,7 +312,7 @@ namespace KlawQ.Controllers
             return View(ordersList);
         }
 
-        // 🚀 POST: /admin/UpdateAppointmentStatus
+        // POST: /admin/UpdateAppointmentStatus
         [HttpPost("UpdateAppointmentStatus")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateAppointmentStatus(int schedulerId, int statusCode)
@@ -292,7 +332,7 @@ namespace KlawQ.Controllers
             return Ok();
         }
 
-        // 🚀 POST: /admin/ApproveCustomAppointment
+        // POST: /admin/ApproveCustomAppointment
         [HttpPost("ApproveCustomAppointment")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveCustomAppointment(int schedulerId, decimal price)
@@ -311,7 +351,7 @@ namespace KlawQ.Controllers
             return Ok();
         }
 
-        // 🚀 POST: /admin/RescheduleAppointment
+        // POST: /admin/RescheduleAppointment
         [HttpPost("RescheduleAppointment")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RescheduleAppointment(int schedulerId, DateTime newDate, int newHour)

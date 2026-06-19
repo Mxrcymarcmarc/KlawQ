@@ -3,6 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KlawQ.Models
 {
+    /// <summary>
+    /// Model representing a user's favorite product reference.
+    /// Covers Encapsulation: Wraps database key links and favorite timestamp details while holding a reference to the related Product.
+    /// </summary>
     public class Favorite
     {
         [Key]
@@ -14,6 +18,10 @@ namespace KlawQ.Models
         public Products? Product { get; set; }
     }
 
+    /// <summary>
+    /// Model representing a user's shopping cart container.
+    /// Covers Encapsulation: Bundles shopping basket identifier details and manages the aggregated CartItem list.
+    /// </summary>
     public class Cart
     {
         [Key]
@@ -24,6 +32,10 @@ namespace KlawQ.Models
         public List<CartItem> Items { get; set; } = [];
     }
 
+    /// <summary>
+    /// Model representing an individual line item inside a shopping cart.
+    /// Covers Encapsulation: Encapsulates line item quantity and keeps relational references to parent Cart and Product models.
+    /// </summary>
     public class CartItem
     {
         [Key]

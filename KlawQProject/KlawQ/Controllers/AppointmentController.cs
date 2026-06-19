@@ -6,25 +6,35 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KlawQ.Controllers
 {
+    /// <summary>
+    /// Controller managing appointment booking operations.
+    /// Covers Inheritance: Inherits from the base Controller class to gain access to routing, model state, and rendering features.
+    /// Covers Abstraction: Utilizes the ApplicationDbContext database mapping layer without needing raw ADO.NET SQL commands.
+    /// </summary>
     [Route("[controller]")]
     [Authorize(Roles = "User,Admin")]
-    public class AppointmentController : Controller
+    public class AppointmentController(ApplicationDbContext context, ILogger<AppointmentController> logger) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly ILogger<AppointmentController> _logger;
+        private readonly ApplicationDbContext _context = context;
+        private readonly ILogger<AppointmentController> _logger = logger;
 
-        public AppointmentController(ApplicationDbContext context, ILogger<AppointmentController> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
-
+        /// <summary>
+        /// GET: /Appointment
+        /// Renders the appointment scheduling interface.
+        /// Covers Abstraction: Returns an IActionResult interface representing the view result.
+        /// </summary>
         [ApiExplorerSettings(IgnoreApi = true)]
         public IActionResult Index()
         {
             return View();
         }
 
+        /// <summary>
+        /// POST: /Appointment/create
+        /// Handles standard form posts to schedule an appointment.
+        /// Covers Encapsulation: Automatically binds form data fields to the Appointment model entity structure.
+        /// Covers Polymorphism (Ad-hoc): Offers a separate endpoint signature for form-based requests compared to AJAX JSON requests.
+        /// </summary>
         [HttpPost]
         [Route("create")]
         public IActionResult CreateAppointment([FromForm] Appointment appointment)
@@ -38,7 +48,12 @@ namespace KlawQ.Controllers
             return RedirectToAction("Index");
         }
 
-        // Accepts JSON and returns created appointment id for AJAX flow
+        /// <summary>
+        /// POST: /Appointment/create-json
+        /// Accepts JSON body payload and returns the created appointment ID.
+        /// Covers Encapsulation: Validates input object state through ModelState checks, protecting data integrity.
+        /// Covers Abstraction: Uses async/await Task operations, abstraction of execution threads.
+        /// </summary>
         [HttpPost]
         [Route("create-json")]
         public async Task<IActionResult> CreateAppointmentJson([FromBody] Appointment appointment)
@@ -47,7 +62,7 @@ namespace KlawQ.Controllers
             {
                 // Get current user's ID from Users table
                 int userId = 0;
-                if (User.Identity?.IsAuthenticated == true)
+                if (User.Identity?.IsAuthenticated is true)
                 {
                     var userEmail = User.Identity.Name;
                     var user = await _context.UserProfiles.FirstOrDefaultAsync(u => u.Email == userEmail);
@@ -68,7 +83,7 @@ namespace KlawQ.Controllers
 
                 _context.Appointments.Add(appointment);
                 await _context.SaveChangesAsync();
-                return Ok(new { AppId = appointment.AppId });
+                return Ok(new { appointment.AppId });
             }
             catch (Exception ex)
             {
@@ -77,6 +92,11 @@ namespace KlawQ.Controllers
             }
         }
 
+        /// <summary>
+        /// POST: /Appointment/UpdateDownPayment
+        /// Updates the down payment state of a specific appointment.
+        /// Covers Encapsulation: Mutates the internal Down_Payment_Paid boolean property of the appointment record.
+        /// </summary>
         [HttpPost("UpdateDownPayment")]
         public async Task<IActionResult> UpdateDownPayment(int id)
         {
@@ -93,7 +113,10 @@ namespace KlawQ.Controllers
                 _context.Appointments.Update(appointment);
                 await _context.SaveChangesAsync();
 
-                _logger?.LogInformation("UpdateDownPayment: appointment {Id} marked as paid", id);
+                if (_logger?.IsEnabled(LogLevel.Information) is true)
+                {
+                    _logger.LogInformation("UpdateDownPayment: appointment {Id} marked as paid", id);
+                }
                 return Ok(new { success = true });
             }
             catch (Exception ex)
@@ -103,16 +126,21 @@ namespace KlawQ.Controllers
             }
         }
 
-    [HttpGet("debug")]
-    public IActionResult DebugUser()
-    {
-        var userName = User.Identity?.Name ?? "Not authenticated";
-        return Ok(new { authenticatedUser = userName });
-    }
+        [HttpGet("debug")]
+        public IActionResult DebugUser()
+        {
+            var userName = User.Identity?.Name ?? "Not authenticated";
+            return Ok(new { authenticatedUser = userName });
+        }
 
-    [HttpPost("fetch-image")]
-    public async Task<IActionResult> FetchImageFromUrl([FromBody] FetchImageRequest body)
-    {
+        /// <summary>
+        /// POST: /Appointment/fetch-image
+        /// Pulls an image from an external URL, checks its content-type, size and saves it to local disk.
+        /// Covers Abstraction: Uses HttpClient to abstract external network calls and manages stream storage without exposing file handles.
+        /// </summary>
+        [HttpPost("fetch-image")]
+        public async Task<IActionResult> FetchImageFromUrl([FromBody] FetchImageRequest body)
+        {
         if (body == null || string.IsNullOrWhiteSpace(body.Url))
             return BadRequest(new { error = "url required" });
 

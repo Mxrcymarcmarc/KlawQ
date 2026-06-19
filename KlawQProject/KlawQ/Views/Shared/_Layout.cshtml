@@ -37,6 +37,7 @@
                     <button id="navGearBtn" class="nav-gear-btn" title="Settings Menu">
                         <i class="fas fa-cog"></i>
                     </button>
+                    <span class="nav-gear-separator"></span>
                 }
                 @if (User.Identity?.IsAuthenticated == true)
                 {
@@ -204,13 +205,12 @@
             </div>
 
             <div class="footer-center">
-                <a class="footer-btn" href="#">Follow on Instagram</a>
+                <a class="footer-btn" href="https://www.instagram.com/klawbykrys/" target="_blank" rel="noopener noreferrer">Follow on Instagram</a>
             </div>
 
             <div class="footer-right">
                 <b>Studio Location</b><br />
-                123 Creative Lane<br />
-                Studio City, SC 12345
+                Sub-Urban Rodriguez, Rizal
             </div>
         </div>
 
@@ -244,6 +244,7 @@
     </script>
 
     <script src="~/js/cart-popup.js"></script>
+    <script src="/js/site.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

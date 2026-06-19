@@ -588,7 +588,7 @@
 
 <div class="portfolio-container">
     <div style="max-width: 1100px; margin: 0 auto;">
-        <a href="/admin" class="back-dash-link">
+        <a href="/admin" class="back-dash-link" onclick="sessionStorage.removeItem('portfolio_active_tab'); sessionStorage.removeItem('portfolio_current_page'); sessionStorage.removeItem('portfolio_scroll_y');">
             <i class="fas fa-arrow-left"></i> Back to Dashboard
         </a>
 
@@ -596,6 +596,8 @@
             <h1 class="page-title"><i class="fas fa-palette title-icon-green"></i> Admin Portfolio Manager <i class="fas fa-palette title-icon-green"></i></h1>
             <p class="page-subtitle">Add, edit, and organize your nail work gallery</p>
         </div>
+
+        <div asp-validation-summary="All" class="text-danger" style="color: #d32f2f; font-weight: 600; background: #ffebee; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #f4c7c7; font-family: var(--secondary-font);"></div>
     </div>
 
     <div class="portfolio-grid-layout">
@@ -771,7 +773,7 @@
                 <div class="upload-area sizing-upload" id="upload-area-create">
                     <i class="fas fa-upload retro-camera" id="upload-icon-create"></i>
                     <h4 id="upload-status-text-create">Click to upload image</h4>
-                    <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+                    <input type="file" id="imageFile" name="imageFile" accept="image/png, image/jpeg, image/jpg" required>
                 </div>
             </div>
 
@@ -829,7 +831,7 @@
                 <div class="upload-area sizing-upload" id="upload-area-edit">
                     <i class="fas fa-upload retro-camera" id="upload-icon-edit"></i>
                     <h4 id="upload-status-text-edit">Click to upload new image</h4>
-                    <input type="file" id="edit_imageFile" name="imageFile" accept="image/*">
+                    <input type="file" id="edit_imageFile" name="imageFile" accept="image/png, image/jpeg, image/jpg">
                 </div>
                 <div id="edit_current_image_container" style="margin-top: 12px; display: flex; align-items: center; gap: 10px;">
                     <img id="edit_current_image_preview" src="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-pink);" />
@@ -854,8 +856,45 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             setupTabListeners();
+
+            // Restore saved tab and page
+            const savedTab = sessionStorage.getItem("portfolio_active_tab");
+            if (savedTab) {
+                currentTab = savedTab;
+                const tabs = document.querySelectorAll(".history-tab");
+                tabs.forEach(t => {
+                    if (t.getAttribute("data-tab") === currentTab) {
+                        t.classList.add("active");
+                    } else {
+                        t.classList.remove("active");
+                    }
+                });
+            }
+
+            const savedPage = sessionStorage.getItem("portfolio_current_page");
+            if (savedPage) {
+                currentPage = parseInt(savedPage) || 1;
+            }
+
             filterAndDisplayGallery();
             setupFileUploadHandlers();
+
+            // Save scroll position on form submission
+            document.querySelectorAll("form").forEach(form => {
+                form.addEventListener("submit", () => {
+                    sessionStorage.setItem("portfolio_scroll_y", window.scrollY);
+                });
+            });
+
+            // Restore scroll position
+            const savedScroll = sessionStorage.getItem("portfolio_scroll_y");
+            if (savedScroll) {
+                window.scrollTo({
+                    top: parseInt(savedScroll),
+                    behavior: "instant"
+                });
+                sessionStorage.removeItem("portfolio_scroll_y");
+            }
         });
 
         function setupTabListeners() {
@@ -865,7 +904,9 @@
                     tabs.forEach(t => t.classList.remove("active"));
                     this.classList.add("active");
                     currentTab = this.getAttribute("data-tab");
+                    sessionStorage.setItem("portfolio_active_tab", currentTab);
                     currentPage = 1; // reset page on tab switch
+                    sessionStorage.setItem("portfolio_current_page", currentPage);
                     filterAndDisplayGallery();
                 });
             });
@@ -956,6 +997,7 @@
 
         function changePage(direction) {
             currentPage += direction;
+            sessionStorage.setItem("portfolio_current_page", currentPage);
             filterAndDisplayGallery();
             
             const gallerySection = document.querySelector(".gallery-section");
@@ -1050,6 +1092,16 @@
             fileInputCreate.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
+
+                const allowedExtensions = /(\.png|\.jpg|\.jpeg)$/i;
+                if (!allowedExtensions.exec(file.name)) {
+                    alert('Only .png, .jpg, and .jpeg files are allowed.');
+                    fileInputCreate.value = '';
+                    statusTextCreate.innerHTML = "Click to upload image";
+                    uploadIconCreate.className = 'fas fa-upload retro-camera';
+                    return;
+                }
+
                 statusTextCreate.innerHTML = `Attached: <strong>${file.name}</strong> <span id="clear-create-btn" style="color: #d32f2f; cursor: pointer; margin-left: 8px; font-weight: bold; font-size: 16px;">✕</span>`;
                 uploadIconCreate.className = 'fas fa-image retro-camera';
             });
@@ -1090,6 +1142,16 @@
             fileInputEdit.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
+
+                const allowedExtensions = /(\.png|\.jpg|\.jpeg)$/i;
+                if (!allowedExtensions.exec(file.name)) {
+                    alert('Only .png, .jpg, and .jpeg files are allowed.');
+                    fileInputEdit.value = '';
+                    statusTextEdit.innerHTML = "Click to upload new image";
+                    uploadIconEdit.className = 'fas fa-upload retro-camera';
+                    return;
+                }
+
                 statusTextEdit.innerHTML = `Attached: <strong>${file.name}</strong> <span id="clear-edit-btn" style="color: #d32f2f; cursor: pointer; margin-left: 8px; font-weight: bold; font-size: 16px;">✕</span>`;
                 uploadIconEdit.className = 'fas fa-image retro-camera';
             });

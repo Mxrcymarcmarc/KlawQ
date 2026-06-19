@@ -6,6 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KlawQ.Controllers
 {
+    /// <summary>
+    /// Controller managing operations for adding, viewing, and removing items in the user's cart.
+    /// Covers Inheritance: Inherits from the base Controller class.
+    /// Covers Abstraction: Interfaces with ApplicationDbContext to query user profiles, carts, and cart items.
+    /// </summary>
     [Route("[controller]")]
     [Authorize]
     public class CartController : Controller
@@ -16,14 +21,16 @@ namespace KlawQ.Controllers
             _context = context;
         }
 
+        // PRIVATE HELPER: Retrieves or initializes the user's cart.
+        // Covers Abstraction: Abstracts cart retrieval logic, ensuring the client receives a valid cart without exposing DB state details.
         private async Task<Cart> GetOrCreateCart()
         {
             var email = User.Identity?.Name;
             var user = await _context.UserProfiles.FirstOrDefaultAsync(u => u.Email == email);
-            if (user == null) throw new Exception("User not found");
+            if (user is null) throw new Exception("User not found");
 
             var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserID == user.UserID);
-            if (cart == null)
+            if (cart is null)
             {
                 cart = new Cart { UserID = user.UserID, CreatedAt = DateTime.UtcNow };
                 _context.Carts.Add(cart);
@@ -32,6 +39,9 @@ namespace KlawQ.Controllers
             return cart;
         }
 
+        // API ENDPOINT: Retrieves all items in the user's cart.
+        // Covers Abstraction: Projects database records onto a simplified anonymous model.
+        // Covers Polymorphism: Returns IActionResult, allowing polymorphic HTTP responses.
         [HttpGet("items")]
         public async Task<IActionResult> GetItems()
         {
@@ -53,7 +63,7 @@ namespace KlawQ.Controllers
                         price = ci.Product?.Product_Price ?? 0,
                         qty = ci.Quantity,
                         image = ci.Product?.Product_Image ?? "/images/placeholder.png"
-                    }).ToList(),
+                    }),
                     count = items.Count,
                     total = items.Sum(ci => (ci.Product?.Product_Price ?? 0) * ci.Quantity)
                 };
@@ -66,6 +76,8 @@ namespace KlawQ.Controllers
             }
         }
 
+        // POST ACTION: Adds a product to the user's cart.
+        // Covers Encapsulation: Restricts quantity mutations to positive values and verifies product existence before modifying model state.
         [HttpPost("add/{id}")]
         public async Task<IActionResult> Add(int id)
         {
@@ -103,6 +115,8 @@ namespace KlawQ.Controllers
             }
         }
 
+        // POST ACTION: Removes a specific item from the user's cart.
+        // Covers Encapsulation: Enforces verification that the cart item exists before removing it from the database context.
         [HttpPost("remove/{id}")]
         public async Task<IActionResult> Remove(int id)
         {

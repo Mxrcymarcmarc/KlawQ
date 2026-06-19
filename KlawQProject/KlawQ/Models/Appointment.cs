@@ -3,6 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KlawQ.Models
 {
+    /// <summary>
+    /// Represents the encapsulated data structure for client bookings.
+    /// Covers Encapsulation: Restricts direct state manipulation by exposing attributes via standard C# properties with accessors (getters/setters).
+    /// </summary>
     public class Appointment
     {
         [Key]
@@ -23,6 +27,10 @@ namespace KlawQ.Models
         public Scheduler? Scheduler { get; set; }
     }
 
+    /// <summary>
+    /// Scheduler model tracking specific dates and time allocations.
+    /// Covers Association (relationship): Maintains a one-to-one relationship reference back to the Appointment object model.
+    /// </summary>
     public class Scheduler
     {
         [Key]
@@ -38,6 +46,10 @@ namespace KlawQ.Models
         public Appointment? Appointment { get; set; }
     }
 
+    /// <summary>
+    /// Data transfer object model capturing a customer's booking request parameters.
+    /// Covers Encapsulation: Packages request attributes (appointment identifier, scheduled date, and time slot) into a single object wrapper.
+    /// </summary>
     public class BookingRequest
     {
         public int AppId { get; set; }

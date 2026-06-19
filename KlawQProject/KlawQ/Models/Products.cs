@@ -2,6 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KlawQ.Models
 {
+    /// <summary>
+    /// Model representing products (e.g. Press-On sets or salon service types).
+    /// Covers Encapsulation: Restricts raw access to product state details (specifications, price, stock levels, type designations) via standard property parameters.
+    /// </summary>
     public class Products
     {
         [Key]

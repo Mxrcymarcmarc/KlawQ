@@ -2,6 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace KlawQ.Models
 {
+    /// <summary>
+    /// Model capturing standard order submissions.
+    /// Covers Encapsulation: Restricts field assignment with required validations and email formatting annotations.
+    /// </summary>
     public class OrderSubmitModel
     {
         [Required]
@@ -35,6 +39,11 @@ namespace KlawQ.Models
         public string? ThumbPhotoBase64 { get; set; }
     }
 
+    /// <summary>
+    /// Model capturing custom nail design order submissions.
+    /// Covers Inheritance: Inherits from OrderSubmitModel to reuse baseline details.
+    /// Covers Polymorphism: Shadows standard ProductIds property to support custom requests.
+    /// </summary>
     public class CustomOrderSubmitModel : OrderSubmitModel
     {
         // Allow custom orders without selecting existing products
@@ -44,6 +53,10 @@ namespace KlawQ.Models
         public string DesignNotes { get; set; } = string.Empty;
     }
 
+    /// <summary>
+    /// ViewModel for rendering checkout initialization page state.
+    /// Covers Encapsulation: Bundles checkout products list, customer submission sub-model, and quantity key maps together.
+    /// </summary>
     public class OrderStartViewModel
     {
         public List<Products> Products { get; set; } = [];

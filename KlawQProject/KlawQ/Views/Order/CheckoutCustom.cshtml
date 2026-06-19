@@ -81,7 +81,7 @@
                         <div class="upload-area inspiration-upload">
                             <i class="fas fa-camera retro-camera" id="upload-icon-insp"></i>
                             <h4 id="upload-status-text-insp">Click to upload inspiration</h4>
-                            <input type="file" name="InspirationImages" accept="image/*" multiple required />
+                            <input type="file" name="InspirationImages" accept="image/png, image/jpeg, image/jpg" multiple required />
                         </div>
                     </div>
 
@@ -115,7 +115,7 @@
                         <div class="upload-area sizing-upload">
                             <i class="fas fa-upload retro-camera" id="upload-icon-hand"></i>
                             <h4 id="upload-status-text-hand">Click to upload sizing photo</h4>
-                            <input type="file" name="HandPhoto" accept="image/*" required />
+                            <input type="file" name="HandPhoto" accept="image/png, image/jpeg, image/jpg" required />
                         </div>
                     </div>
                 </div>
@@ -138,6 +138,15 @@
             handInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
+
+                const allowedExtensions = /(\.png|\.jpg|\.jpeg)$/i;
+                if (!allowedExtensions.exec(file.name)) {
+                    alert('Only .png, .jpg, and .jpeg files are allowed.');
+                    handInput.value = '';
+                    handStatus.innerHTML = "Click to upload sizing photo";
+                    handIcon.className = 'fas fa-upload retro-camera';
+                    return;
+                }
 
                 handStatus.innerHTML = `Attached: <strong>${file.name}</strong> <span id="clear-hand-btn" style="color: #d32f2f; cursor: pointer; margin-left: 8px; font-weight: bold; font-size: 16px;">✕</span>`;
                 handIcon.className = 'fas fa-image retro-camera';
@@ -179,6 +188,17 @@
             inspInput.addEventListener('change', (e) => {
                 const files = e.target.files;
                 if (!files || files.length === 0) return;
+
+                const allowedExtensions = /(\.png|\.jpg|\.jpeg)$/i;
+                for (let i = 0; i < files.length; i++) {
+                    if (!allowedExtensions.exec(files[i].name)) {
+                        alert('Only .png, .jpg, and .jpeg files are allowed. Invalid file: ' + files[i].name);
+                        inspInput.value = '';
+                        inspStatus.innerHTML = "Click to upload inspiration";
+                        inspIcon.className = 'fas fa-camera retro-camera';
+                        return;
+                    }
+                }
 
                 let displayName = files.length === 1 ? files[0].name : `${files.length} images`;
                 inspStatus.innerHTML = `Attached: <strong>${displayName}</strong> <span id="clear-insp-btn" style="color: #d32f2f; cursor: pointer; margin-left: 8px; font-weight: bold; font-size: 16px;">✕</span>`;

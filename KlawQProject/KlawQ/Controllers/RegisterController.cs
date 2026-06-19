@@ -1,4 +1,4 @@
-﻿using BCrypt.Net;
+using BCrypt.Net;
 using Humanizer.Configuration;
 using KlawQ.Data;
 using KlawQ.Models;
@@ -14,33 +14,32 @@ using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
-    public class RegisterController : Controller
+    /// <summary>
+    /// Controller managing user registration processes, email verification, and security code dispatching.
+    /// Covers Inheritance: Inherits from the base Controller class.
+    /// Covers Abstraction: Interfaces with Identity UserManager and database contexts, hiding account validation and email protocols.
+    /// </summary>
+    public class RegisterController(
+        ApplicationDbContext context,
+        SignInManager<IdentityUser> signInManager,
+        UserManager<IdentityUser> userManager,
+        IConfiguration configuration) : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IConfiguration _configuration;
+        private readonly ApplicationDbContext _context = context;
+        private readonly SignInManager<IdentityUser> _signInManager = signInManager;
+        private readonly UserManager<IdentityUser> _userManager = userManager;
+        private readonly IConfiguration _configuration = configuration;
 
-        public RegisterController(
-            ApplicationDbContext context,
-            SignInManager<IdentityUser> signInManager,
-            UserManager<IdentityUser> userManager,
-            IConfiguration configuration)
-        {
-            _context = context;
-            _signInManager = signInManager;
-            _userManager = userManager;
-            _configuration = configuration;
-        }
-
-        // Display Registration Page
+        // WEB VIEW ENDPOINT: Display Registration Page.
+        // Covers Polymorphism: Returns IActionResult (resolving to ViewResult).
         [HttpGet]
         public IActionResult Register()
         {
             return View("~/Views/Account/Register.cshtml");
         }
 
-        // Process Details & Send Verification Code
+        // POST ACTION: Process Details & Send Verification Code.
+        // Covers Encapsulation: Validates the model parameters and tests password requirements against the identity validators list before saving verification credentials to the Session and sending the verification email.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
@@ -96,7 +95,8 @@ namespace KlawQ.Controllers
             }
         }
 
-        // Display Verification Code Screen
+        // WEB VIEW ENDPOINT: Display Verification Code Screen.
+        // Covers Abstraction: Hides verification flow setup behind a simple VerifyCodeViewModel.
         [HttpGet]
         public IActionResult VerifyEmail(string email)
         {
@@ -104,7 +104,8 @@ namespace KlawQ.Controllers
             return View("~/Views/Account/VerifyEmail.cshtml", model);
         }
 
-        // Confirm Code & Commit User to Database
+        // POST ACTION: Confirm Code & Commit User to Database.
+        // Covers Encapsulation: Performs verification check of the submitted code against the cached code and updates the Identity database user profile atomically.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> VerifyEmail(VerifyCodeViewModel model)
@@ -195,12 +196,13 @@ namespace KlawQ.Controllers
             }
         }
 
-        // Method for sending emails via MailKit
-        private void SendEmailCode(string email, string code)
+        // PRIVATE UTILITY: Sends emails via MailKit.
+        // Covers Abstraction: Employs SMTP protocol components (MimeMessage, SmtpClient) to dispatch verification codes without exposing the transport configurations.
+        private static void SendEmailCode(string email, string code)
         {
             // NOTE: For production use, it's critical to store email credentials securely (e.g., in environment variables or a secrets manager) rather than hardcoding them. This example uses hardcoded values for demonstration purposes only.
-            string Gmail = "klawqwebapp@gmail.com";
-            string AppPassword = "tqwc jyao ujds bedm";
+            const string Gmail = "klawqwebapp@gmail.com";
+            const string AppPassword = "tqwc jyao ujds bedm";
 
             // Construct the email message with a visually appealing HTML template
             var message = new MimeMessage();
@@ -227,22 +229,20 @@ namespace KlawQ.Controllers
             message.Body = bodyBuilder.ToMessageBody();
 
             // Send the email using MailKit's SmtpClient. We connect to Gmail's SMTP server with STARTTLS for security, authenticate with the provided credentials, and send the message. If any errors occur during this process, we catch the exception and log it for debugging while also providing a user-friendly error message.
-            using (var client = new SmtpClient())
+            using var client = new SmtpClient();
+            // For development/testing, you might want to use a service like Mailtrap or Ethereal Email to avoid sending real emails. In that case, you would change the SMTP server and credentials accordingly.
+            try
             {
-                // For development/testing, you might want to use a service like Mailtrap or Ethereal Email to avoid sending real emails. In that case, you would change the SMTP server and credentials accordingly.
-                try
-                {
-                    // Connect to Gmail's SMTP server with STARTTLS for secure email transmission
-                    client.Connect("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-                    client.Authenticate(Gmail, AppPassword);
-                    client.Send(message);
-                    client.Disconnect(true);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Email dispatch error: {ex.Message}");
-                    throw new Exception("We encountered an issue sending your verification email. Please check your credentials.");
-                }
+                // Connect to Gmail's SMTP server with STARTTLS for secure email transmission
+                client.Connect("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+                client.Authenticate(Gmail, AppPassword);
+                client.Send(message);
+                client.Disconnect(true);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Email dispatch error: {ex.Message}");
+                throw new Exception("We encountered an issue sending your verification email. Please check your credentials.");
             }
         }
 
@@ -253,7 +253,8 @@ namespace KlawQ.Controllers
             return View("~/Views/Account/Login.cshtml");
         }
 
-        // Endpoint to handle AJAX request for resending the verification code. It generates a new code, updates the session, and sends a new email. If the session has expired, it returns a 400 Bad Request error so the frontend can prompt the user to restart the registration process.
+        // POST ACTION: Resends the verification code.
+        // Covers Encapsulation: Ensures that session variables are verified before generating a new validation code and updating registration states.
         [HttpPost]
         [Route("Account/ResendCode")]
         public IActionResult ResendCode()

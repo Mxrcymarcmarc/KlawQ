@@ -175,7 +175,18 @@ nav {
 
 /* Shift brand link right if gear button is present to prevent overlapping */
 .nav-brand-group:has(.nav-gear-btn) .nav-brand {
-    margin-left: 45px;
+    margin-left: 70px;
+}
+
+/* Navigation vertical separator line */
+.nav-gear-separator {
+    position: fixed;
+    top: 20px;
+    left: 75px;
+    width: 1px;
+    height: 28px;
+    background-color: rgba(139, 75, 59, 0.2);
+    z-index: 1100;
 }
 
 /* Navigation Gear Button (Fixed to match cart button's viewport positioning) */
@@ -268,8 +279,23 @@ nav {
     margin: 0 auto;
 }
 
+.drawer-menu li {
+    width: 100%;
+    position: relative;
+}
+
 .drawer-menu-top {
     gap: 35px; /* Spacing between main menu items */
+}
+
+.drawer-menu-top li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    bottom: -17.5px; /* Halfway of the 35px gap */
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: rgba(142, 75, 92, 0.15);
 }
 
 .drawer-menu-bottom {
@@ -432,3 +458,8 @@ nav {
         background-color: #fbc0c7;
         transform: translateY(-2px);
     }
+
+/* Hide validation summary when it has no errors */
+.validation-summary-valid {
+    display: none !important;
+}

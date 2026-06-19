@@ -1,7 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace KlawQ.Models
 {
+    /// <summary>
+    /// Model representing custom application user profiles.
+    /// Covers Encapsulation: Protects user credentials (email, name, role, password hash parameters) via standard C# property interfaces and validation attributes.
+    /// </summary>
     public class Users
     {
         [Key]

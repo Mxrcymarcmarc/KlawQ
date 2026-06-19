@@ -9,7 +9,11 @@ using System.Threading.Tasks;
 
 namespace KlawQ.Controllers
 {
-    // AdminOrdersController: Handles both the web view and API endpoints for managing orders in the admin interface
+    /// <summary>
+    /// Controller managing orders and custom design requests within the administration dashboard.
+    /// Covers Inheritance: Inherits from base Controller class.
+    /// Covers Abstraction: Interfaces with EF Core DbContext to query orders and update database state.
+    /// </summary>
     [Route("AdminOrders")]
     public class AdminOrdersController(ApplicationDbContext context) : Controller
     {
@@ -17,7 +21,9 @@ namespace KlawQ.Controllers
         private readonly ApplicationDbContext _context = context;
 
 
-        // WEB VIEW ENDPOINT: Renders the main order management page with optional filtering parameters
+        // WEB VIEW ENDPOINT: Renders the main order management page with optional filtering parameters.
+        // Covers Polymorphism: Returns IActionResult (an interface), allowing polymorphic rendering of ViewResult or standard responses.
+        // Covers Abstraction: Delegates complexity of data retrieval to the GetFilteredOrdersDataAsync helper.
         [HttpGet("")]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> Index([FromQuery] string status = "All", [FromQuery] int months = 3)
@@ -29,7 +35,9 @@ namespace KlawQ.Controllers
             return View("~/Views/Admin/ManageOrders.cshtml", viewModel);
         }
 
-        // API ENDPOINT: Provides JSON data for the orders based on filtering parameters, used by client-side scripts for dynamic updates
+        // API ENDPOINT: Provides JSON data for the orders based on filtering parameters, used by client-side scripts for dynamic updates.
+        // Covers Polymorphism: Returns an IActionResult implementing OkObjectResult.
+        // Covers Abstraction: Obtains filtered model data through a reusable service method.
         [HttpGet("data")]
         public async Task<IActionResult> GetOrdersData([FromQuery] string status = "All", [FromQuery] int months = 3)
         {
@@ -38,7 +46,9 @@ namespace KlawQ.Controllers
             return Ok(viewModel);
         }
 
-        // API ENDPOINT: Updates the status of an order and handles related business logic such as stock deduction for completed orders
+        // API ENDPOINT: Updates the status of an order and handles related business logic such as stock deduction for completed orders.
+        // Covers Encapsulation: Validates the target status against valid state constraints and manages product stock levels to protect model integrity.
+        // Covers Abstraction: Abstracts database state changes under entity updates and SaveChangesAsync calls.
         [HttpPost("UpdateStatus")]
         public async Task<IActionResult> UpdateStatus([FromQuery] int orderId, [FromQuery] string status)
         {
@@ -85,7 +95,9 @@ namespace KlawQ.Controllers
             return Ok();
         }
 
-        // API ENDPOINT: Approves a custom order request by updating the order type, status, and embedding the approved price into the thumb photo JSON structure
+        // API ENDPOINT: Approves a custom order request by updating the order type, status, and embedding the approved price into the thumb photo JSON structure.
+        // Covers Encapsulation: Encapsulates custom request processing logic, ensuring status/order type changes and JSON serialization occur atomically.
+        // Covers Abstraction: Interacts with DB Context without exposing database configuration details.
         [HttpPost("ApproveCustomRequest")]
         public async Task<IActionResult> ApproveCustomRequest([FromQuery] int orderId, [FromQuery] decimal price)
         {
@@ -150,13 +162,13 @@ namespace KlawQ.Controllers
                 // If any exceptions occur during parsing or processing, fall back to creating a new JSON object with just the price, ensuring that the approved price is still stored even if the existing data is malformed
                 catch
                 {
-                    order.Thumb_Photo = JsonSerializer.Serialize(new { price = price });
+                    order.Thumb_Photo = JsonSerializer.Serialize(new { price });
                 }
             }
             // If the existing Thumb_Photo is null, empty, or not a valid JSON object, create a new JSON object with just the price to ensure the approved price is stored correctly
             else
             {
-                order.Thumb_Photo = JsonSerializer.Serialize(new { price = price });
+                order.Thumb_Photo = JsonSerializer.Serialize(new { price });
             }
 
             // Update the order type to 'P' for PressOn and set the status to "Payment Pending" to reflect that the custom request has been approved and is now an active order awaiting payment
@@ -167,7 +179,8 @@ namespace KlawQ.Controllers
             return Ok();
         }
 
-        // API ENDPOINT: Rejects a custom order request by updating the order status to "Rejected", allowing administrators to manage and track rejected requests without deleting records
+        // API ENDPOINT: Rejects a custom order request by updating the order status to "Rejected", allowing administrators to manage and track rejected requests without deleting records.
+        // Covers Encapsulation: Protects order data by changing the internal state to "Rejected" in a controlled setter action.
         [HttpPost("RejectCustomRequest")]
         public async Task<IActionResult> RejectCustomRequest([FromQuery] int orderId)
         {
@@ -185,7 +198,8 @@ namespace KlawQ.Controllers
             return Ok();
         }
 
-        // WEB VIEW ENDPOINT: Renders the details page for a specific order, including user email and all related order items with product details, providing administrators with comprehensive information about the order for review and management purposes
+        // WEB VIEW ENDPOINT: Renders the details page for a specific order, including user email and all related order items with product details.
+        // Covers Abstraction: Eagerly loads relational navigation properties via Entity Framework Core while hiding actual SQL joining complexities from callers.
         [HttpGet("Details/{id}")]
         public async Task<IActionResult> Details(int id)
         {
@@ -209,7 +223,8 @@ namespace KlawQ.Controllers
             return View("~/Views/Admin/OrderDetails.cshtml", order);
         }
 
-        // REUSABLE HELPER METHOD: Retrieves filtered orders data based on status and months parameters, used by both the web view and API endpoints to ensure consistent data retrieval logic across different access points
+        // REUSABLE HELPER METHOD: Retrieves filtered orders data based on status and months parameters.
+        // Covers Abstraction: Encapsulates query logic, ignoring query filters and fetching specific related models, hiding raw SQL translation details from the consumer.
         private async Task<AdminOrdersViewModel> GetFilteredOrdersDataAsync(string status, int months)
         {
             // Base tracking query eagerly pulling downstream item structural bindings
