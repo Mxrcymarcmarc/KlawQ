@@ -39,12 +39,45 @@
 
     /* Merged gallery styles from Backend for consistent appearance */
     .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:20px}
-    .gallery-card, .gallery-item{background:#fff;border-radius:16px;overflow:hidden;position:relative;border:6px solid transparent;box-shadow:0 8px 18px rgba(0,0,0,.06);display:flex;flex-direction:column}
+    .gallery-card, .gallery-item{background:#fff;border-radius:16px;overflow:hidden;position:relative;border:6px solid transparent;box-shadow:0 8px 18px rgba(0,0,0,.06);display:flex;flex-direction:column;transition:transform 0.3s ease, border-color 0.3s, box-shadow 0.3s}
     /* make all cards square and same size */
     .gallery-card, .gallery-card.image-card, .custom-request-card{aspect-ratio:1;min-height:260px;max-height:400px;width:100%}
     .gallery-card.image-card{border-color:#fde6ea}
     .gallery-card.image-card img{width:100%;height:100%;object-fit:cover;display:block}
-    .card-link {display:block; height:100%; width:100%;}
+    .card-link {display:block; height:100%; width:100%; position:relative;}
+    .gallery-card.image-card:hover {
+        transform: translateY(-5px);
+        border-color: #f0b8cc;
+        box-shadow: 0 12px 24px rgba(240, 184, 204, 0.35);
+    }
+    .card-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+        padding: 12px 8px;
+        text-align: center;
+        border-top: 1px solid #fde6ea;
+        transition: background 0.3s ease;
+        box-sizing: border-box;
+        z-index: 1;
+    }
+    .gallery-card.image-card:hover .card-overlay {
+        background: rgba(255, 255, 255, 0.95);
+    }
+    .card-title {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #795548;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin: 0;
+    }
     .gallery-card.out-of-stock img {filter: grayscale(40%) blur(0.5px); opacity: 0.8;}
     .out-of-stock-overlay {position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.6); display: flex; align-items: center; justify-content: center; z-index: 2; pointer-events: none;}
     .out-of-stock-badge {background: #e2557a; color: white; padding: 6px 14px; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 0.85rem; border-radius: 20px; box-shadow: 0 4px 8px rgba(226, 85, 122, 0.3); letter-spacing: 0.5px; text-transform: uppercase; pointer-events: none;}
@@ -143,6 +176,9 @@
                         var title = titleObj?.ToString() ?? "";
                     }
                     <img src="@imgPath" alt="@title" class="nail-img" />
+                    <div class="card-overlay">
+                        <span class="card-title">@p.Product_Name</span>
+                    </div>
                 </a>
             </div>
             }
